@@ -423,7 +423,8 @@ a.blog-post__visual:hover .blog-post__image {
 }
 
 .blog-post .avatar__photo {
-  display: none;
+  width: 36px;
+  height: 36px;
 }
 
 .blog-post .avatar__intro {
