@@ -38,7 +38,7 @@ function BlogListPageContent({ metadata, items }: Props): ReactNode {
     >
       <main>
         <BlogIntro />
-        <div className="blog-wrapper">
+        <div className="blog-feed">
           <BlogPostItems items={items} />
           <BlogListPaginator metadata={metadata} />
         </div>

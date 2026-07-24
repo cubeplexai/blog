@@ -264,7 +264,7 @@ body {
   border-radius: 8px;
 }
 
-.blog-wrapper {
+.blog-feed {
   width: min(100% - 48px, 1120px);
   margin: 0 auto;
   padding: 24px 0 88px;
@@ -511,7 +511,7 @@ a.blog-post__visual:hover .blog-post__image {
   }
 
   .blog-intro,
-  .blog-wrapper {
+  .blog-feed {
     width: min(100% - 32px, 1120px);
   }
 
@@ -537,7 +537,7 @@ a.blog-post__visual:hover .blog-post__image {
     font-size: 17px;
   }
 
-  .blog-wrapper {
+  .blog-feed {
     padding-bottom: 56px;
   }
 
