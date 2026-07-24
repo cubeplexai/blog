@@ -268,8 +268,8 @@ body {
 .blog-intro__image {
   width: 100%;
   height: auto;
-  aspect-ratio: 16 / 9;
-  max-height: 380px;
+  aspect-ratio: 2 / 1;
+  max-height: 320px;
   object-fit: cover;
   border: 1px solid var(--ink-5);
   border-radius: 8px;
