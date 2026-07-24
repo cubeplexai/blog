@@ -103,7 +103,6 @@ const config: Config = {
           label: 'GitHub',
           position: 'right',
           target: '_self',
-          className: 'header-github-link',
         },
       ],
     },
