@@ -38,15 +38,19 @@ jobs:
           if-no-files-found: error
 
   deploy-cloudflare:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.CF_API_TOKEN != '' && secrets.CF_ACCOUNT_ID != ''
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build-and-check
     runs-on: ubuntu-latest
+    env:
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
     steps:
       - uses: actions/download-artifact@v8
         with:
           name: blog-site-build
           path: build/
       - name: Deploy to Cloudflare Pages
+        if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
