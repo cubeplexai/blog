@@ -1,0 +1,34 @@
+---
+slug: self-hosted-ai-is-an-operating-model
+title: Self-hosted AI is an operating model
+description: Running agent systems in your environment changes who controls access, context, and execution.
+authors: [cubeplex]
+tags: [Self-hosting, Operations]
+image: /img/blog/self-hosted-infrastructure.png
+---
+
+Self-hosting is often described as an installation choice. For agent systems, it is more accurately an operating model.
+
+Where an agent runs determines where its credentials live, which data it can reach, how its network access is governed, and who can inspect its execution. Those are not details to add after the workflow is useful. They are part of the workflow from the beginning.
+
+<!-- truncate -->
+
+## Control begins with the execution environment
+
+An agent needs more than a model. It needs context, tool access, and somewhere to perform work. A self-hosted deployment gives a team direct control over that environment.
+
+That does not make every decision easy. Teams still need clear policies for credentials, permissions, logging, updates, and model providers. It does make the decisions explicit and keeps them close to the systems they affect.
+
+## Make the boundaries real
+
+The useful question is not whether an agent is autonomous. It is what the agent is autonomous *within*.
+
+Good boundaries are concrete. A workspace can limit the tools available to a task. A credential can be scoped to the action it supports. A sandbox can isolate execution from the broader environment. An approval step can hold a sensitive action until a person reviews it.
+
+These controls are most effective when they are normal parts of the workflow, not emergency brakes that appear after deployment.
+
+## Keep ownership with the team
+
+Self-hosting lets a team choose the infrastructure, model providers, identity systems, storage locations, and audit trail that fit its environment. It also gives the team responsibility for operating those choices well.
+
+CubePlex is built for teams that want both: agent capability and a deployment model they can inspect and govern. Start with a small, bounded workflow. Make its context and approvals visible. Then expand only when the operating model is working for the people responsible for it.
