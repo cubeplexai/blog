@@ -9,6 +9,7 @@
     "build": "docusaurus build && node scripts/normalize-url-format.mjs build",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear",
+    "create:cover": "node scripts/create-blog-cover.mjs",
     "optimize:images": "node scripts/optimize-blog-images.mjs",
     "typecheck": "tsc",
     "check:urls": "node scripts/check-url-format.mjs build",
