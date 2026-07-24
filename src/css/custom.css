@@ -267,9 +267,8 @@ body {
 
 .blog-intro__image {
   width: 100%;
-  height: auto;
-  aspect-ratio: 2 / 1;
-  max-height: 320px;
+  /* An explicit height is required for a replaced <img> to crop reliably. */
+  height: clamp(220px, 19vw, 260px);
   object-fit: cover;
   border: 1px solid var(--ink-5);
   border-radius: 8px;
