@@ -7,8 +7,8 @@ const classicOptions: ClassicOptions = {
   blog: {
     routeBasePath: '/',
     showReadingTime: true,
-    blogSidebarCount: 0,
-    blogSidebarTitle: 'Latest posts',
+    blogSidebarCount: 3,
+    blogSidebarTitle: 'Recent posts',
     editUrl: 'https://github.com/cubeplexai/blog/edit/main/',
     feedOptions: {
       type: ['rss', 'atom', 'json'],

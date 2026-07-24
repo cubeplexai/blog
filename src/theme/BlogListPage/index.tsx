@@ -4,6 +4,7 @@ import BlogListPageStructuredData from '@theme/BlogListPage/StructuredData';
 import BlogPostItems from '@theme/BlogPostItems';
 import Layout from '@theme/Layout';
 import SearchMetadata from '@theme/SearchMetadata';
+import RecentPosts from '@site/src/components/RecentPosts';
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
 import type { Props } from '@theme/BlogListPage';
@@ -30,7 +31,7 @@ function BlogIntro(): ReactNode {
   );
 }
 
-function BlogListPageContent({ metadata, items }: Props): ReactNode {
+function BlogListPageContent({ metadata, items, sidebar }: Props): ReactNode {
   return (
     <Layout
       title={metadata.permalink === '/' ? undefined : metadata.blogTitle}
@@ -38,9 +39,14 @@ function BlogListPageContent({ metadata, items }: Props): ReactNode {
     >
       <main>
         <BlogIntro />
-        <div className="blog-feed">
-          <BlogPostItems items={items} />
-          <BlogListPaginator metadata={metadata} />
+        <div className="blog-feed-layout">
+          <aside className="blog-feed-layout__sidebar">
+            <RecentPosts sidebar={sidebar} />
+          </aside>
+          <div className="blog-feed">
+            <BlogPostItems items={items} />
+            <BlogListPaginator metadata={metadata} />
+          </div>
         </div>
       </main>
     </Layout>

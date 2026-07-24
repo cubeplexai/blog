@@ -274,10 +274,68 @@ body {
   border-radius: 8px;
 }
 
-.blog-feed {
-  width: min(100% - 48px, 1120px);
+.blog-feed-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: clamp(40px, 6vw, 96px);
+  width: min(100% - 48px, 1360px);
   margin: 0 auto;
   padding: 24px 0 88px;
+}
+
+.blog-feed {
+  min-width: 0;
+}
+
+.recent-posts {
+  position: sticky;
+  top: calc(var(--ifm-navbar-height) + 32px);
+  color: var(--ink-11);
+}
+
+.recent-posts__title {
+  margin: 0 0 16px;
+  color: var(--ink-9);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.recent-posts__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recent-posts__list li + li {
+  margin-top: 14px;
+}
+
+.recent-posts__list a {
+  display: block;
+  color: var(--ink-11);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.recent-posts__list a:hover,
+.recent-posts__list a:focus-visible {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.blog-recent-posts .recent-posts {
+  margin-top: 8px;
+}
+
+.blog-post-page .table-of-contents {
+  position: sticky;
+  top: calc(var(--ifm-navbar-height) + 32px);
+  border-left: 1px solid var(--ink-5);
+  padding-left: 16px;
 }
 
 /* Give post imagery and headings an editorial frame without making the prose hard to scan. */
@@ -303,6 +361,7 @@ body {
 
 .blog-post__visual {
   display: block;
+  aspect-ratio: 2 / 1;
   margin-bottom: 24px;
   border-radius: 8px;
   overflow: hidden;
@@ -311,8 +370,7 @@ body {
 .blog-post__image {
   display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 3 / 2;
+  height: 100%;
   object-fit: cover;
   border: 1px solid var(--ink-5);
   border-radius: 8px;
@@ -495,6 +553,15 @@ a.blog-post__visual:hover .blog-post__image {
   .blog-intro__image {
     max-width: 720px;
   }
+
+  .blog-feed-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .recent-posts {
+    position: static;
+  }
 }
 
 /* Match the Docs header's compact GitHub mark. */
@@ -521,7 +588,7 @@ a.blog-post__visual:hover .blog-post__image {
   }
 
   .blog-intro,
-  .blog-feed {
+  .blog-feed-layout {
     width: min(100% - 32px, 1120px);
   }
 
