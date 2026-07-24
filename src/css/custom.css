@@ -124,10 +124,10 @@ body {
 
 .blog-intro {
   display: grid;
-  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: clamp(32px, 5vw, 80px);
   align-items: center;
-  width: min(100% - 48px, 1180px);
+  width: min(100% - 48px, 1280px);
   min-height: min(640px, calc(100dvh - var(--ifm-navbar-height)));
   margin: 0 auto;
   padding: 72px 0 64px;
@@ -200,9 +200,20 @@ body {
 }
 
 .blog-wrapper {
-  width: min(100% - 48px, 900px);
+  width: min(100% - 48px, 1120px);
   margin: 0 auto;
   padding: 24px 0 88px;
+}
+
+/* Give post imagery and headings an editorial frame without making the prose hard to scan. */
+.blog-post-page .container.margin-vert--lg {
+  width: min(100% - 48px, 1320px);
+  max-width: none;
+}
+
+.blog-post-page main.col--9 {
+  flex: 0 0 83.333333%;
+  max-width: 83.333333%;
 }
 
 .blog-post {
@@ -292,9 +303,9 @@ a.blog-post__visual:hover .blog-post__image {
 }
 
 .blog-post .markdown {
-  max-width: 70ch;
+  max-width: 74ch;
   color: var(--ink-11);
-  font-size: 17px;
+  font-size: 18px;
 }
 
 .blog-post .markdown > p:first-child {
@@ -399,7 +410,16 @@ a.blog-post__visual:hover .blog-post__image {
 
   .blog-intro,
   .blog-wrapper {
-    width: min(100% - 32px, 900px);
+    width: min(100% - 32px, 1120px);
+  }
+
+  .blog-post-page .container.margin-vert--lg {
+    width: min(100% - 32px, 1120px);
+  }
+
+  .blog-post-page main.col--9 {
+    flex: 0 0 100%;
+    max-width: 100%;
   }
 
   .blog-intro {
