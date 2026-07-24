@@ -102,14 +102,43 @@ body {
   -webkit-backdrop-filter: blur(18px) saturate(150%);
 }
 
+.navbar__inner {
+  width: min(100% - 48px, 1400px);
+  max-width: none;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
 .navbar__brand {
   margin-right: 32px;
 }
 
-.navbar__title,
+.navbar__logo {
+  width: 140px;
+  height: 32px;
+}
+
 .navbar__link {
+  color: var(--ink-9);
   font-size: 14px;
   font-weight: 500;
+}
+
+.navbar__link > svg {
+  display: none;
+}
+
+.navbar__items:not(.navbar__items--right) > .navbar__item + .navbar__item {
+  margin-left: 34px;
+}
+
+.navbar__items--right {
+  gap: 10px;
+}
+
+.navbar__items--right > .navbar__item {
+  margin-left: 0;
 }
 
 .navbar__link--active,
@@ -117,9 +146,75 @@ body {
   color: var(--accent);
 }
 
-.navbar__toggle,
-.clean-btn {
+.header-github-link,
+.navbar__items--right .clean-btn,
+.navbar__toggle {
+  min-height: 40px;
+  border: 1px solid var(--ink-5);
+  border-radius: 6px;
+  background: var(--surface);
   color: var(--ink-11);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.header-github-link {
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.navbar__items--right .clean-btn,
+.navbar__toggle {
+  width: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-github-link:hover,
+.navbar__items--right .clean-btn:hover,
+.navbar__toggle:hover {
+  border-color: var(--accent);
+  color: var(--ink-12);
+}
+
+.header-github-link:active,
+.navbar__items--right .clean-btn:active,
+.navbar__toggle:active {
+  transform: translateY(1px) scale(0.985);
+}
+
+.navbar-sidebar {
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.navbar-sidebar__items {
+  padding: 12px;
+}
+
+.navbar-sidebar .menu__link {
+  min-height: 50px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ink-5);
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  color: var(--ink-11);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.navbar-sidebar .menu__list-item:last-child .menu__link {
+  border-bottom: 0;
+}
+
+.navbar-sidebar .menu__link:hover,
+.navbar-sidebar .menu__link--active {
+  background: transparent;
+  color: var(--accent);
 }
 
 .blog-intro {
@@ -380,6 +475,10 @@ a.blog-post__visual:hover .blog-post__image {
 }
 
 @media (max-width: 996px) {
+  .navbar__inner {
+    width: min(100% - 32px, 1400px);
+  }
+
   .blog-intro {
     grid-template-columns: 1fr;
     min-height: auto;
@@ -405,6 +504,7 @@ a.blog-post__visual:hover .blog-post__image {
   }
 
   .navbar__logo {
+    width: 122px;
     height: 28px;
   }
 
