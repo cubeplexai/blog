@@ -9,6 +9,7 @@
     "build": "docusaurus build && node scripts/normalize-url-format.mjs build",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear",
+    "optimize:images": "node scripts/optimize-blog-images.mjs",
     "typecheck": "tsc",
     "check:urls": "node scripts/check-url-format.mjs build",
     "check": "pnpm build && pnpm typecheck && pnpm check:urls"
@@ -30,6 +31,7 @@
     "@docusaurus/tsconfig": "3.10.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "sharp": "^0.34.5",
     "typescript": "~5.9.3"
   },
   "engines": {

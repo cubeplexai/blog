@@ -1,5 +1,6 @@
 allowBuilds:
   core-js: true
+  sharp: true
 onlyBuiltDependencies:
   - core-js
   - sharp

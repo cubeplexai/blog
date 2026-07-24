@@ -22,7 +22,7 @@ function BlogIntro(): ReactNode {
       </div>
       <img
         className="blog-intro__image"
-        src="/blog/img/blog/governed-work.png"
+        src="/blog/img/blog/governed-work.webp"
         alt="A calm technical workspace with a laptop and process diagrams"
         width={1536}
         height={1024}
