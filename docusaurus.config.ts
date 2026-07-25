@@ -10,12 +10,12 @@ const classicOptions: ClassicOptions = {
     blogSidebarCount: 3,
     blogSidebarTitle: 'Recent posts',
     editUrl: 'https://github.com/cubeplexai/blog/edit/main/',
+    editLocalizedFiles: true,
     feedOptions: {
       type: ['rss', 'atom', 'json'],
       title: 'CubePlex Blog',
       description: 'Product, engineering, and governance notes from CubePlex.',
       copyright: `Copyright © ${new Date().getFullYear()} CubePlex.`,
-      language: 'en',
     },
   },
   theme: {
@@ -34,6 +34,14 @@ const config: Config = {
   url: 'https://cubeplex.ai',
   baseUrl: '/blog/',
   trailingSlash: false,
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'zh-Hans'],
+    localeConfigs: {
+      en: { label: 'English' },
+      'zh-Hans': { label: '简体中文' },
+    },
+  },
   organizationName: 'cubeplexai',
   projectName: 'blog',
   onBrokenLinks: 'throw',
@@ -81,11 +89,11 @@ const config: Config = {
           target: '_self',
         },
         {
-          href: 'https://cubeplex.ai/blog',
+          to: '/',
           label: 'Blog',
           position: 'left',
-          target: '_self',
         },
+        { type: 'localeDropdown', position: 'right' },
         {
           href: 'https://github.com/cubeplexai/cubeplex',
           position: 'right',

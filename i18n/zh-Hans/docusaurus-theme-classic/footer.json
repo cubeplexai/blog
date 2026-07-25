@@ -1,0 +1,34 @@
+{
+  "link.title.Explore": {
+    "message": "探索",
+    "description": "The title of the footer links column with title=Explore in the footer"
+  },
+  "link.title.Blog": {
+    "message": "博客",
+    "description": "The title of the footer links column with title=Blog in the footer"
+  },
+  "link.item.label.Product": {
+    "message": "产品",
+    "description": "The label of footer link with label=Product linking to https://cubeplex.ai"
+  },
+  "link.item.label.Documentation": {
+    "message": "文档",
+    "description": "The label of footer link with label=Documentation linking to https://cubeplex.ai/docs"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/cubeplexai/cubeplex"
+  },
+  "link.item.label.All posts": {
+    "message": "所有文章",
+    "description": "The label of footer link with label=All posts linking to /"
+  },
+  "link.item.label.RSS feed": {
+    "message": "RSS 订阅",
+    "description": "The label of footer link with label=RSS feed linking to https://cubeplex.ai/blog/rss.xml"
+  },
+  "copyright": {
+    "message": "版权所有 © 2026 CubePlex。为可治理的智能体工作打造。",
+    "description": "The footer copyright"
+  }
+}

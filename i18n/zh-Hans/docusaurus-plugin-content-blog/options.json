@@ -1,0 +1,14 @@
+{
+  "title": {
+    "message": "CubePlex 博客",
+    "description": "The title for the blog used in SEO"
+  },
+  "description": {
+    "message": "CubePlex 的产品、工程与智能体治理实践。",
+    "description": "The description for the blog used in SEO"
+  },
+  "sidebar.title": {
+    "message": "最新文章",
+    "description": "The label for the left sidebar"
+  }
+}

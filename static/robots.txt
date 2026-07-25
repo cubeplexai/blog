@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://cubeplex.ai/blog/sitemap.xml
+Sitemap: https://cubeplex.ai/blog/zh-Hans/sitemap.xml

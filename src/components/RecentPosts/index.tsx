@@ -1,4 +1,5 @@
 import Link from '@docusaurus/Link';
+import Translate, {translate} from '@docusaurus/Translate';
 import type { BlogSidebar } from '@docusaurus/plugin-content-blog';
 import type { ReactNode } from 'react';
 
@@ -10,8 +11,13 @@ export default function RecentPosts({ sidebar }: Props): ReactNode {
   if (!sidebar?.items.length) return null;
 
   return (
-    <nav className="recent-posts" aria-label="Recent posts">
-      <p className="recent-posts__title">Recent posts</p>
+    <nav
+      className="recent-posts"
+      aria-label={translate({id: 'blog.recentPosts.ariaLabel', message: 'Recent posts'})}
+    >
+      <p className="recent-posts__title">
+        <Translate id="blog.recentPosts.title">Recent posts</Translate>
+      </p>
       <ul className="recent-posts__list">
         {sidebar.items.map((item) => (
           <li key={item.permalink}>

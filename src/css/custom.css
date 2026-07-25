@@ -197,6 +197,12 @@ body {
   color: var(--accent);
 }
 
+/* The GitHub shortcut stays in the header on mobile; don't repeat its icon in
+   the sidebar's navigation list. */
+.navbar-sidebar .header-github-link {
+  display: none !important;
+}
+
 .blog-intro {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -329,6 +335,20 @@ body {
 
 .blog-recent-posts .recent-posts {
   margin-top: 8px;
+}
+
+/* Keep the article first in the document for reading order, while preserving
+   the left sidebar on desktop. */
+.blog-post-page .row > main {
+  order: 2;
+}
+
+.blog-post-page .row > .blog-recent-posts {
+  order: 1;
+}
+
+.blog-post-page .row > .col--2 {
+  order: 3;
 }
 
 .blog-post-page .table-of-contents {
@@ -473,6 +493,84 @@ a.blog-post__visual:hover .blog-post__image {
   margin-top: 24px;
 }
 
+.blog-product-callout {
+  max-width: 74ch;
+  margin-top: 48px;
+  padding: 32px;
+  border: 1px solid var(--ink-5);
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent-soft), var(--surface) 62%);
+}
+
+.blog-product-callout__eyebrow {
+  margin: 0 0 12px;
+  color: var(--accent);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.blog-product-callout h2 {
+  max-width: 20ch;
+  margin: 0;
+  font-size: clamp(26px, 3vw, 34px);
+}
+
+.blog-product-callout__products {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.blog-product-callout__product {
+  padding: 20px;
+  border: 1px solid var(--ink-5);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.blog-product-callout__product h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.blog-product-callout__product p {
+  margin: 10px 0 0;
+  color: var(--ink-9);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.blog-product-callout__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  margin-top: 18px;
+  padding: 0 14px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.blog-product-callout__link:hover,
+.blog-product-callout__link:focus-visible {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+  color: #ffffff;
+  text-decoration: none;
+}
+
 .theme-blog-footer {
   border-top: 1px solid var(--ink-5);
 }
@@ -514,6 +612,13 @@ a.blog-post__visual:hover .blog-post__image {
 }
 
 @media (max-width: 996px) {
+  /* The mobile sidebar is fixed by Docusaurus. Keep its content from being
+     clipped to the navbar height after the custom navbar styles are applied. */
+  .navbar-sidebar {
+    height: 100dvh;
+    z-index: 300;
+  }
+
   .navbar__inner {
     width: min(100% - 32px, 1400px);
   }
@@ -562,6 +667,22 @@ a.blog-post__visual:hover .blog-post__image {
 
   .recent-posts {
     position: static;
+  }
+
+  /* Keep recent posts as follow-up reading after the article and paginator. */
+  .blog-post-page .row > main {
+    order: 1;
+  }
+
+  .blog-post-page .row > .blog-recent-posts {
+    order: 2;
+    margin-top: 16px;
+    padding-top: 32px;
+    border-top: 1px solid var(--ink-5);
+  }
+
+  .blog-post-page .row > .col--2 {
+    order: 3;
   }
 }
 
@@ -630,5 +751,18 @@ a.blog-post__visual:hover .blog-post__image {
 
   .blog-post .markdown > p:first-child {
     font-size: 18px;
+  }
+
+  .blog-product-callout {
+    margin-top: 40px;
+    padding: 24px;
+  }
+
+  .blog-product-callout__products {
+    grid-template-columns: 1fr;
+  }
+
+  .blog-product-callout__link {
+    width: 100%;
   }
 }
