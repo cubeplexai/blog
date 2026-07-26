@@ -10,6 +10,11 @@ function PostImage(): ReactNode {
   const { frontMatter, metadata, isBlogPostPage } = useBlogPost();
   const image = frontMatter.image;
   const imageUrl = useBaseUrl(typeof image === 'string' ? image : '');
+  const { coverAspectRatio } = frontMatter as typeof frontMatter & {
+    coverAspectRatio?: string;
+  };
+  const isLegacyCover = coverAspectRatio === '2:1';
+  const coverHeight = isLegacyCover ? 640 : 512;
 
   if (typeof image !== 'string') return null;
 
@@ -18,16 +23,23 @@ function PostImage(): ReactNode {
       className="blog-post__image"
       src={imageUrl}
       alt={metadata.title}
-      width={1536}
-      height={1024}
+      width={1280}
+      height={coverHeight}
       loading={isBlogPostPage ? 'eager' : 'lazy'}
     />
   );
 
   return isBlogPostPage ? (
-    <div className="blog-post__visual">{visual}</div>
+    <div className="blog-post__visual" data-cover-ratio={isLegacyCover ? '2:1' : '5:2'}>
+      {visual}
+    </div>
   ) : (
-    <Link className="blog-post__visual" to={metadata.permalink} aria-label={metadata.title}>
+    <Link
+      className="blog-post__visual"
+      data-cover-ratio={isLegacyCover ? '2:1' : '5:2'}
+      to={metadata.permalink}
+      aria-label={metadata.title}
+    >
       {visual}
     </Link>
   );

@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1120" role="img" aria-labelledby="title desc">
+  <title id="title">OpenSandbox 与 CubeSandbox 架构比较</title>
+  <desc id="desc">使用深色和蓝色为主的并排架构图。OpenSandbox 显示协议到可替换 runtime 的路径；CubeSandbox 显示从 API 到 KVM MicroVM 的固定路径。</desc>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#27272a" stroke-width="0.7"/>
+    </pattern>
+    <marker id="arrow" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#71717a"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#6a83e3"/>
+    </marker>
+    <style>
+      text { font-family: Inter, 'PingFang SC', 'Noto Sans SC', sans-serif; }
+      .title { fill:#f4f4f5; font-size:28px; font-weight:650; letter-spacing:-.4px; }
+      .subtitle { fill:#a1a1aa; font-size:14px; }
+      .panel { fill:#0a0a0b; stroke:#3f3f46; stroke-width:1.25; }
+      .panel-title { fill:#93a6ec; font-size:16px; font-weight:650; }
+      .panel-copy { fill:#71717a; font-size:12px; }
+      .box-mask { fill:#0a0a0b; }
+      .box { fill:#0a0a0b; stroke:#3f3f46; stroke-width:1.25; }
+      .box-key { fill:#14213d; stroke:#6a83e3; stroke-width:1.6; }
+      .box-name { fill:#f4f4f5; font-size:15px; font-weight:600; }
+      .box-sub { fill:#a1a1aa; font-size:12px; }
+      .line { fill:none; stroke:#71717a; stroke-width:1.5; marker-end:url(#arrow); stroke-linejoin:round; }
+      .line-key { fill:none; stroke:#6a83e3; stroke-width:1.8; marker-end:url(#arrow-blue); stroke-linejoin:round; }
+      .line-note { fill:none; stroke:#52525b; stroke-width:1.25; stroke-dasharray:5 5; }
+      .label { fill:#a1a1aa; font-size:11px; }
+      .footer { fill:#0a0a0b; stroke:#3f3f46; stroke-width:1.1; }
+      .footer-title { fill:#93a6ec; font-size:12px; font-weight:650; }
+      .footer-copy { fill:#a1a1aa; font-size:12px; }
+    </style>
+  </defs>
+  <rect width="1920" height="1120" fill="#18181b"/>
+  <rect width="1920" height="1120" fill="url(#grid)"/>
+
+  <text x="48" y="52" class="title">OpenSandbox vs. CubeSandbox：两种 Agent 执行层的架构重心</text>
+  <text x="48" y="78" class="subtitle">蓝色节点表示各自的主控制路径；灰色节点是配套组件。所有实线均为主调用/数据路径，虚线仅表示实现依赖或可选能力。</text>
+
+  <rect x="42" y="110" width="875" height="875" rx="14" class="panel"/>
+  <rect x="1003" y="110" width="875" height="875" rx="14" class="panel"/>
+  <text x="72" y="146" class="panel-title">OpenSandbox · 协议优先，运行时可替换</text>
+  <text x="72" y="166" class="panel-copy">上层依赖统一 Sandbox contract；隔离、快照与卷语义由实际 provider 决定。</text>
+  <text x="1033" y="146" class="panel-title">CubeSandbox · 从 API 到 KVM MicroVM 的固定执行路径</text>
+  <text x="1033" y="166" class="panel-copy">调度、节点代理、存储与网络围绕 MicroVM 数据平面协同。</text>
+
+  <!-- connections: OpenSandbox -->
+  <path d="M330 235 H400" class="line-key"/>
+  <path d="M515 269 V330" class="line-key"/>
+  <path d="M515 394 V465" class="line-key"/>
+  <path d="M515 529 V610" class="line-key"/>
+  <path d="M515 674 V755" class="line-key"/>
+  <path d="M630 497 H735" class="line"/>
+
+  <!-- connections: CubeSandbox -->
+  <path d="M1288 235 H1360" class="line-key"/>
+  <path d="M1475 269 V330" class="line-key"/>
+  <path d="M1475 394 V465" class="line-key"/>
+  <path d="M1475 529 V600" class="line-key"/>
+  <path d="M1475 664 V735" class="line-key"/>
+  <path d="M1475 799 V870" class="line-key"/>
+  <path d="M1595 362 H1660" class="line"/>
+  <path d="M1260 632 H1360" class="line"/>
+  <path d="M1260 632 H1360" class="line"/>
+  <path d="M1595 902 H1730" class="line"/>
+
+  <!-- OpenSandbox boxes -->
+  <rect x="100" y="200" width="230" height="69" rx="7" class="box-mask"/>
+  <rect x="100" y="200" width="230" height="69" rx="7" class="box-key"/>
+  <text x="215" y="229" text-anchor="middle" class="box-name">应用 / Agent / 运维者</text>
+  <text x="215" y="249" text-anchor="middle" class="box-sub">SDK · osb CLI · MCP</text>
+
+  <rect x="400" y="200" width="230" height="69" rx="7" class="box-mask"/>
+  <rect x="400" y="200" width="230" height="69" rx="7" class="box-key"/>
+  <text x="515" y="229" text-anchor="middle" class="box-name">Sandbox contract</text>
+  <text x="515" y="249" text-anchor="middle" class="box-sub">specs · OpenAPI · lifecycle</text>
+
+  <rect x="400" y="330" width="230" height="64" rx="7" class="box-mask"/>
+  <rect x="400" y="330" width="230" height="64" rx="7" class="box-key"/>
+  <text x="515" y="358" text-anchor="middle" class="box-name">Lifecycle server</text>
+  <text x="515" y="378" text-anchor="middle" class="box-sub">create · inspect · pause · delete</text>
+
+  <rect x="400" y="465" width="230" height="64" rx="7" class="box-mask"/>
+  <rect x="400" y="465" width="230" height="64" rx="7" class="box-key"/>
+  <text x="515" y="493" text-anchor="middle" class="box-name">Runtime provider</text>
+  <text x="515" y="513" text-anchor="middle" class="box-sub">Docker 或 Kubernetes</text>
+
+  <rect x="735" y="465" width="140" height="64" rx="7" class="box-mask"/>
+  <rect x="735" y="465" width="140" height="64" rx="7" class="box"/>
+  <text x="805" y="493" text-anchor="middle" class="box-name">Volume</text>
+  <text x="805" y="513" text-anchor="middle" class="box-sub">provider 语义</text>
+
+  <rect x="385" y="610" width="260" height="64" rx="7" class="box-mask"/>
+  <rect x="385" y="610" width="260" height="64" rx="7" class="box-key"/>
+  <text x="515" y="638" text-anchor="middle" class="box-name">Sandbox workload + execd</text>
+  <text x="515" y="658" text-anchor="middle" class="box-sub">command · files · SSE · PTY</text>
+
+  <rect x="385" y="755" width="260" height="64" rx="7" class="box-mask"/>
+  <rect x="385" y="755" width="260" height="64" rx="7" class="box-key"/>
+  <text x="515" y="783" text-anchor="middle" class="box-name">Endpoint / egress</text>
+  <text x="515" y="803" text-anchor="middle" class="box-sub">ingress、策略与凭据注入</text>
+
+  <!-- CubeSandbox boxes -->
+  <rect x="1058" y="200" width="230" height="69" rx="7" class="box-mask"/>
+  <rect x="1058" y="200" width="230" height="69" rx="7" class="box-key"/>
+  <text x="1173" y="229" text-anchor="middle" class="box-name">应用 / E2B client</text>
+  <text x="1173" y="249" text-anchor="middle" class="box-sub">SDK / REST API</text>
+
+  <rect x="1360" y="200" width="230" height="69" rx="7" class="box-mask"/>
+  <rect x="1360" y="200" width="230" height="69" rx="7" class="box-key"/>
+  <text x="1475" y="229" text-anchor="middle" class="box-name">CubeAPI</text>
+  <text x="1475" y="249" text-anchor="middle" class="box-sub">API adapter / auth</text>
+
+  <rect x="1360" y="330" width="230" height="64" rx="7" class="box-mask"/>
+  <rect x="1360" y="330" width="230" height="64" rx="7" class="box-key"/>
+  <text x="1475" y="358" text-anchor="middle" class="box-name">CubeMaster</text>
+  <text x="1475" y="378" text-anchor="middle" class="box-sub">资源选择 · 生命周期调度</text>
+
+  <rect x="1660" y="330" width="145" height="64" rx="7" class="box-mask"/>
+  <rect x="1660" y="330" width="145" height="64" rx="7" class="box"/>
+  <text x="1732" y="358" text-anchor="middle" class="box-name">Redis</text>
+  <text x="1732" y="378" text-anchor="middle" class="box-sub">状态 / 事件</text>
+
+  <rect x="1360" y="465" width="230" height="64" rx="7" class="box-mask"/>
+  <rect x="1360" y="465" width="230" height="64" rx="7" class="box-key"/>
+  <text x="1475" y="493" text-anchor="middle" class="box-name">Cubelet</text>
+  <text x="1475" y="513" text-anchor="middle" class="box-sub">节点本地 sandbox 管理</text>
+
+  <rect x="1360" y="600" width="230" height="64" rx="7" class="box-mask"/>
+  <rect x="1360" y="600" width="230" height="64" rx="7" class="box-key"/>
+  <text x="1475" y="628" text-anchor="middle" class="box-name">CubeShim</text>
+  <text x="1475" y="648" text-anchor="middle" class="box-sub">准备 guest / snapshot / vsock</text>
+
+  <rect x="1090" y="600" width="170" height="64" rx="7" class="box-mask"/>
+  <rect x="1090" y="600" width="170" height="64" rx="7" class="box"/>
+  <text x="1175" y="628" text-anchor="middle" class="box-name">CubeCoW</text>
+  <text x="1175" y="648" text-anchor="middle" class="box-sub">模板 / snapshot</text>
+
+  <rect x="1360" y="735" width="230" height="64" rx="7" class="box-mask"/>
+  <rect x="1360" y="735" width="230" height="64" rx="7" class="box-key"/>
+  <text x="1475" y="763" text-anchor="middle" class="box-name">KVM MicroVM</text>
+  <text x="1475" y="783" text-anchor="middle" class="box-sub">CubeHypervisor / guest</text>
+
+  <rect x="1360" y="870" width="230" height="64" rx="7" class="box-mask"/>
+  <rect x="1360" y="870" width="230" height="64" rx="7" class="box-key"/>
+  <text x="1475" y="898" text-anchor="middle" class="box-name">CubeVS + CubeEgress</text>
+  <text x="1475" y="918" text-anchor="middle" class="box-sub">eBPF policy · L7 egress</text>
+
+  <rect x="1730" y="870" width="95" height="64" rx="7" class="box-mask"/>
+  <rect x="1730" y="870" width="95" height="64" rx="7" class="box"/>
+  <text x="1777" y="898" text-anchor="middle" class="box-name">外网</text>
+  <text x="1777" y="918" text-anchor="middle" class="box-sub">Internet</text>
+
+  <rect x="42" y="1020" width="1836" height="62" rx="10" class="footer"/>
+  <text x="68" y="1047" class="footer-title">读图结论</text>
+  <text x="68" y="1068" class="footer-copy">OpenSandbox 的稳定边界是协议与开发者入口，运行时是可替换变量；CubeSandbox 的稳定边界是 MicroVM 执行路径，接口、调度、网络和节点运行时共同构成一个垂直栈。</text>
+</svg>

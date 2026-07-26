@@ -1,0 +1,252 @@
+---
+slug: opensandbox-vs-cubesandbox-agent-platform-selection
+title: 从 Agent 平台出发：OpenSandbox 与 CubeSandbox 选型指南
+description: 从功能、接口、运行机制、Kubernetes 与运维条件出发，判断哪种 Sandbox 更适合 Agent 平台。
+authors: [xfgong]
+tags: [Agent 平台, Sandbox, Kubernetes, 架构]
+image: /img/blog/opensandbox-vs-cubesandbox-agent-platform-selection-cover.webp
+---
+
+<!-- 旧稿，2026-07-25 暂存。 -->
+
+昨天，CubeSandbox 发布了 [v0.6.0](https://github.com/TencentCloud/CubeSandbox/releases/tag/v0.6.0)。这是它第一个支持 Kubernetes 部署的版本。做 Agent 平台时，代码执行、浏览器自动化和长任务最终都要落到某种隔离运行时里；今天就从这个角度，看看 CubeSandbox 和 OpenSandbox 该怎么选。
+
+<!-- truncate -->
+
+## 先认识两个项目
+
+### CubeSandbox：从腾讯云内部场景走出来
+
+CubeSandbox 来自腾讯云 IaaS 前沿技术团队。这个团队属于腾讯云 IaaS 产品体系，长期做网络、Agent Infra 和高性能基础设施。项目在腾讯云内部的 Serverless 和 Agent Sandbox 场景中运行过一段时间后，于 2026 年 4 月在 [TencentCloud GitHub 组织](https://github.com/TencentCloud/CubeSandbox)开源；[v0.1.0 发布说明](https://github.com/TencentCloud/CubeSandbox/releases/tag/v0.1.0)将 4 月 20 日标记为首次开源发布。项目采用 Apache 2.0 许可证。
+
+它的出发点很明确：把运行时本身做成面向 Agent 的基础设施，而不只是给应用提供一层调用接口。后面谈到 MicroVM、快照、网络和调度时，都是这条路线的延伸。
+
+### OpenSandbox：由阿里发起，走向独立项目组织
+
+OpenSandbox 最早由阿里团队发起，公开代码在 2025 年 12 月进入 GitHub。早期仓库位于 `alibaba/OpenSandbox`，现在已迁至 [opensandbox-group/OpenSandbox](https://github.com/opensandbox-group/OpenSandbox)；Java、JavaScript 和 .NET 包名中仍保留着 Alibaba 的来源。项目同样采用 Apache 2.0 许可证。
+
+OpenSandbox 的官网显示，它已被收录进 [CNCF Landscape](https://landscape.cncf.io/?item=orchestration-management--scheduling-orchestration--opensandbox)。这里需要区分一下：被 Landscape 收录意味着项目进入 CNCF 的生态目录，并不等同于成为 CNCF Sandbox、Incubating 或 Graduated 项目。
+
+早期的 CubeSandbox 并不支持 Kubernetes 部署。这并不代表它没有资源管理和调度能力：它本身就带有一套控制面和节点调度链路，也因此对组织的运维能力提出了更高要求。v0.6.0 现在增加了 Kubernetes 部署路径，虽然还是 Preview，但终于可以把这两条路线放到同一个 Agent 平台的选型问题里来比较。
+
+下图总结了选型流程。正在设计或开发 Agent 平台时，可以按此流程判断。下文再展开介绍两个 Sandbox 系统的细节。
+
+![Agent 平台 Sandbox 选型决策流](/img/blog/opensandbox-vs-cubesandbox/agent-platform-selection-flow.svg)
+
+两条路线都可以用同一套 Agent workload 做 POC；先验证图中列出的 provider 语义或节点条件，再决定是否进入正式部署。
+
+## 1. 功能：先看 Agent 实际需要什么
+
+| 能力 | OpenSandbox | CubeSandbox | 对 Agent 平台的意义 |
+| --- | --- | --- | --- |
+| 生命周期 | 公开的 Sandbox 生命周期协议，覆盖创建、查询、暂停、恢复、续租、删除 | 围绕 template、sandbox、auto-pause、snapshot 的一体化工作流 | 前者适合将生命周期纳入你自己的编排；后者适合把 runtime 状态本身作为产品能力 |
+| 命令、文件与交互 | Command、Filesystem、Code Interpreter 等环境；execd 提供命令、文件、metrics、SSE 与 PTY WebSocket | E2B 兼容 API、模板与运行中的 MicroVM；适合持续运行的服务型任务 | Coding Agent、浏览器 Agent、远程开发都需要流式日志、文件传输和可恢复会话 |
+| Agent 接入面 | 多语言 SDK、CLI，另有 MCP server，可直接被 Claude Code、Cursor 一类客户端消费 | Node.js、Python、Go SDK，加上 E2B 兼容接口 | 前者降低工具型 Agent 的接入摩擦；后者降低已有 E2B 生态迁移成本 |
+| 浏览器与桌面 | 文档直接覆盖 Chrome/Playwright、VNC、VS Code 等场景 | 可用模板将浏览器与依赖打进 MicroVM，强调长时运行 | 前者更像通用执行面；后者更像可产品化的专用环境池 |
+| 存储与快照 | 抽象了 host、PVC、OSSFS 等 volume；快照及暂停/恢复的具体语义随 provider 而异 | CubeCoW 使用 reflink，v0.6.0 加入可创建、挂载、卸载、销毁的 Volume framework | 有工作区、检查点、分支实验和复用数据集时，必须验证“快照/卷”的真实恢复语义 |
+| 出网与密钥 | egress 组件和 credential vault，强调可控出网与凭据注入 | CubeVS eBPF 网络层、CubeEgress 透明 L7 代理，强调零信任出网控制 | 两者都可成为安全执行层；最终仍要与平台 IAM、审计和策略系统对接 |
+| 入站访问 | sandbox endpoint/ingress 配置 | CubeProxy 按 Host/Path 路由到 sandbox | Agent 若需启动预览站点、Web IDE 或回调服务，入站路径是产品能力的一部分 |
+| Kubernetes | Docker 与 Kubernetes 作为 runtime provider，可把不同后端藏在统一协议后 | v0.6.0 Preview 用 Helm 部署控制面与 node DaemonSet，MicroVM 仍在节点本地运行 | 前者偏运行时可替换，后者偏把 K8s 当作承载和编排底座 |
+| 管理面 | SDK/CLI/MCP 与生命周期服务器为主 | WebUI、CubeOps、cubemastercli、控制面服务 | 管理面越多不等于你的平台越完整；要看是否覆盖了租户、审计、SLO 与变更流程 |
+
+从 [OpenSandbox README](https://github.com/alibaba/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/README.md) 和 [架构文档](https://github.com/alibaba/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/docs/architecture/index.md) 可以看出，它先定义 Sandbox 协议，再由 runtime provider 实现。CubeSandbox 的路径更直接：[KVM MicroVM、CubeCoW、CubeVS、CubeEgress、CubeProxy](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/architecture/overview.md) 都在同一套执行链里。
+
+### 状态会不会成为产品资产？
+
+如果 sandbox 只是短命的工具容器，拿到任务就执行，上传结果后销毁，OpenSandbox 的接口通常更顺手。团队可以先用 Docker 迭代，再把某些工作负载迁到 Kubernetes provider。
+
+如果 Agent 要跑数小时甚至数天，要保留工作区，反复从模板或快照恢复，还要承载有状态服务，CubeSandbox 的 MicroVM、预快照恢复和 CoW 存储更值得测试。不过别拿文档里的启动时延直接当结论，还是要用自己的 workload 压一遍。
+
+## 2. 接口设计：上层怎么接，底层怎么换
+
+### OpenSandbox：先定协议，再接运行时
+
+OpenSandbox 将 public contract 放在 [specs](https://github.com/alibaba/OpenSandbox/tree/e9d0a63919739b1bed05914373acbacb11e37d43/specs)，包括 sandbox lifecycle、diagnostics、execd 与 egress API。SDK 是从这些 OpenAPI 定义生成后再补充易用封装；服务端通过 [runtime factory](https://github.com/alibaba/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/server/opensandbox_server/services/factory.py) 选择 Docker 或 Kubernetes provider。
+
+这样一来，Agent workflow 只需要依赖 create、exec、files、endpoint、pause、resume 等统一语义。SDK 和 CLI 面向应用代码，MCP 面向工具调用型 Agent；本地、单机和集群部署也能沿用同一套上层调用。
+
+代价是 provider 的边角语义并不会自动对齐。快照、pause/resume、卷和 secure runtime 都要按后端逐项验收。平台侧最好再包一层 Tool Runtime Adapter，只暴露已经过 POC 验证的能力。
+
+### CubeSandbox：兼容 E2B，也绑定整套执行栈
+
+CubeSandbox 提供 E2B 兼容 API，并维护 [Node.js](https://github.com/TencentCloud/CubeSandbox/tree/c9906ea01bd0616277fe5c1891a27c4e50619f87/sdk/node)、[Python](https://github.com/TencentCloud/CubeSandbox/tree/c9906ea01bd0616277fe5c1891a27c4e50619f87/sdk/python)、[Go](https://github.com/TencentCloud/CubeSandbox/tree/c9906ea01bd0616277fe5c1891a27c4e50619f87/sdk/go) SDK。若你的 Agent 平台或客户已有 E2B 调用模型，这是一条低摩擦路径：可以先让任务、模板和 sandbox 生命周期继续沿用已有抽象，再迁移到新的底层。
+
+同时也要接受更深的运行时绑定：template 制作、MicroVM 节点、网络、存储和调度模式是一整套东西。它更像受控执行集群，不是把每一种云原生实现都抽象成 provider。
+
+### 接口选型建议
+
+| 你的现状 | 更合适的接口路线 |
+| --- | --- |
+| 自研 Agent 平台，工具调用入口很多，希望未来增加不同执行后端 | OpenSandbox；在平台侧建立内部 Tool Runtime Adapter |
+| 已有 E2B API、客户 SDK 或示例代码，迁移窗口短 | CubeSandbox；先做 E2B 兼容性回归 |
+| 要让开发者在 CLI、IDE Agent、工作流服务中复用同一 sandbox | OpenSandbox 的 SDK + CLI + MCP 组合更直接 |
+| API 只是表层，真正要优化的是模板、快照、密度与状态服务 | 优先深测 CubeSandbox 的垂直执行栈 |
+
+## 3. 架构机制：隔离、故障域和运维成本对比
+
+![Sandbox 创建路径对比](/img/blog/opensandbox-vs-cubesandbox/create-path-comparison.svg)
+
+Sandbox 的创建链路决定了由谁完成调度和恢复。OpenSandbox 的上层调用会落到选定的 provider，Docker、Kubernetes 或 secure runtime 的创建、调度和恢复语义也随 provider 变化。CubeSandbox 则由自己的 CubeMaster、Cubelet 和节点内 MicroVM 链路接手，调度与运行时是一套系统。于是同样是创建 sandbox，故障定位和扩容会落在不同团队、不同组件上。
+
+![OpenSandbox 与 CubeSandbox 的架构重心](/img/blog/opensandbox-vs-cubesandbox/architecture-comparison.svg)
+
+这类架构选择会延伸到节点内部。OpenSandbox 将共性收敛在 protocol、SDK 和 lifecycle server；隔离、快照和卷的实际行为，要随选定的 provider 验证。CubeSandbox 把 MicroVM 控制、存储和流量处理放进同一条执行链，节点需要满足 KVM、XFS/reflink 等条件，团队也要维护相应的节点运行时。
+
+<div className="architecture-mechanism-table-wrap">
+  <table className="architecture-mechanism-table">
+    <thead>
+      <tr>
+        <th>机制</th>
+        <th>OpenSandbox</th>
+        <th>CubeSandbox</th>
+        <th>选型含义</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>基本抽象</td>
+        <td>Sandbox protocol + provider</td>
+        <td>KVM MicroVM runtime</td>
+        <td>选择的是“可替换实现”还是“确定的执行内核”</td>
+      </tr>
+      <tr>
+        <td>执行数据面</td>
+        <td>用户工作负载 + execd，可叠加 code interpreter/egress</td>
+        <td>CubeShim、Hypervisor/KVM、Guest MicroVM</td>
+        <td>CubeSandbox 的隔离边界和宿主机要求更明确</td>
+      </tr>
+      <tr>
+        <td>调度</td>
+        <td>交给选定 Docker/Kubernetes provider 的实现</td>
+        <td>CubeMaster 选择节点，Cubelet 在本机创建/管理 MicroVM</td>
+        <td>CubeSandbox 调度和节点运行时是一体的</td>
+      </tr>
+      <tr>
+        <td>状态/写时复制</td>
+        <td>volume/snapshot 设计允许后端实现</td>
+        <td>CubeCoW 基于 reflink 的本地层</td>
+        <td>需要评估基础设施前置条件与数据持久化边界</td>
+      </tr>
+      <tr>
+        <td>网络</td>
+        <td>endpoint/ingress 及 egress policy 由组件和 provider 协作</td>
+        <td>CubeVS eBPF、CubeEgress L7、CubeProxy 路由</td>
+        <td>两者都不是“自动安全”；要验证默认拒绝、策略传播、审计与故障退化</td>
+      </tr>
+      <tr>
+        <td>安全模型</td>
+        <td>能配置 secure runtime；隔离强度依赖选中的 runtime</td>
+        <td>MicroVM 作为核心隔离单元</td>
+        <td>有严格多租户或不可信代码目标时，先定义威胁模型再比较</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+隔离强度要从业务要求倒推。只隔离组织内部的受信任任务时，调度弹性和接入成本往往更重要。要执行第三方代码、浏览器自动化或不可信插件时，就得把 breakout 防护、内核攻击面、凭据泄漏、横向网络访问和节点回收写进威胁模型。CubeSandbox 可以先测 MicroVM 的隔离边界；OpenSandbox 则要在部署标准里明确所用的 secure runtime。
+
+## 4. 细看 CubeSandbox 0.6 的 Kubernetes 支持
+
+CubeSandbox 0.6 把 Kubernetes 用作控制面和节点组件的交付工具。CubeMaster 仍负责资源管理和 sandbox 调度，Cubelet 在节点内创建 KVM MicroVM；每个 sandbox 并不会成为一个 Kubernetes Pod。从资源模型看，v0.6 还没有走到每个 sandbox 都由 Pod、CRD 或 Operator 管理的路线，因此不能称为严格意义上的“云原生 Sandbox”。
+
+[v0.6.0 changelog](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/changelog/v0.6.0.md) 将 Kubernetes deployment 标为 Preview，支持通过 Helm 部署到 TKE、标准 Kubernetes 与 k3s，也提到滚动和金丝雀发布。
+
+![CubeSandbox v0.6.0 Kubernetes 部署与 MicroVM 执行边界](/img/blog/opensandbox-vs-cubesandbox/cubesandbox-kubernetes-v0.6.svg)
+
+- 控制面由 Helm 部署，包含 CubeMaster、CubeAPI、CubeOps、WebUI、MySQL/Redis、Proxy 等组件。
+- 节点级 DaemonSet 准备 installer、bootstrap、可选 PVM 组件和 cube-node Big Pod；Cubelet、network agent 和可选 egress 在这里运行。
+- CubeMaster 选择已注册的 Cubelet，Cubelet 再通过 CubeShim/Hypervisor 在本地创建 KVM MicroVM。
+- 节点需要 KVM、XFS/reflink，以及 privileged、hostPID、hostPath 等宿主机能力。默认 chart 配置见 [values.yaml](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/deploy/kubernetes/chart/values.yaml)。
+
+[Kubernetes architecture 文档](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/guide/kubernetes/architecture.md) 说明了这些前提：
+
+| K8s 前提 | 结论 |
+| --- | --- |
+| 集群策略禁止 privileged、hostPID 或 hostPath | CubeSandbox 当前 K8s 模式通常不合适；优先验证 OpenSandbox 的 Kubernetes provider |
+| 可以建立隔离的专用计算节点池，拥有节点内核和文件系统治理权 | CubeSandbox 可以进入 POC，K8s 负责交付与节点生命周期，MicroVM 负责 sandbox 隔离 |
+| 希望原生 CRD/Operator 将每个 sandbox 纳入 Pod/Job 工作流 | 不要据 v0.6.0 直接假设已具备；仓库 roadmap 将 CRD/operator 列为后续演进 |
+| 生产变更需要无中断升级保证 | v0.6.0 明确是 Preview，应把升级、回滚、节点 drain、故障恢复作为验收项 |
+
+OpenSandbox 走的是另一条路：上层 lifecycle API 不变，Kubernetes provider 承担实际运行。已有 K8s 平台团队、又希望在平台规范内选择 batch 或 secure runtime 时，这种做法更轻。快照和状态语义仍要按 provider 验证。
+
+## 5. 按团队条件来选
+
+### 多入口的通用 Agent 平台
+
+产品同时有 API、CLI、IDE Agent、工作流服务和内部运营工具；近期还不确定最终会全部跑容器、K8s，还是混合运行时。
+
+先选 OpenSandbox。把 protocol、SDK 和 MCP 封进统一执行适配层，后面再决定哪些任务跑容器、哪些跑 Kubernetes，风险更小。
+
+### 面向不可信代码的高隔离执行集群
+
+任务多为代码、浏览器或长期驻留服务，隔离是产品卖点；团队也能独占配有 KVM 和 XFS/reflink 的节点，并愿意维护节点级运行时。
+
+CubeSandbox 更合适。它的 MicroVM、调度、存储和网络是配套设计的，适合把隔离和资源密度当作第一目标。POC 先测逃逸防护、资源配额、冷/热恢复、节点故障、镜像供应链和多租户审计。
+
+### 权限受限的企业 Kubernetes
+
+平台只能使用普通 namespace 权限，不能部署 privileged DaemonSet、hostPID 或 hostPath。
+
+优先看 OpenSandbox，但仍要让集群管理员确认 Kubernetes runtime/provider 是否满足隔离和网络策略。能跑在 Kubernetes 上，不等于已经通过安全评审。
+
+### 已有 E2B 集成，需要低风险替换底座
+
+调用方已经围绕 E2B 的 sandbox/template API 建立了 SDK、示例和客户集成。
+
+CubeSandbox 的兼容接口可以作为迁移起点。回归要用真实客户路径：创建、文件、流式执行、超时、错误码、快照和网络策略都得覆盖，不能只跑 hello world。
+
+### 浏览器自动化、远程开发和临时环境并存
+
+需要 Playwright/Chrome、VNC/VS Code、命令执行和文件操作，并且不同团队对运行时有不同偏好。
+
+OpenSandbox 的环境能力和 SDK/CLI/MCP 组合更适合做成共享工具。测试时别漏掉浏览器进程回收、会话日志、端口暴露和凭据清理。
+
+### 有状态、长生命周期的 Agent worker
+
+Agent 需要维护大量工作区或服务状态，并频繁从预构建环境恢复。
+
+CubeSandbox 的模板、MicroVM 和 CoW 路径更接近这类需求。共享 volume、快照一致性、跨节点迁移和备份恢复，仍要在自己的数据规模下验证。
+
+## 6. 不要用“成熟/不成熟”一句带过
+
+| 维度 | OpenSandbox | CubeSandbox | 采购/自建时要问的问题 |
+| --- | --- | --- | --- |
+| 开发者契约 | 协议、生成 SDK、CLI、MCP 覆盖面广 | E2B 兼容 + Node/Python/Go SDK | 你能否把错误、取消、配额和审计统一到平台 API？ |
+| 运行时深度 | provider 选择决定能力与一致性 | 从调度到 MicroVM、网络、存储均有专用实现 | 威胁模型和性能目标是否匹配这种深度？ |
+| Kubernetes 交付 | 运行时 provider 路线 | v0.6.0 Helm 交付为 Preview | 权限、节点池、升级、回滚、drain 是否经过演练？ |
+| 平台运维面 | 生命周期服务为主，平台团队需补产品化治理 | WebUI/CubeOps/CLI 更完整，但不等于自动覆盖企业治理 | 租户、RBAC、审计、成本、告警、备份由谁负责？ |
+| 文档与版本可信度 | 需按 provider 验证语义 | 需按具体版本验证兼容与部署路径 | 文档、chart、SDK、服务端是否是同一 release 组合？ |
+
+架构图只能帮助理解，尽调还得看源码和真实 API。CubeSandbox 的架构文档把 CubeAPI 到 CubeMaster 标为 gRPC；当前 [CubeAPI client 源码](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/CubeAPI/src/cubemaster/mod.rs) 实际通过 HTTP 调用 CubeMaster REST API。CubeMaster 到 Cubelet 才是 [gRPC 控制边](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/CubeMaster/pkg/cubelet/actions.go)。所以版本锁定、契约回归和升级演练要算进完善程度。
+
+## 7. POC 要测什么
+
+单看启动时延或安全宣传，得不出选型结论。两边用同一组 Agent workload、网络策略、配额和观察周期来测，结果才有可比性。
+
+| 验收面 | 最小 POC 操作 | 必须记录的证据 |
+| --- | --- | --- |
+| 接口 | 创建 sandbox、流式执行、上传/下载文件、取消任务、回收 | API 兼容率、错误码、SDK 复杂度、Agent 工具调用成功率 |
+| 状态 | 写入工作区、创建快照或暂停、恢复后校验一致性 | 恢复时间、数据正确性、快照/volume 语义 |
+| 安全 | 注入短期凭据、允许一条出网规则、拒绝其余请求 | 审计记录、拒绝是否默认生效、凭据是否在回收后消失 |
+| 可靠性 | 任务运行时杀进程、重启节点、drain/滚动升级 | 失败域、重试行为、恢复窗口、遗留资源 |
+| 性能与成本 | 固定模板、不同并发、冷/热启动、长连接任务 | p50/p95/p99、CPU/内存/磁盘、节点密度、单位任务成本 |
+| K8s 运维 | 安装、升级、回滚、节点扩缩、策略变更 | 所需权限、人工步骤、停机窗口、告警与可观测性 |
+
+CubeSandbox 要单独验收“KVM/XFS/reflink 专用节点池 + Helm Preview 升级”。OpenSandbox 则要逐个确认计划上线的 provider 是否保持关键 lifecycle、volume 和 snapshot 语义。
+
+## 结论
+
+如果平台现在最需要的是一个可替换的执行 API，先从 OpenSandbox 开始。它的协议、SDK、CLI 和 MCP 能把不同入口拉到一套生命周期上，团队不必一开始就押注某个隔离内核。
+
+如果隔离本身就是产品能力，而且团队能长期维护 KVM/XFS 节点池，CubeSandbox 应进入深测。它把调度、MicroVM、网络和存储集成在同一套执行栈里。
+
+两类需求同时存在时，可以先在平台侧定义最小的 Tool Runtime Contract。OpenSandbox 承接通用工作负载；只有经过 POC 证明确实需要更强隔离、状态恢复或密度优化的任务，才放进 CubeSandbox 计算池。当前源码没有看到现成且无语义损失的 OpenSandbox-to-CubeSandbox 适配器，lifecycle、网络、volume 和故障行为没测清前，不要承诺“无缝双栈”。
+
+最后留下来的应该是一份运行方案：哪类 Agent 任务跑在哪里，谁负责运行时语义，Kubernetes 需要什么权限，节点出故障时平台承诺什么 SLO。
+
+## 参考源码
+
+- [OpenSandbox README](https://github.com/alibaba/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/README.md) 与 [architecture](https://github.com/alibaba/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/docs/architecture/index.md)
+- [OpenSandbox sandbox lifecycle spec](https://github.com/alibaba/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/specs/sandbox-lifecycle.yml) 与 [execd router](https://github.com/alibaba/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/components/execd/pkg/web/router.go)
+- [CubeSandbox README](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/README.md) 与 [architecture overview](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/architecture/overview.md)
+- [CubeSandbox v0.6.0 changelog](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/changelog/v0.6.0.md)、[Kubernetes architecture](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/guide/kubernetes/architecture.md)、[Helm values](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/deploy/kubernetes/chart/values.yaml)

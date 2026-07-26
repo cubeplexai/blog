@@ -381,10 +381,14 @@ body {
 
 .blog-post__visual {
   display: block;
-  aspect-ratio: 2 / 1;
+  aspect-ratio: 5 / 2;
   margin-bottom: 24px;
   border-radius: 8px;
   overflow: hidden;
+}
+
+.blog-post__visual[data-cover-ratio='2:1'] {
+  aspect-ratio: 2 / 1;
 }
 
 .blog-post__image {
@@ -432,8 +436,11 @@ a.blog-post__visual:hover .blog-post__image {
 }
 
 .blog-post h1 {
-  max-width: 16ch;
-  font-size: clamp(40px, 5.2vw, 64px);
+  max-width: none;
+  font-size: clamp(36px, 3.6vw, 52px);
+  letter-spacing: -0.032em;
+  line-height: 1.08;
+  text-wrap: balance;
 }
 
 .blog-post .avatar {
@@ -469,8 +476,13 @@ a.blog-post__visual:hover .blog-post__image {
 }
 
 .blog-post .markdown h2 {
-  margin-top: 48px;
+  margin: 56px 0 20px;
   font-size: 28px;
+  scroll-margin-top: calc(var(--ifm-navbar-height) + 28px);
+}
+
+.blog-post .markdown h3 {
+  scroll-margin-top: calc(var(--ifm-navbar-height) + 28px);
 }
 
 .blog-post .markdown img {
@@ -478,6 +490,46 @@ a.blog-post__visual:hover .blog-post__image {
   margin: 36px 0;
   border: 1px solid var(--ink-5);
   border-radius: 8px;
+}
+
+.architecture-mechanism-table-wrap {
+  max-width: 100%;
+  margin: 28px 0 36px;
+  overflow-x: auto;
+}
+
+.blog-post .markdown .architecture-mechanism-table {
+  display: table;
+  width: 100%;
+  min-width: 680px;
+  margin: 0;
+  table-layout: fixed;
+}
+
+.architecture-mechanism-table th,
+.architecture-mechanism-table td {
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+.architecture-mechanism-table th:nth-child(1),
+.architecture-mechanism-table td:nth-child(1) {
+  width: 14%;
+}
+
+.architecture-mechanism-table th:nth-child(2),
+.architecture-mechanism-table td:nth-child(2) {
+  width: 27%;
+}
+
+.architecture-mechanism-table th:nth-child(3),
+.architecture-mechanism-table td:nth-child(3) {
+  width: 29%;
+}
+
+.architecture-mechanism-table th:nth-child(4),
+.architecture-mechanism-table td:nth-child(4) {
+  width: 30%;
 }
 
 .blog-post .markdown ul,
@@ -751,6 +803,18 @@ a.blog-post__visual:hover .blog-post__image {
 
   .blog-post .markdown > p:first-child {
     font-size: 18px;
+  }
+
+  .blog-post h1 {
+    font-size: 30px;
+    letter-spacing: -0.025em;
+    line-height: 1.12;
+  }
+
+  .blog-post .markdown h2 {
+    margin: 44px 0 16px;
+    font-size: 26px;
+    line-height: 1.16;
   }
 
   .blog-product-callout {
