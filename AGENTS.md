@@ -1,5 +1,13 @@
 # CubePlex Blog Agent Guide
 
+## Chinese editorial writing
+
+Before drafting, restructuring, translating, or reviewing Chinese blog content,
+read and follow `.agents/skills/write-cubeplex-blog-zh/SKILL.md`. Apply it to
+Chinese titles, outlines, and MDX posts. Prefer direct, specific statements over
+metaphors, parallel slogans, hypothetical setups, rhetorical questions, and
+chat-style navigation.
+
 ## Blog cover images
 
 Create article cover images as final 2:1 WebP assets at `1280x640`. Keep the

@@ -1,0 +1,171 @@
+---
+slug: opensandbox-vs-cubesandbox-agent-platform-selection
+title: "OpenSandbox vs. CubeSandbox: Choosing Between Kubernetes Resources and a MicroVM Runtime Stack"
+description: A platform selection guide comparing OpenSandbox's Kubernetes resource model with CubeSandbox's MicroVM runtime stack, including performance, pause and resume, and operational requirements.
+authors: [xfgong]
+tags: [Agent Platform, Sandbox, Kubernetes, MicroVM]
+image: /img/blog/opensandbox-vs-cubesandbox-agent-platform-selection-cover-en.webp
+---
+
+OpenSandbox and CubeSandbox both provide isolated code execution environments for agents, but they optimize for different infrastructure models. OpenSandbox manages sandboxes through Kubernetes resources and scheduling. CubeSandbox ships an integrated runtime stack from its control plane down to KVM MicroVMs, with an emphasis on high-concurrency creation, execution-state snapshots, and fast recovery.
+
+<!-- truncate -->
+
+## Project background
+
+### OpenSandbox
+
+[OpenSandbox](https://github.com/opensandbox-group/OpenSandbox) was originally open-sourced by Alibaba. The repository first lived under `alibaba/OpenSandbox` and has since moved to the independent `opensandbox-group` organization. The Java, JavaScript, .NET, and Go package names still carry Alibaba identifiers. The Apache-2.0 project provides multi-language SDKs, a CLI, and an MCP server, with Docker and Kubernetes deployment options.
+
+This article focuses on the Kubernetes implementation. OpenSandbox defines custom resources such as `BatchSandbox`, `Pool`, and `SandboxSnapshot`. Its controller creates, prewarms, pauses, and reclaims sandboxes. Applications call the lifecycle API, while Kubernetes schedules and manages the underlying workloads.
+
+### CubeSandbox
+
+[CubeSandbox](https://github.com/TencentCloud/CubeSandbox) is an Apache-2.0 sandbox platform open-sourced by Tencent Cloud. The project includes CubeAPI, CubeMaster, Cubelet, CubeShim, CubeHypervisor, networking, and storage components. Each sandbox runs inside a KVM MicroVM.
+
+Version 0.6 introduced Kubernetes deployment in Preview. Kubernetes delivers the control-plane and node components. CubeMaster still schedules sandboxes, and Cubelet creates MicroVMs on the selected node. An individual sandbox is not a Kubernetes Pod and has no corresponding sandbox custom resource.
+
+## Kubernetes resource model
+
+### BatchSandbox, Pods, and PVCs in OpenSandbox
+
+The OpenSandbox Kubernetes controller works directly with cluster resources:
+
+- `BatchSandbox` describes sandbox replicas, templates, lifecycle, and task configuration.
+- `Pool` maintains prewarmed Pods to reduce provisioning latency for temporary workloads.
+- Sandbox CPU, memory, and GPU requirements become Kubernetes resource requests, and the scheduler selects the node.
+- Pod templates can set a `RuntimeClass`. Teams that need a stronger isolation boundary can use Kata Containers or another compatible CRI runtime.
+- Workspaces can mount PVCs, leaving their lifecycle to existing StorageClass, CSI, snapshot, and backup systems.
+
+This model reuses established operational tooling. Namespace policies, RBAC, ResourceQuota, admission control, node pools, monitoring, logs, and alerts still apply. Platform teams can inspect sandbox workloads through `kubectl`, Kubernetes events, and scheduler state instead of maintaining a separate resource view.
+
+The Kubernetes resource model does not define the isolation strength. A standard container, Kata Containers, and other `RuntimeClass` implementations expose different security boundaries. Production deployments still need an explicit threat model.
+
+### Kubernetes deployment in CubeSandbox v0.6
+
+CubeSandbox v0.6 uses Helm to install CubeAPI, CubeMaster, CubeOps, WebUI, databases, proxies, and other control-plane components. DaemonSets and the `cube-node` Pod install and run Cubelet, the network agent, and related node services. After CubeMaster selects a Cubelet, CubeShim and CubeHypervisor create a KVM MicroVM on that node.
+
+![CubeSandbox v0.6 Kubernetes deployment and MicroVM execution boundary](/img/blog/opensandbox-vs-cubesandbox/cubesandbox-kubernetes-v0.6-en.svg)
+
+Kubernetes can manage component delivery, rolling upgrades, and node orchestration. Sandbox resource accounting, scheduling, and runtime state remain inside CubeSandbox. Existing Kubernetes monitoring covers Pods and nodes, while MicroVM counts, templates, snapshots, and recovery failures need CubeSandbox metrics and management tools.
+
+## Sandbox creation path
+
+When OpenSandbox creates a Kubernetes sandbox, the controller creates or allocates a Pod. Kubernetes handles node selection, image pulls, volume mounts, and container startup. A prewarmed `Pool` can remove some of those steps. Node failures, eviction, and insufficient capacity appear through standard Kubernetes resource status.
+
+CubeSandbox asks CubeMaster to select a node, then Cubelet restores a MicroVM from a template. Provisioning performance depends on several node-level optimizations: template snapshots, demand-paged memory images through `mmap`, XFS reflink, preallocated network devices, and storage resource pools. The reported performance comes from the complete execution path rather than KVM or the MicroVM boundary alone.
+
+| Area | OpenSandbox on Kubernetes | CubeSandbox v0.6 |
+| --- | --- | --- |
+| Scheduler | Kubernetes scheduler | CubeMaster |
+| Execution unit | Container in a Pod, optionally using `RuntimeClass` | Node-local KVM MicroVM |
+| Prewarming | `Pool` of prewarmed Pods | Template snapshots and node resource pools |
+| Resource view | Kubernetes API and custom resources | CubeMaster, Cubelet, and CubeOps |
+| Node failure handling | Pod, PVC, and application retry policies | CubeSandbox state and snapshot mechanisms |
+
+## CubeSandbox performance data
+
+### Test conditions and reported results
+
+The [CubeSandbox performance report](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/blog/posts/2026-06-01-cubesandbox-perf-benchmark.md) uses a Tencent Cloud BMI5 bare-metal server with 96 logical CPUs, 375 GiB of memory, and NVMe storage formatted with XFS. Each sandbox has 2 vCPUs and 2 GiB of memory, and the creation benchmark includes warm-up runs.
+
+| Test | Project-reported result |
+| --- | ---: |
+| Single-concurrency average creation latency | 47.8 ms |
+| Single-concurrency creation p95 | 57.4 ms |
+| Creation throughput at concurrency 20 | 180.9 sandboxes/s |
+| Request p95 at concurrency 50 | 508.4 ms |
+| Whole-system average memory increase across 1,000 idle sandboxes | About 25.7 MB each |
+| Average Pause time for a 2 GiB sandbox | 558.4 ms |
+| Average single-sandbox Resume time | 41.8 ms |
+
+The results show substantial system-level optimization for high-concurrency provisioning and recovery. The report also publishes scripts and machine specifications. It does not establish that CubeSandbox is faster than other lightweight virtualization stacks. Template contents, warm-up policy, image caches, storage, networking, and the API completion condition all affect the numbers.
+
+The CubeSandbox README claims less than 5 MB of overhead, while the detailed report derives about 25.7 MB per sandbox from whole-system available memory. The two figures use different accounting methods. Capacity planning should use measurements the deploying team can reproduce rather than putting the README number into a cross-project comparison table.
+
+### Scope of comparison with Kata Containers and Firecracker
+
+[Kata Containers](https://github.com/kata-containers/kata-containers/blob/8dd6c888193b80a90a82d1bde9bd0ac905bf6ec7/docs/design/virtualization.md) is an OCI/CRI runtime that can use QEMU, Cloud Hypervisor, Firecracker, Dragonball, and other VMMs. [Firecracker](https://firecracker-microvm.github.io/) is a MicroVM-oriented VMM. CubeSandbox includes APIs, scheduling, templates, node agents, a VMM, networking, storage, and snapshot management. These projects operate at different layers.
+
+A useful comparison separates those layers:
+
+- Compare CubeHypervisor with Firecracker, Cloud Hypervisor, or Dragonball for VMM startup, memory use, and device models.
+- Compare CubeShim with Kata Containers for containerd/CRI integration, images, networking, and storage paths.
+- Compare CubeSandbox with OpenSandbox on Kubernetes plus a `RuntimeClass` for platform-level provisioning, recovery, failure handling, and operational cost.
+
+No public same-host, same-template, same-concurrency benchmark currently covers all three layers. Firecracker's public figures and the CubeSandbox report use different hardware and test methods, so they do not provide a performance ranking.
+
+## Pause, resume, and clone
+
+### OpenSandbox rootfs snapshots
+
+The [OpenSandbox Kubernetes pause flow](https://github.com/opensandbox-group/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/docs/guides/pause-resume.md) starts a commit Job on the source Pod's node. The Job commits the writable container rootfs to an OCI image, pushes it to a registry, and then releases the Pod or pool allocation. On resume, the controller rewrites the `BatchSandbox` template with the snapshot image and creates a new runtime.
+
+This process preserves filesystem changes and the original template configuration. It does not preserve processes, memory, or CPU registers. Processes start again from the container entrypoint after recovery. This works well for tasks that can restart their process and keep important state in a workspace or PVC. Registry-backed snapshots also fit existing image replication, retention, and garbage-collection workflows.
+
+### Full VM state in CubeSandbox
+
+[CubeSandbox snapshots and clones](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/guide/snapshot-rollback-clone.md) preserve CPU registers, guest memory, device state, and the filesystem. Processes continue from their pre-pause state after recovery. The same state can support rollback and clone operations. This is useful for interpreters with in-memory state, browser sessions, long-running agent processes, and execution branches derived from a shared checkpoint.
+
+CubeSandbox v0.6 currently uses full-memory-copy for Pause. In the project benchmark, a 2 GiB sandbox took 558.4 ms on average to pause and 41.8 ms to resume. Fast recovery is a clear feature of this implementation, while pause write volume still changes with memory state. OpenSandbox has no corresponding result on the same machine, so the reports do not show which platform pauses faster.
+
+### Recovery boundaries and node constraints
+
+Full VM state adds operational constraints:
+
+- Outbound sockets opened by the sandbox disconnect during Pause, and the application must reconnect after recovery.
+- In v0.6, paused snapshots remain on the node. The documentation lists cross-node recovery as future work.
+- When a paused sandbox releases CPU and memory quota, insufficient capacity on the original node causes Resume to return HTTP 409. Higher density requires explicit recovery headroom.
+- Snapshot compatibility depends on CPU, kernel, hypervisor, and virtual device versions. Upgrades and rollbacks require dedicated tests.
+
+OpenSandbox restores a container filesystem. CubeSandbox restores the state of a running VM. The workload's need for process continuity should be established before comparing recovery latency.
+
+## APIs and integration cost
+
+OpenSandbox uses its own lifecycle, command, and file protocols. In the project's [E2B compatibility discussion](https://github.com/opensandbox-group/OpenSandbox/issues/800#issuecomment-4394440123), a maintainer explains that the core API does not plan to target E2B compatibility because that would constrain the project's API design.
+
+CubeSandbox provides an E2B-compatible API. Existing E2B SDKs, templates, and customer code can reduce migration effort, but teams still need regression coverage for error codes, timeouts, streaming execution, file operations, templates, and snapshot semantics.
+
+A “unified API” does not distinguish these projects. Both have APIs and SDKs, and OpenSandbox does not unify E2B with other sandbox protocols. The selection criterion is the migration cost for current callers and whether the chosen API covers the required lifecycle and state semantics.
+
+## Deployment requirements
+
+| Requirement | OpenSandbox on Kubernetes | CubeSandbox v0.6 |
+| --- | --- | --- |
+| Cluster resources | Custom resources, controller, Pods, Jobs, PVCs, image registry | Helm control plane, node DaemonSets, `cube-node` Pod |
+| Node requirements | Depend on the container runtime and `RuntimeClass` | KVM, XFS/reflink, node-level installation and configuration |
+| Privileged components | Controller needs cluster-resource permissions; rootfs snapshot Job mounts the containerd socket | Requires privileged mode, `hostPID`, `hostPath`, and other host permissions |
+| Operations and observability | Reuses Kubernetes workload tooling | Kubernetes covers component delivery; MicroVM state also needs CubeOps and Cube metrics |
+| Storage boundary | PVC/CSI and an OCI registry | Node-local snapshots, CubeCoW, and the Volume framework |
+
+OpenSandbox is usually easier to introduce in enterprise Kubernetes environments with restricted permissions and no dedicated KVM node pool. CubeSandbox's integrated execution stack becomes useful when the team can manage the host, operate dedicated nodes, and needs full-state recovery.
+
+## POC acceptance criteria
+
+Both platforms should run the same templates, workloads, and concurrency model. At minimum, record the following:
+
+| Test | Evidence to collect |
+| --- | --- |
+| Creation to first completed command | p50, p95, p99, and failure rate for cold and warm caches |
+| Concurrency | Throughput, queueing time, and capacity limit at a fixed node count |
+| Memory and storage | Whole-system increase for idle, active, and fully written working sets |
+| Pause and resume | Latency, write volume, and time to first command at different dirty-page sizes |
+| State fidelity | Process, in-memory values, files, listening ports, and external connection behavior |
+| Node failure | Rebuild or recovery behavior after node loss, drain, and upgrade |
+| Operational integration | RBAC, quota, logs, metrics, alerts, snapshot cleanup, and backup procedures |
+
+## Where each platform fits
+
+OpenSandbox fits teams with an established Kubernetes platform. Sandboxes can be managed as native resources, while scheduling, quotas, PVCs, node pools, monitoring, and logging remain in the existing operational system. This model is direct when a task can restart its process or stores runtime state in files and external services.
+
+CubeSandbox fits high-concurrency code execution, reinforcement learning, long-running agents, browser sessions, and workloads that need rollback or clone from a live execution state. The team also takes responsibility for KVM, XFS, node services, snapshot capacity, and recovery admission. Existing E2B integrations provide another practical reason to choose it.
+
+The resource model and state semantics can be evaluated from the current implementations. CubeSandbox's clear difference from OpenSandbox is fast recovery and cloning of full VM state. A performance advantage over Kata Containers or Firecracker still requires a reproducible, like-for-like benchmark.
+
+## Versions and source references
+
+- [OpenSandbox README](https://github.com/opensandbox-group/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/README.md), [architecture](https://github.com/opensandbox-group/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/docs/architecture/index.md), and [Kubernetes controller](https://github.com/opensandbox-group/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/docs/kubernetes/index.md)
+- [OpenSandbox Kubernetes PVC example](https://github.com/opensandbox-group/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/docs/examples/kubernetes-pvc-volume-mount.md) and [pause/resume guide](https://github.com/opensandbox-group/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/docs/guides/pause-resume.md)
+- [CubeSandbox architecture](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/architecture/overview.md), [v0.6 changelog](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/changelog/v0.6.0.md), and [Kubernetes architecture](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/guide/kubernetes/architecture.md)
+- [CubeSandbox performance report](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/blog/posts/2026-06-01-cubesandbox-perf-benchmark.md), [lifecycle guide](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/guide/lifecycle.md), and [snapshot implementation](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/blog/posts/2026-06-25-cubesandbox-snapshot-clone-rollback-deep-dive.md)
+- [Kata Containers virtualization](https://github.com/kata-containers/kata-containers/blob/8dd6c888193b80a90a82d1bde9bd0ac905bf6ec7/docs/design/virtualization.md) and the [Firecracker website](https://firecracker-microvm.github.io/)

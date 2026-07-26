@@ -1,0 +1,171 @@
+---
+slug: opensandbox-vs-cubesandbox-agent-platform-selection
+title: OpenSandbox 与 CubeSandbox 选型：Kubernetes 资源模型与 MicroVM 执行栈
+description: 比较 OpenSandbox 的 Kubernetes 资源模型与 CubeSandbox 的 MicroVM 执行栈，并分析创建性能、暂停恢复和部署条件。
+authors: [xfgong]
+tags: [Agent 平台, Sandbox, Kubernetes, MicroVM]
+image: /img/blog/opensandbox-vs-cubesandbox-agent-platform-selection-cover.webp
+---
+
+OpenSandbox 和 CubeSandbox 都为 Agent 提供隔离的代码执行环境，但两个项目的工程重点不同。OpenSandbox 把 Sandbox 纳入 Kubernetes 资源和调度体系；CubeSandbox 自带从控制面到 KVM MicroVM 的执行栈，重点解决高并发创建、运行状态保存和快速恢复。
+
+<!-- truncate -->
+
+## 项目背景
+
+### OpenSandbox
+
+[OpenSandbox](https://github.com/opensandbox-group/OpenSandbox) 最初由阿里开源，早期仓库位于 `alibaba/OpenSandbox`，目前代码已迁移到独立的 `opensandbox-group` 组织。Java、JavaScript、.NET 和 Go 的包名仍保留 Alibaba 标识。项目采用 Apache 2.0 许可证，提供多语言 SDK、CLI 和 MCP Server，运行环境可以部署在 Docker 或 Kubernetes 上。
+
+本文关注它的 Kubernetes 实现。OpenSandbox 在集群内提供 `BatchSandbox`、`Pool` 和 `SandboxSnapshot` 等自定义资源，由 controller 负责创建、预热、暂停和回收 Sandbox。应用调用生命周期 API 后，实际工作负载由 Kubernetes 调度和管理。
+
+### CubeSandbox
+
+[CubeSandbox](https://github.com/TencentCloud/CubeSandbox) 是腾讯云开源的 Sandbox 平台，同样采用 Apache 2.0 许可证。项目包含 CubeAPI、CubeMaster、Cubelet、CubeShim、CubeHypervisor、网络和存储组件，Sandbox 运行在 KVM MicroVM 中。
+
+v0.6 首次提供 Preview 状态的 Kubernetes 部署。Kubernetes 负责交付控制面和节点组件，CubeMaster 继续负责 Sandbox 调度，Cubelet 在选定节点上创建 MicroVM。单个 Sandbox 不是一个 Kubernetes Pod，也没有对应的 Sandbox CR。
+
+## Kubernetes 资源模型
+
+### OpenSandbox 的 BatchSandbox、Pod 和 PVC
+
+OpenSandbox 的 Kubernetes controller 直接管理集群资源：
+
+- `BatchSandbox` 描述 Sandbox 数量、模板、生命周期和任务配置。
+- `Pool` 维护预热 Pod，降低临时任务的创建等待时间。
+- Sandbox 的 CPU、内存和 GPU 需求进入 Kubernetes 资源请求，调度结果由 scheduler 决定。
+- Pod 模板可以设置 `RuntimeClass`。需要更强隔离时，可以接入 Kata Containers 等兼容 CRI 的运行时。
+- 工作区可以挂载 PVC，数据生命周期继续使用 StorageClass、CSI、快照和备份体系管理。
+
+这条路线的价值在运维侧。已有的 Namespace、RBAC、ResourceQuota、准入策略、节点池、监控、日志和告警可以继续使用。平台团队能在 `kubectl`、事件和调度器状态中看到 Sandbox workload，不需要再维护一套独立的资源视图。
+
+Kubernetes 资源模型本身不代表隔离强度。普通容器、Kata Containers 或其他 `RuntimeClass` 的安全边界不同，生产配置仍要根据威胁模型确定。
+
+### CubeSandbox v0.6 的 Kubernetes 部署
+
+CubeSandbox v0.6 用 Helm 安装 CubeAPI、CubeMaster、CubeOps、WebUI、数据库和代理等控制面组件。节点上的 DaemonSet 和 `cube-node` Pod 负责安装、启动 Cubelet、network agent 及相关服务。CubeMaster 选定 Cubelet 后，节点内的 CubeShim 和 CubeHypervisor 创建 KVM MicroVM。
+
+![CubeSandbox v0.6 Kubernetes 部署与 MicroVM 执行边界](/img/blog/opensandbox-vs-cubesandbox/cubesandbox-kubernetes-v0.6.svg)
+
+这套部署能使用 Kubernetes 完成组件发布、滚动升级和节点编排，但 Sandbox 的资源账本、调度和运行状态仍由 CubeSandbox 管理。现有 Kubernetes 监控可以覆盖 Pod 和节点，MicroVM 数量、模板、快照、恢复失败等指标还要接入 CubeSandbox 自己的管理面。
+
+## Sandbox 创建链路
+
+OpenSandbox 创建 Kubernetes Sandbox 时，controller 生成或分配 Pod，Kubernetes 负责节点选择、镜像拉取、卷挂载和容器启动。预热 `Pool` 可以省去部分创建步骤。节点故障、驱逐和容量不足会按 Kubernetes 的资源状态暴露出来。
+
+CubeSandbox 先由 CubeMaster 选择节点，再由 Cubelet 从模板恢复 MicroVM。创建性能依赖多项节点内优化，包括模板快照、内存镜像的 `mmap` 按需加载、XFS reflink、网络设备预建和存储资源池。它的性能来自整条执行链，不能只归因于 MicroVM 或 KVM。
+
+| 项目 | OpenSandbox Kubernetes | CubeSandbox v0.6 |
+| --- | --- | --- |
+| 调度器 | Kubernetes scheduler | CubeMaster |
+| 执行单元 | Pod 中的容器或 `RuntimeClass` | 节点本地 KVM MicroVM |
+| 预热方式 | `Pool` 维护预热 Pod | 模板快照和节点资源池 |
+| 资源视图 | Kubernetes API 和 CRD | CubeMaster、Cubelet 和 CubeOps |
+| 节点故障处理 | 依赖 Pod、PVC 和上层重试策略 | 依赖 CubeSandbox 的状态与快照机制 |
+
+## CubeSandbox 的性能数据
+
+### 官方测试条件和结果
+
+[CubeSandbox 性能报告](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/zh/blog/posts/2026-06-01-cubesandbox-perf-benchmark.md)使用腾讯云 BMI5 裸金属服务器，机器有 96 个逻辑 CPU、375 GiB 内存和 NVMe XFS。Sandbox 规格为 2 vCPU、2 GiB，创建测试包含预热。
+
+| 测试项 | 官方结果 |
+| --- | ---: |
+| 单并发创建平均延迟 | 47.8 ms |
+| 单并发创建 p95 | 57.4 ms |
+| 20 并发创建吞吐 | 180.9 个/s |
+| 50 并发请求 p95 | 508.4 ms |
+| 1000 个空载 Sandbox 的整机均摊内存增量 | 约 25.7 MB/个 |
+| 2 GiB Sandbox 单次 Pause 平均耗时 | 558.4 ms |
+| 单次 Resume 平均耗时 | 41.8 ms |
+
+这些数据说明 CubeSandbox 已经针对高并发创建和恢复做了系统级优化，也给出了测试脚本和机器配置。它们还不能直接回答 CubeSandbox 是否快于其他轻量虚拟化方案。模板内容、热身方式、镜像缓存、存储、网络和 API 完成条件都会改变结果。
+
+README 中的“低于 5 MB”与性能报告按整机可用内存计算出的约 25.7 MB 使用了不同口径。容量规划应采用团队能复现的整机数据，不宜把前者直接写进横向对比表。
+
+### Kata Containers 与 Firecracker 的比较范围
+
+[Kata Containers](https://github.com/kata-containers/kata-containers/blob/8dd6c888193b80a90a82d1bde9bd0ac905bf6ec7/docs/design/virtualization.md) 是 OCI/CRI 运行时，可以使用 QEMU、Cloud Hypervisor、Firecracker、Dragonball 等 VMM。[Firecracker](https://firecracker-microvm.github.io/) 是面向 MicroVM 的 VMM。CubeSandbox 则包含 API、调度、模板、节点代理、VMM、网络、存储和快照管理。三者不在同一层。
+
+更合适的拆分方式如下：
+
+- CubeHypervisor 与 Firecracker、Cloud Hypervisor、Dragonball 比较 VMM 启动、内存和设备模型。
+- CubeShim 与 Kata Containers 比较 containerd/CRI 接入、镜像、网络和存储路径。
+- CubeSandbox 与 OpenSandbox + Kubernetes + `RuntimeClass` 比较完整平台的创建、恢复、故障处理和运维成本。
+
+目前没有公开的同机、同模板、同并发测试覆盖这三层。Firecracker 官网和 CubeSandbox 报告中的启动与密度数字来自不同硬件和测试方法，不能据此排出性能高低。
+
+## 暂停、恢复和克隆
+
+### OpenSandbox 的 rootfs 快照
+
+[OpenSandbox 的 Kubernetes 暂停流程](https://github.com/opensandbox-group/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/docs/guides/pause-resume.md)会在源 Pod 所在节点启动 commit Job，把容器可写 rootfs 提交为 OCI 镜像并推送到镜像仓库，然后释放 Pod 或池内分配。恢复时，controller 用快照镜像改写 `BatchSandbox` 模板并重新创建运行环境。
+
+这个流程保留文件系统改动和原有模板配置，不保存进程、内存和 CPU 寄存器。恢复后的进程从容器入口重新启动。它适合能够重启进程、主要状态位于工作区或 PVC 的任务。快照进入 OCI Registry 后，也更容易纳入现有镜像复制、保留和清理流程。
+
+### CubeSandbox 的完整 VM 状态
+
+[CubeSandbox 的快照和克隆](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/zh/guide/snapshot-rollback-clone.md)保存 CPU 寄存器、Guest 内存、设备状态和文件系统。恢复后，暂停前的进程可以继续执行。相同状态还可以用于回滚和克隆，适合保留解释器内存、浏览器会话、长时间运行的 Agent 进程，或从一个检查点并行派生多条执行分支。
+
+CubeSandbox v0.6 的 Pause 当前使用 full-memory-copy。官方测试中，2 GiB Sandbox 的单次 Pause 平均为 558.4 ms，Resume 平均为 41.8 ms。快恢复是明确优势，暂停写入量仍会随内存状态变化。OpenSandbox 没有相同机器上的对应数据，因此不能直接判断哪一方暂停更快。
+
+### 恢复范围和节点限制
+
+完整 VM 状态也带来额外限制：
+
+- Sandbox 主动建立的外部 socket 会在暂停时断开，应用需要在恢复后重连。
+- v0.6 的暂停快照仍保存在节点侧，文档把跨节点恢复列为后续版本能力。
+- 如果暂停时释放了 CPU 和内存配额，原节点容量不足会使恢复返回 HTTP 409；提高密度和保证恢复成功之间需要预留资源。
+- 快照兼容性受 CPU、内核、Hypervisor 和虚拟设备版本影响，升级和回滚需要单独测试。
+
+OpenSandbox 的恢复单元是容器文件系统，CubeSandbox 的恢复单元是运行中的 VM 状态。选型时应先确定 Agent 是否需要进程连续性，再比较恢复时延。
+
+## API 与接入成本
+
+OpenSandbox 使用自己的生命周期、命令和文件协议。项目在 [E2B 兼容讨论](https://github.com/opensandbox-group/OpenSandbox/issues/800#issuecomment-4394440123)中说明，核心 API 不计划以兼容 E2B 为目标，以免限制自身能力设计。
+
+CubeSandbox 提供 E2B 兼容 API。已有 E2B SDK、模板和客户代码时，这会减少迁移工作，但仍需回归错误码、超时、流式执行、文件操作、模板和快照语义。
+
+“统一接口”不是这两个项目的有效区分项。两边都有 API 和 SDK，OpenSandbox 也没有统一 E2B 与其他 Sandbox 协议。这里需要计算的是现有调用方的迁移成本，以及接口是否覆盖平台所需的生命周期和状态语义。
+
+## 部署条件
+
+| 条件 | OpenSandbox Kubernetes | CubeSandbox v0.6 |
+| --- | --- | --- |
+| 集群资源 | CRD、controller、Pod、Job、PVC、镜像仓库 | Helm 控制面、节点 DaemonSet、`cube-node` Pod |
+| 节点要求 | 取决于选用的容器运行时和 `RuntimeClass` | KVM、XFS/reflink、节点级安装和配置 |
+| 高权限组件 | controller 需要集群资源权限；rootfs 快照 Job 挂载 containerd socket | 需要 privileged、hostPID、hostPath 等节点权限 |
+| 观测和运维 | 可直接复用 Kubernetes workload 体系 | Kubernetes 覆盖组件交付，MicroVM 状态还需 CubeOps 和 Cube 指标 |
+| 存储边界 | PVC/CSI 与 OCI Registry | 节点快照、CubeCoW 和 Volume framework |
+
+权限受限、没有专用 KVM 节点池的企业 Kubernetes，通常更容易部署 OpenSandbox。能够管理宿主机、接受专用节点池并且需要完整状态恢复时，CubeSandbox 才能发挥执行栈的价值。
+
+## POC 验收项
+
+两边应使用相同模板、任务和并发模型。至少记录以下数据：
+
+| 验收项 | 需要记录的结果 |
+| --- | --- |
+| 创建到首条命令完成 | p50、p95、p99、失败率，区分冷缓存与热缓存 |
+| 并发能力 | 固定节点规模下的吞吐、排队时间和容量上限 |
+| 内存与存储 | 空载、活跃、写满工作集三种状态的整机增量 |
+| 暂停与恢复 | 不同脏页量下的耗时、写入量、恢复后首条命令延迟 |
+| 状态保真 | 进程、内存变量、文件、监听端口和外部连接的恢复结果 |
+| 节点故障 | 节点宕机、drain、升级后的重建或恢复行为 |
+| 运维接入 | RBAC、配额、日志、指标、告警、快照清理和备份流程 |
+
+## 适用范围
+
+OpenSandbox 适合已经建设 Kubernetes 平台能力的团队。Sandbox 可以按原生资源管理，调度、配额、PVC、节点池、监控和日志继续使用现有体系。任务能够重启进程，或者运行状态主要落在文件与外部存储时，这条路线更直接。
+
+CubeSandbox 适合高并发代码执行、强化学习、长时间运行的 Agent、浏览器会话，以及需要从运行状态回滚或克隆的任务。团队需要同时承担 KVM、XFS、节点服务、快照容量和恢复准入的运维工作。已有 E2B 集成也是选择 CubeSandbox 的实际因素。
+
+在完成同机 POC 之前，可以确认的是两者的资源模型和状态语义。CubeSandbox 相对 OpenSandbox 的明确差异是完整 VM 状态的快速恢复与克隆；它相对 Kata Containers、Firecracker 的性能优势仍需要可复现的横向数据。
+
+## 版本与源码
+
+- [OpenSandbox README](https://github.com/opensandbox-group/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/README.md)、[架构说明](https://github.com/opensandbox-group/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/docs/architecture/index.md)、[Kubernetes controller](https://github.com/opensandbox-group/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/docs/kubernetes/index.md)
+- [OpenSandbox Kubernetes PVC 示例](https://github.com/opensandbox-group/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/docs/examples/kubernetes-pvc-volume-mount.md)、[暂停与恢复](https://github.com/opensandbox-group/OpenSandbox/blob/e9d0a63919739b1bed05914373acbacb11e37d43/docs/guides/pause-resume.md)
+- [CubeSandbox 架构](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/architecture/overview.md)、[v0.6 changelog](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/changelog/v0.6.0.md)、[Kubernetes 架构](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/guide/kubernetes/architecture.md)
+- [CubeSandbox 性能报告](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/zh/blog/posts/2026-06-01-cubesandbox-perf-benchmark.md)、[生命周期](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/zh/guide/lifecycle.md)、[快照实现](https://github.com/TencentCloud/CubeSandbox/blob/c9906ea01bd0616277fe5c1891a27c4e50619f87/docs/zh/blog/posts/2026-06-25-cubesandbox-snapshot-clone-rollback-deep-dive.md)
+- [Kata Containers 虚拟化实现](https://github.com/kata-containers/kata-containers/blob/8dd6c888193b80a90a82d1bde9bd0ac905bf6ec7/docs/design/virtualization.md)、[Firecracker 官网](https://firecracker-microvm.github.io/)

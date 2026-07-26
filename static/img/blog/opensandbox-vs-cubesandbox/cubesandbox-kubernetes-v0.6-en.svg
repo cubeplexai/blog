@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1120" role="img" aria-labelledby="title desc">
+  <title id="title">CubeSandbox v0.6 Kubernetes delivery and MicroVM execution boundary</title>
+  <desc id="desc">A simplified view of CubeSandbox v0.6 Kubernetes Preview. Helm deploys the control plane and node DaemonSets. CubeMaster schedules work to Cubelet, while the host creates KVM MicroVMs instead of one Pod per sandbox.</desc>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0 L0 0 0 40" fill="none" stroke="#27272a" stroke-width=".7"/></pattern>
+    <marker id="arrow" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0 L9 3.5 L0 7Z" fill="#71717a"/></marker>
+    <marker id="arrow-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0 L9 3.5 L0 7Z" fill="#6a83e3"/></marker>
+    <style>
+      text{font-family:Inter,Arial,sans-serif}
+      .title{fill:#f4f4f5;font-size:28px;font-weight:650;letter-spacing:-.4px}
+      .subtitle{fill:#a1a1aa;font-size:14px}
+      .cluster{fill:#0a0a0b;stroke:#6a83e3;stroke-width:1.3;stroke-dasharray:8 5}
+      .region{fill:none;stroke:#3f3f46;stroke-width:1.2;stroke-dasharray:6 5}
+      .region-title{fill:#93a6ec;font-size:14px;font-weight:650}
+      .region-copy{fill:#71717a;font-size:11.5px}
+      .box-mask{fill:#0a0a0b}
+      .box{fill:#0a0a0b;stroke:#3f3f46;stroke-width:1.25}
+      .key{fill:#14213d;stroke:#6a83e3;stroke-width:1.6}
+      .name{fill:#f4f4f5;font-size:15px;font-weight:600}
+      .sub{fill:#a1a1aa;font-size:11.5px}
+      .line{fill:none;stroke:#71717a;stroke-width:1.5;marker-end:url(#arrow);stroke-linejoin:round}
+      .line-key{fill:none;stroke:#6a83e3;stroke-width:1.8;marker-end:url(#arrow-blue);stroke-linejoin:round}
+      .dash{fill:none;stroke:#52525b;stroke-width:1.25;stroke-dasharray:5 5}
+      .foot{fill:#0a0a0b;stroke:#3f3f46;stroke-width:1.1}
+      .foot-title{fill:#93a6ec;font-size:12px;font-weight:650}
+      .foot-copy{fill:#a1a1aa;font-size:12px}
+    </style>
+  </defs>
+  <rect width="1920" height="1120" fill="#18181b"/><rect width="1920" height="1120" fill="url(#grid)"/>
+  <text x="48" y="52" class="title">CubeSandbox v0.6 on Kubernetes: Kubernetes delivers infrastructure, CubeMaster schedules MicroVMs</text>
+  <text x="48" y="78" class="subtitle">The Helm deployment is Preview. Kubernetes runs the control plane and node DaemonSets; each sandbox remains a node-local KVM MicroVM, not a Pod.</text>
+
+  <rect x="42" y="108" width="1836" height="894" rx="16" class="cluster"/>
+  <text x="70" y="140" class="region-title">Kubernetes Cluster · Helm Chart</text>
+  <text x="70" y="160" class="region-copy">Deployments, Services, and StatefulSets run the control plane; DaemonSets prepare the node toolbox and cube-node Big Pod.</text>
+
+  <rect x="75" y="245" width="790" height="650" rx="12" class="region"/>
+  <rect x="1010" y="245" width="795" height="650" rx="12" class="region"/>
+  <text x="102" y="278" class="region-title">Control plane</text>
+  <text x="102" y="298" class="region-copy">API, scheduling, state, and ingress</text>
+  <text x="1037" y="278" class="region-title">Compute node</text>
+  <text x="1037" y="298" class="region-copy">DaemonSets deliver node components; the host runtime executes KVM MicroVMs</text>
+
+  <path d="M960 245 V315 H467 V375" class="dash"/>
+  <path d="M960 245 V315 H1270 V375" class="dash"/>
+  <path d="M300 408 H380" class="line-key"/>
+  <path d="M555 408 H640" class="line-key"/>
+  <path d="M850 408 H970 V682 H1110" class="line-key"/>
+  <path d="M1225 568 V650" class="dash"/>
+  <path d="M1340 682 H1380" class="line-key"/>
+  <path d="M1530 682 H1590" class="line-key"/>
+  <path d="M745 442 V574 H570" class="line"/>
+  <path d="M1440 408 V500" class="line"/>
+  <path d="M1225 714 V830" class="line"/>
+  <path d="M1705 682 H1750" class="line"/>
+
+  <rect x="790" y="175" width="340" height="70" rx="7" class="box-mask"/>
+  <rect x="790" y="175" width="340" height="70" rx="7" class="key"/>
+  <text x="960" y="204" text-anchor="middle" class="name">Helm Chart (v0.6 Preview)</text>
+  <text x="960" y="225" text-anchor="middle" class="sub">Control plane plus four node DaemonSet roles</text>
+
+  <rect x="125" y="375" width="175" height="66" rx="7" class="box-mask"/><rect x="125" y="375" width="175" height="66" rx="7" class="key"/>
+  <text x="212" y="403" text-anchor="middle" class="name">Ingress / Proxy</text><text x="212" y="423" text-anchor="middle" class="sub">E2B / HTTPS endpoint</text>
+  <rect x="380" y="375" width="175" height="66" rx="7" class="box-mask"/><rect x="380" y="375" width="175" height="66" rx="7" class="key"/>
+  <text x="467" y="403" text-anchor="middle" class="name">CubeAPI</text><text x="467" y="423" text-anchor="middle" class="sub">REST / auth</text>
+  <rect x="640" y="375" width="210" height="66" rx="7" class="box-mask"/><rect x="640" y="375" width="210" height="66" rx="7" class="key"/>
+  <text x="745" y="403" text-anchor="middle" class="name">CubeMaster</text><text x="745" y="423" text-anchor="middle" class="sub">node selection · lifecycle</text>
+  <rect x="370" y="540" width="200" height="68" rx="7" class="box-mask"/><rect x="370" y="540" width="200" height="68" rx="7" class="box"/>
+  <text x="470" y="568" text-anchor="middle" class="name">MySQL / Redis</text><text x="470" y="589" text-anchor="middle" class="sub">state, events, routing, locks</text>
+
+  <rect x="1100" y="375" width="340" height="66" rx="7" class="box-mask"/><rect x="1100" y="375" width="340" height="66" rx="7" class="box"/>
+  <text x="1270" y="403" text-anchor="middle" class="name">Node DaemonSets</text><text x="1270" y="423" text-anchor="middle" class="sub">installer · bootstrap · optional PVM · cube-node</text>
+  <rect x="1440" y="375" width="250" height="66" rx="7" class="box-mask"/><rect x="1440" y="375" width="250" height="66" rx="7" class="box"/>
+  <text x="1565" y="403" text-anchor="middle" class="name">Node requirements</text><text x="1565" y="423" text-anchor="middle" class="sub">KVM · XFS/reflink · host access</text>
+
+  <rect x="1080" y="500" width="520" height="68" rx="8" class="box-mask"/><rect x="1080" y="500" width="520" height="68" rx="8" class="key"/>
+  <text x="1340" y="528" text-anchor="middle" class="name">cube-node “Big Pod” · one per compute node</text><text x="1340" y="549" text-anchor="middle" class="sub">Pod network · privileged host mounts · node agents, not one sandbox</text>
+  <rect x="1110" y="650" width="230" height="64" rx="7" class="box-mask"/><rect x="1110" y="650" width="230" height="64" rx="7" class="key"/>
+  <text x="1225" y="678" text-anchor="middle" class="name">Cubelet</text><text x="1225" y="698" text-anchor="middle" class="sub">node-local sandbox control</text>
+  <rect x="1380" y="650" width="150" height="64" rx="7" class="box-mask"/><rect x="1380" y="650" width="150" height="64" rx="7" class="box"/>
+  <text x="1455" y="678" text-anchor="middle" class="name">Network</text><text x="1455" y="698" text-anchor="middle" class="sub">agent / CubeVS</text>
+  <rect x="1590" y="650" width="115" height="64" rx="7" class="box-mask"/><rect x="1590" y="650" width="115" height="64" rx="7" class="box"/>
+  <text x="1647" y="678" text-anchor="middle" class="name">Egress</text><text x="1647" y="698" text-anchor="middle" class="sub">optional L7</text>
+  <rect x="1750" y="650" width="40" height="64" rx="7" class="box-mask"/><rect x="1750" y="650" width="40" height="64" rx="7" class="box"/>
+  <text x="1770" y="688" text-anchor="middle" class="sub">WAN</text>
+
+  <rect x="1080" y="830" width="520" height="66" rx="8" class="box-mask"/><rect x="1080" y="830" width="520" height="66" rx="8" class="key"/>
+  <text x="1340" y="858" text-anchor="middle" class="name">Host runtime: CubeShim → CubeHypervisor / KVM → MicroVM × N</text>
+  <text x="1340" y="879" text-anchor="middle" class="sub">Cubelet starts or restores through the host toolbox; each sandbox is a MicroVM, not a Kubernetes Pod</text>
+
+  <rect x="42" y="1034" width="1836" height="60" rx="10" class="foot"/>
+  <text x="68" y="1060" class="foot-title">Selection impact</text>
+  <text x="68" y="1081" class="foot-copy">Kubernetes manages deployment and node lifecycle; CubeSandbox schedules sandboxes and isolates them as MicroVMs. Clusters that prohibit privileged DaemonSets, hostPID, or hostPath need a dedicated node pool or a different design.</text>
+</svg>

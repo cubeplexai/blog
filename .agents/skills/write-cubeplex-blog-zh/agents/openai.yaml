@@ -1,0 +1,4 @@
+interface:
+  display_name: "CubePlex Blog 中文写作"
+  short_description: "为 CubePlex Blog 撰写直白、具体、无模板腔的中文文章"
+  default_prompt: "使用 $write-cubeplex-blog-zh 撰写或修改一篇直白、具体的 CubePlex 中文博客文章。"
