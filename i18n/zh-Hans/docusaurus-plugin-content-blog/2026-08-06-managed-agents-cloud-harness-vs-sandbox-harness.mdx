@@ -1,18 +1,20 @@
 ---
 slug: managed-agents-cloud-harness-vs-sandbox-harness
-title: 云端与 Sandbox 内 Harness 的 Managed Agent 架构
+title: Cloud Managed Agents 的两种 Harness 架构
 description: 比较集中式云端 Harness 与 Sandbox 内 Harness 的生命周期、并行执行、安全边界、故障恢复和运维成本，并说明 CubePlex 的架构选择。
 authors: [xfgong]
 tags: [Managed Agents, Agent Harness, Sandbox, Agent 平台]
 ---
 
-我把 OpenHands、OpenAI Agents SDK、Codex Cloud 和 Claude Code Action 的公开资料放在一起看时，先遇到一个容易混淆的说法，“Agent runs in a sandbox”。这句话只交代了工具在哪里执行，没有交代谁保存上下文、发起模型请求，又是谁处理 tool call 和恢复运行。
+Cloud Managed Agent 目前有两种典型运行架构。第一种把 Agent Harness 和工具环境一起放进 Sandbox，Agent loop 与工作区共享生命周期。Codex Cloud 和 Claude Code Action 接近这条路线。
 
-Managed Agent 通常保存 prompt、模型和工具配置。平台还要确定哪个进程持有 Agent loop。目前常见的做法有两种。一种把 Harness 安装进每个 Sandbox，让 Agent loop 与工作区在同一个隔离环境内运行；另一种把 Harness 做成统一的云端服务，由它通过 API 调度一个或多个 Sandbox。两者都能隔离执行环境，但 Agent 与 Sandbox 的生命周期、故障边界和扩展方式不同。
+第二种把 Harness 放在云端控制面，Sandbox 只接收命令、维护工作区并返回执行结果。OpenHands 和 OpenAI Agents SDK 的 SandboxAgent 采用这类边界。
+
+两种架构都能隔离执行环境。Sandbox 内 Harness 更看重本地工具调用和自包含交付；集中式 Harness 把 Agent 生命周期与 Sandbox 分开，也更容易让一个 Agent 并行调度多个执行环境。对应的代价分别落在状态恢复、凭据管理和远程执行协议上。
 
 <!-- truncate -->
 
-## Harness 的运行边界
+## 两种架构的运行边界
 
 本文所说的 Harness，是模型之外负责推进 Agent 运行的软件层。它组装 system prompt、对话历史、skills 和 memory，发起模型请求，解析 tool call，再把 observation 送回模型。
 
@@ -107,7 +109,7 @@ Sandbox 内 Harness 适合自包含 CLI、单一长期工作区、客户 VPC 内
 
 两者也可以组合。控制面保存 Managed Agent 定义、版本、身份、审批和 durable state；Sandbox 内运行一个受限 worker，负责 PTY、文件索引、浏览器控制和批量本地操作。worker 可以一次执行一个结构化步骤并返回结果，但不持有长期模型密钥，也不成为 Agent 状态的唯一副本。这种划分保留了工具局部性，同时避免把整个 Managed Agent 的生命周期绑定到单个 Sandbox。
 
-## CubePlex 的架构选择
+## CubePlex 选择集中式 Harness
 
 CubePlex 选择集中式 Harness 与独立 Sandbox。Cubepi Agent loop、上下文、middleware、MCP 路由、审批、stream 和 trace 由云端控制面管理；Sandbox 提供隔离的 Shell、文件、浏览器和产物执行环境。
 
