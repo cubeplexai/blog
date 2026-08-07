@@ -6,7 +6,7 @@ authors: [xfgong]
 tags: [Managed Agents, Agent Harness, Sandbox, Agent 平台]
 ---
 
-云端 Agent 平台有两种常见架构。一种把 Claude Code、Codex 或 OpenCode 这类现成 Harness 放进 Sandbox，VibeKit 和 LiteLLM Agent Platform 是代表，Buzz 也在复用这些 Harness。另一种把 Agent loop 留在控制面，Sandbox 只承担执行，Claude Managed Agents、QM 和 OpenHands 采用这类边界，Manus 与 Perplexity Computer 也更接近集中调度的产品形态。前一种适合有明确起止的自动化任务，后一种更适合持续数周或数月、等待事件并服务多个用户的 Managed Agent。
+云端 Agent 平台有两种常见架构。一种把 Claude Code、Codex 或 OpenCode 这类现成 Harness 放进 Sandbox，VibeKit 和 LiteLLM Agent Platform 是代表，Buzz 也在复用这些 Harness。另一种把 Agent loop 留在控制面，Sandbox 只承担执行，Claude Managed Agents 和 OpenHands 采用这类边界，Manus 与 Perplexity Computer 也更接近集中调度的产品形态。前一种适合有明确起止的自动化任务，后一种更适合持续数周或数月、等待事件并服务多个用户的 Managed Agent。
 
 <!-- truncate -->
 
@@ -68,7 +68,6 @@ CubePlex 当前已经采用集中式 Cubepi run path 和独立 Sandbox。Managed
 
 - [OpenHands Runtime Architecture](https://docs.openhands.dev/openhands/usage/architecture/runtime)
 - [Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents/overview)
-- [QM](https://github.com/yc-software/qm)
 - [Claude Code Action](https://github.com/anthropics/claude-code-action)
 - [VibeKit](https://github.com/superagent-ai/vibekit)
 - [LiteLLM Agent Platform](https://github.com/BerriAI/litellm-agent-platform)
