@@ -1,9 +1,15 @@
 {
-  "blog.recentPosts.ariaLabel": {
-    "message": "最新文章"
+  "blog.allPosts.ariaLabel": {
+    "message": "全部文章"
   },
-  "blog.recentPosts.title": {
-    "message": "最新文章"
+  "blog.allPosts.title": {
+    "message": "全部文章"
+  },
+  "blog.allPosts.showAll": {
+    "message": "查看全部 {count} 篇文章"
+  },
+  "blog.allPosts.showLess": {
+    "message": "收起"
   },
   "blog.productCallout.eyebrow": {
     "message": "开源项目"

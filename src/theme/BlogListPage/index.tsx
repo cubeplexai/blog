@@ -4,7 +4,7 @@ import BlogListPageStructuredData from '@theme/BlogListPage/StructuredData';
 import BlogPostItems from '@theme/BlogPostItems';
 import Layout from '@theme/Layout';
 import SearchMetadata from '@theme/SearchMetadata';
-import RecentPosts from '@site/src/components/RecentPosts';
+import AllPosts from '@site/src/components/AllPosts';
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
 import type { Props } from '@theme/BlogListPage';
@@ -18,7 +18,7 @@ function BlogListPageContent({ metadata, items, sidebar }: Props): ReactNode {
       <main>
         <div className="blog-feed-layout">
           <aside className="blog-feed-layout__sidebar">
-            <RecentPosts sidebar={sidebar} />
+            <AllPosts sidebar={sidebar} />
           </aside>
           <div className="blog-feed">
             <BlogPostItems items={items} />
