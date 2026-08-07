@@ -1,6 +1,7 @@
 import { HtmlClassNameProvider, ThemeClassNames } from '@docusaurus/theme-common';
 import Translate, {translate} from '@docusaurus/Translate';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import BlogListPaginator from '@theme/BlogListPaginator';
 import BlogListPageStructuredData from '@theme/BlogListPage/StructuredData';
 import BlogPostItems from '@theme/BlogPostItems';
@@ -13,6 +14,7 @@ import type { Props } from '@theme/BlogListPage';
 
 function BlogIntro(): ReactNode {
   const {i18n} = useDocusaurusContext();
+  const introImageUrl = useBaseUrl('/img/blog/governed-work.webp');
   const docsUrl =
     i18n.currentLocale === 'zh-Hans'
       ? 'https://cubeplex.ai/docs/zh-Hans'
@@ -38,7 +40,7 @@ function BlogIntro(): ReactNode {
       </div>
       <img
         className="blog-intro__image"
-        src="/blog/img/blog/governed-work.webp"
+        src={introImageUrl}
         alt={translate({
           id: 'blog.intro.imageAlt',
           message: 'A calm technical workspace with a laptop and process diagrams',
