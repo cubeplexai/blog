@@ -12,10 +12,10 @@
     "message": "把 Agent 接进团队的日常工作"
   },
   "blog.productCallout.cubeplexDescription": {
-    "message": "CubePlex 把 Agent、团队知识、外部工具和自动化任务放在同一个工作空间里。谁能用、用了什么、任务跑到哪一步，都能统一管理。"
+    "message": "面向团队的自托管 AI Agent 工作空间，用来处理文档、数据和跨系统任务，并统一管理权限与执行记录。"
   },
   "blog.productCallout.cubepiDescription": {
-    "message": "用 Python 构建可以持续运行的异步 Agent，持久化、工具调用、流式输出和运行追踪都由运行时处理。"
+    "message": "高性能、可追踪、生产级持久化的 Python 原生异步 Agent 框架。"
   },
   "blog.productCallout.cubeplexCta": {
     "message": "查看 CubePlex 源码"
