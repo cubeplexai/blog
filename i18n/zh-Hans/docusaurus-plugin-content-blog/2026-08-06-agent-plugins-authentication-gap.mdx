@@ -1,0 +1,65 @@
+---
+slug: agent-plugins-authentication-gap
+title: Agent Plugins 的认证缺口
+description: Agent Plugins 统一了 Skills 与 MCP server 的打包格式，认证流程、凭据注入和权限管理仍由客户端自行实现。
+authors: [xfgong]
+tags: [Agent Plugins, MCP, Agent Skills, 认证]
+image: /img/blog/agent-plugins-authentication-gap-cover.webp
+---
+
+2026 年 8 月 6 日，Agent Plugins 项目以开放、厂商中立的插件标准对外发布。初始技术委员会由五名 Core Maintainer 组成，他们分别来自 Amazon、Cursor、Microsoft、OpenAI 和 Vercel，Lead Core Maintainer 是 Vercel 的 Jonathan Hefner。
+
+项目的治理席位属于维护者个人，没有为公司预留席位，任何单一厂商也不能控制多数 Core Maintainer。更准确的说法是，来自这五家公司的维护者共同发起了一项由社区治理的开放规范。
+
+Agent Plugins v1.0.0 目前仍是 Working Draft。它规定每个 Plugin 必须包含 `plugin.json`，Agent Skills 放在 `skills/`，MCP server 配置放在 `mcp.json`。客户端还可以通过反向域名命名的 extension 加入自己的行为，同时不改变可移植的核心格式。
+
+这份规范要解决的是 Agent 客户端之间的插件格式分裂。同一套 Skill 和 MCP 配置以前需要按不同客户端的目录与配置方式重新整理。Agent Plugins 给出了统一的目录结构、schema 和加载规则，让兼容客户端可以发现同一个插件包。
+
+我把 v1.0.0 规范和 Future Considerations 对了一遍。认证被明确留给了客户端。当前草案没有定义 OAuth 配置或可移植的凭据引用，远程 MCP 的授权发现、用户交互和凭据存储也由客户端处理。这条边界符合包格式的职责，却把最影响实际使用的一段流程留在了每个 Agent 产品里。
+
+Skills 和 MCP 承担不同的工作。Skill 告诉 Agent 怎样完成任务，MCP 负责连接外部系统。一个 Plugin 可以把两者一起交给客户端，用户仍可能要分别处理命令行登录、OAuth 授权和 API key。组件已经装好，连接还未必可用。
+
+<!-- truncate -->
+
+## Skill 中的命令行认证
+
+很多 Skill 会执行命令行工具。工具可能要求浏览器登录、API key、环境变量或凭据文件，也可能直接读取操作系统钥匙串里的登录会话。Agent Plugins 负责发现 `SKILL.md` 及其附带文件，没有定义这些工具怎样向用户申请连接。
+
+开发者自己运行 Plugin 时，可以在终端里完成认证。Web Agent 平台面对的是另一套流程。用户需要知道哪个服务正在申请权限、要访问哪个账户，还要能在以后撤销连接。让用户离开网页运行供应商提供的登录命令，产品流程会在这里中断。让用户把 secret 粘贴进聊天风险更高，执行环境和模型上下文都可能接触到本来无需看到的凭据。
+
+一个 GitHub Plugin 就可能同时包含调用 `gh` 的 Skill 和 GitHub MCP server。两者访问同一项服务，认证入口和凭据消费方式却可能完全不同。Plugin 包没有足够的信息告诉平台，它们能否复用同一次用户连接，或者各自需要哪些最低权限。
+
+## 每个服务都有自己的授权边界
+
+把同一个 Plugin 里的组件接进统一界面是合理的，共享一份 token 往往行不通。GitHub、Linear、AWS 和企业内部服务可能由不同的授权服务器签发 token，也由不同的资源服务器验证。
+
+MCP 的授权规范要求 HTTP MCP server 通过 Protected Resource Metadata 告诉客户端应使用哪个授权服务器。客户端申请 token 时必须带上目标 MCP server 的 resource 参数，server 也必须验证 token 的 audience。为一个 MCP server 签发的 token 不能发送给另一个 server，更不能直接透传给下游 API。
+
+平台可以统一的是**连接流程**。用户在同一个界面里看到 Plugin 需要访问哪些服务，选择账户并批准权限，之后还能单独撤销某个连接。平台在界面背后保存多份相互隔离的最小权限凭据。
+
+## Agent Plugins v1.0.0 的标准边界
+
+Agent Plugins v1.0.0 Working Draft 定义了两种可移植组件。Skill 放在 `skills/` 下，MCP 配置放在 `mcp.json` 中。MCP server 可以使用 stdio、Streamable HTTP 或旧版 HTTP+SSE transport。
+
+规范把 `headers` 和 stdio server 的 `env` 都视为可见的包数据，禁止 Plugin 在其中嵌入凭据。它也没有定义 OAuth 配置和可移植的 credential reference。客户端可以通过自己的 extension 实现认证，但这部分行为不属于跨客户端合约。
+
+项目的 Future Considerations 已经列出这一缺口。文档提到未来可能增加 secret 声明、由客户端完成的 secret 注入、跨 Plugin 隔离，以及凭据轮换和撤销语义。这份文档是非规范性的讨论，也没有承诺这些内容会进入后续版本。
+
+## 平台需要补上的连接合约
+
+Agent 平台现在仍要自行设计连接合约。Plugin 中的 MCP server 或 Skill 应能声明所需服务、目标资源和最低权限。客户端再把这份声明映射到 OAuth、企业 workload identity、受管 vault 或已经批准的本地连接。凭据本身不应进入 Plugin 包。
+
+命令行工具需要凭据时，客户端可以只向对应子进程注入短期 token。另一种做法是提供本地 credential broker，用任务绑定的授权换取供应商 token。Agent 只拿到完成当前操作所需的临时访问权，无法读取凭据库里的原始 secret。
+
+这样，同一个用户连接可以服务获批准的 MCP server 和 CLI。底层 token 仍然保留各自的 audience、权限范围和过期时间。平台也能记录哪个 Agent 在什么时间使用了哪项连接，并允许用户或管理员随时撤销。
+
+Agent Plugins 已经统一了组件的打包与发现。认证由客户端管理是 v1.0.0 有意保留的边界。对于多用户 Web Agent 平台，这部分工作包括连接界面、凭据隔离、短期注入、审计和撤销。可移植的连接声明出现以前，Plugin 能被不同客户端加载，还不能保证用户能在这些客户端里用同一种方式完成认证。
+
+## 参考资料
+
+- [Agent Plugins](https://agent-plugins.org/)
+- [Agent Plugins v1.0.0 Working Draft](https://agent-plugins.org/specification)
+- [Agent Plugins governance](https://github.com/agentplugins/agent-plugins-spec/blob/main/GOVERNANCE.md)
+- [Agent Plugins maintainers](https://github.com/agentplugins/agent-plugins-spec/blob/main/MAINTAINERS.md)
+- [MCP Authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)
+- [Agent Plugins future considerations](https://github.com/agentplugins/agent-plugins-spec/blob/main/FUTURE_CONSIDERATIONS.md)

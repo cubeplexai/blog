@@ -1,0 +1,65 @@
+---
+slug: agent-plugins-authentication-gap
+title: The Authentication Gap in Agent Plugins
+description: Agent Plugins standardizes how Skills and MCP servers are packaged, while clients still own connection flows, credential injection, and permission management.
+authors: [xfgong]
+tags: [Agent Plugins, MCP, Agent Skills, Authentication]
+image: /img/blog/agent-plugins-authentication-gap-cover-en.webp
+---
+
+Agent Plugins launched publicly on August 6, 2026, as an open, vendor-neutral standard. Its initial Technical Steering Committee has five Core Maintainers affiliated with Amazon, Cursor, Microsoft, OpenAI, and Vercel. Jonathan Hefner of Vercel serves as Lead Core Maintainer.
+
+The governance roles belong to individuals rather than reserved company seats, and no single vendor may control a majority of Core Maintainers. It is more precise to describe Agent Plugins as a community-governed specification started by maintainers from those five companies.
+
+Version 1.0.0 is currently a Working Draft. Every plugin has a `plugin.json` manifest, with Agent Skills under `skills/` and MCP server configuration in `mcp.json`. Reverse-domain extension namespaces let individual clients add behavior without changing the portable core.
+
+The specification addresses fragmented plugin formats across Agent clients. Authors previously had to rearrange the same Skills and MCP configurations for different client directories and configuration models. Agent Plugins provides one directory structure, schema set, and loading contract that compatible clients can share.
+
+Authentication remains client-managed. The draft defines no OAuth configuration or portable credential-reference fields. Authorization discovery, user interaction, and credential storage for remote MCP servers are also handled by the client. That is a reasonable boundary for a package format, but it leaves an important product workflow outside the portable contract.
+
+Skills and MCP servers do different jobs. A Skill tells an Agent how to complete a task, while MCP connects it to external systems. A plugin can deliver both, yet the user may still face separate CLI logins, OAuth grants, and API keys. Installing the components does not make their connections usable.
+
+<!-- truncate -->
+
+## Authentication for Skill-invoked CLIs
+
+Many Skills invoke command-line tools. A tool may require a browser login, an API key, an environment variable, a credentials file, or an existing session in the operating system keychain. Agent Plugins defines how a client discovers `SKILL.md` and its files, but it does not define how those tools request a connection from the user.
+
+Developers running a plugin for themselves can finish authentication in a terminal. A web-based Agent platform needs to show which service is requesting access, which account will be used, and how that connection can later be revoked. Sending the user to a provider-specific login command breaks that flow. Pasting a secret into chat is riskier because the execution environment and model context may see a credential they do not need.
+
+A GitHub plugin might contain both a Skill that invokes `gh` and a GitHub MCP server. They access the same service through different authentication paths. The package does not tell a platform whether they can reuse one user connection or which minimum permissions each component needs.
+
+## Each service keeps its authorization boundary
+
+Presenting every connection through one interface is useful. Sharing one access token across the plugin usually is not. GitHub, Linear, AWS, and internal services can use different authorization and resource servers.
+
+The MCP authorization specification requires an HTTP MCP server to advertise its authorization server through Protected Resource Metadata. The client must include the target MCP server as the resource when requesting a token, and the server must validate the token audience. A token issued for one MCP server cannot be sent to another server or passed through to an upstream API.
+
+The platform can unify the **connection flow**. A user can see which services a plugin needs, choose accounts, approve permissions, and later revoke an individual connection. Behind that interface, the platform retains separate least-privilege credentials for each service.
+
+## The boundary of Agent Plugins v1.0.0
+
+Agent Plugins v1.0.0 defines two portable component types. Skills live under `skills/`, and MCP configuration lives in `mcp.json`. MCP servers can use stdio, Streamable HTTP, or legacy HTTP+SSE transports.
+
+The draft treats configured HTTP headers and stdio environment values as visible package data and prohibits embedded credentials. It defines no OAuth configuration or portable credential reference. Clients can implement authentication in their own extensions, but those extensions are outside the cross-client contract.
+
+The project's non-normative Future Considerations document names this gap directly. It lists possible future work for secret declarations, client-mediated injection, isolation between plugins, credential rotation, and revocation. None of those items is committed to a future release.
+
+## The connection contract platforms still need
+
+Agent platforms still need their own connection contract. An MCP server or Skill should be able to declare the required service, target resource, and minimum permissions. The client can map that declaration to OAuth, enterprise workload identity, a managed vault, or an approved local connection. Credentials should remain outside the plugin package.
+
+For a command-line tool, the client can inject a short-lived token only into the subprocess that needs it. A local credential broker could instead exchange a task-bound authorization for a provider token. The Agent receives temporary access for the current operation without gaining access to the underlying credential store.
+
+One user-visible connection could then serve an approved MCP server and CLI while the underlying tokens retain separate audiences, scopes, and expiration. The platform can also record which Agent used a connection and allow a user or administrator to revoke it.
+
+Agent Plugins has standardized component packaging and discovery. Leaving authentication to clients is an intentional v1.0.0 boundary. Multi-user web Agent platforms still have to provide connection UX, credential isolation, short-lived injection, audit records, and revocation. Until plugins can declare those connection requirements portably, cross-client loading will not provide a consistent authentication experience.
+
+## References
+
+- [Agent Plugins](https://agent-plugins.org/)
+- [Agent Plugins v1.0.0 Working Draft](https://agent-plugins.org/specification)
+- [Agent Plugins governance](https://github.com/agentplugins/agent-plugins-spec/blob/main/GOVERNANCE.md)
+- [Agent Plugins maintainers](https://github.com/agentplugins/agent-plugins-spec/blob/main/MAINTAINERS.md)
+- [MCP Authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)
+- [Agent Plugins future considerations](https://github.com/agentplugins/agent-plugins-spec/blob/main/FUTURE_CONSIDERATIONS.md)
