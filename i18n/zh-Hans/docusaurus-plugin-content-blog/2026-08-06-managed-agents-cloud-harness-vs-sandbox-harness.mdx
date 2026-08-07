@@ -1,137 +1,77 @@
 ---
 slug: managed-agents-cloud-harness-vs-sandbox-harness
-title: Cloud Managed Agents 的两种 Harness 架构
-description: 比较集中式云端 Harness 与 Sandbox 内 Harness 的生命周期、并行执行、安全边界、故障恢复和运维成本，并说明 CubePlex 的架构选择。
+title: 长期运行的 Managed Agent 需要控制面 Harness
+description: 比较控制面 Harness 与 Sandbox 内 Harness，说明单次自动化任务和长期运行 Agent 对生命周期、状态恢复、多 Sandbox 编排与管控的不同要求。
 authors: [xfgong]
 tags: [Managed Agents, Agent Harness, Sandbox, Agent 平台]
 ---
 
-Cloud Managed Agent 目前有两种典型运行架构。第一种把 Agent Harness 和工具环境一起放进 Sandbox，Agent loop 与工作区共享生命周期。Claude Code Action 是较明确的例子，整个 Action 都在 GitHub runner 上运行。Codex Cloud 把每个任务放进独立云端环境，也更接近这类封装，不过公开资料没有详细说明模型 loop 的进程边界。
-
-第二种把 Harness 放在云端控制面。OpenHands 是这类架构的代表实现，后端向容器内的执行服务发送 action，再接收 observation。Sandbox 处理命令和工作区，Agent loop 留在后端。
-
-OpenAI Agents SDK 的 `SandboxAgent` 也采用类似分工。它仍通过普通 `Runner` API 运行，outer runtime 持有审批、trace、handoff 和恢复记录，sandbox session 负责命令、文件变更和环境隔离。这个功能目前处于 beta，适合用来说明 SDK 的架构边界，不宜和成熟的 Cloud Managed Agent 产品并列。
-
-两种架构都能隔离执行环境。Sandbox 内 Harness 更看重本地工具调用和自包含交付；集中式 Harness 把 Agent 生命周期与 Sandbox 分开，也更容易让一个 Agent 并行调度多个执行环境。对应的代价分别落在状态恢复、凭据管理和远程执行协议上。
+云端 Agent 平台有两种常见架构。一种把 Claude Code、Codex 或 OpenCode 这类现成 Harness 放进 Sandbox，VibeKit 和 LiteLLM Agent Platform 是代表，Buzz 也在复用这些 Harness。另一种把 Agent loop 留在控制面，Sandbox 只承担执行，Claude Managed Agents、QM 和 OpenHands 采用这类边界，Manus 与 Perplexity Computer 也更接近集中调度的产品形态。前一种适合有明确起止的自动化任务，后一种更适合持续数周或数月、等待事件并服务多个用户的 Managed Agent。
 
 <!-- truncate -->
 
-## 两种架构的运行边界
+## Harness 的位置决定 Agent 的生命周期
 
-本文所说的 Harness，是模型之外负责推进 Agent 运行的软件层。它组装 system prompt、对话历史、skills 和 memory，发起模型请求，解析 tool call，再把 observation 送回模型。
-
-上下文压缩、token 预算、重试、取消和人工审批也由 Harness 管理。它还要绑定 Shell、文件、浏览器、MCP 和子 Agent 等工具，并保存运行事件、trace、成本和最终产物。
-
-判断 Harness 位于哪里，不能只看产品是否写了“Agent runs in a sandbox”。如果模型循环在云端，Sandbox 只接收命令并返回结果，它仍是集中式 Harness。只有当持有上下文并推进模型 turn 的进程也运行在 Sandbox 内，才属于 Sandbox 内 Harness。
-
-[OpenHands 的 Runtime 文档](https://docs.openhands.dev/openhands/usage/architecture/runtime)给出了集中式实现。后端产生 action，通过 REST 发送给容器中的 Action Execution Server，容器执行后返回 observation。
-
-[OpenAI Agents SDK 的 SandboxAgent](https://openai.github.io/openai-agents-python/sandbox/guide/)仍是完整的 `Agent`，保留 instructions、tools、handoff 和 model settings，并通过普通 `Runner` API 运行。官方文档把审批、trace、handoff 和恢复记录留在 outer runtime，sandbox session 负责命令、文件变更和环境隔离。Filesystem、Shell、Skills、Memory 和 Compaction 都可以作为 sandbox capability，因此把它概括成“只执行命令”会漏掉工作区和运行时能力。它目前是 beta SDK 能力，本文把它当作架构边界的例子，不把它当作已经成熟的 Cloud Managed Agent 产品。
-
-[OpenAI 对 Codex Cloud 的说明](https://openai.com/index/introducing-codex/)明确写明每个任务运行在独立云端环境中，但没有进一步说明模型 loop 的进程边界。[Claude Code Action](https://github.com/anthropics/claude-code-action)把 Claude Code 的执行逻辑完整放在 GitHub runner 上，再从 runner 访问模型服务。Claude Code Action 是 Sandbox 内 Harness 更明确的产品例子。
+Harness 负责保存上下文、发起模型请求、处理 tool call，并决定下一步动作。重试、审批、预算和子 Agent 调度也在这一层。判断它位于哪里，只需看谁持有上下文并发起下一轮模型调用。Sandbox 提供文件、进程、浏览器和网络等执行资源。
 
 ![Managed Agents 的两种 Harness 运行架构](/img/blog/managed-agents-architecture/harness-placement-comparison.svg)
 
 本文把 Sandbox 统一视为提供命令、文件、进程和状态生命周期的隔离执行资源，不重复比较容器、Kubernetes 与 MicroVM 的资源模型。不同 Sandbox 实现的调度、暂停、恢复和快照语义，可参考上一篇文章[《OpenSandbox 与 CubeSandbox 选型》](./opensandbox-vs-cubesandbox-agent-platform-selection)。
 
-## Sandbox 内 Harness
+## Sandbox 内 Harness 适合单次任务
 
-这条路线把 Agent CLI、模型客户端、上下文状态和工具执行环境打包进同一个 Sandbox。
+Sandbox 内 Harness 的优点很实在。Shell、文件、PTY 和浏览器都在本地，工具调用不经过远程协议。代码索引、大文件处理和长时间终端进程也不需要反复传输结果。平台还能把 Harness、依赖和工作区固定在同一个镜像里，运行环境容易复现，也方便交付到客户 VPC。
 
-Harness 可以直接调用本地 Shell、读取文件、连接 PTY 或浏览器，不需要为每次 action 和 observation 设计远程协议。现有的 Codex CLI、Claude Code、OpenClaw 或自研 CLI 也更容易原样放进镜像。对于文件扫描、代码索引、浏览器截图和长时间终端进程，本地调用能减少 RPC、序列化和大结果传输。
+这套结构最适合一次任务对应一个运行环境。修一个 issue、生成一份报告、执行一轮数据处理，都有明确的开始和结束。任务完成后销毁 Sandbox，状态恢复和版本迁移都很少成为主要问题。多租户隔离也容易理解，每个任务或用户得到独立容器即可。
 
-这种封装也便于交付到客户 VPC 或边缘环境。平台交付一个包含指定 Harness 版本和依赖的镜像，客户只需要提供计算资源和模型出口。镜像、Harness 和工作区版本一起固定，单次运行的环境更容易复现。
+长期运行会改变这些条件。Agent 可能等待审批，几小时后接收 webhook，下周继续同一个项目。Harness 留在 Sandbox 内时，平台只能持续保留环境，或者把进程、上下文和工作区一起暂停。文件系统快照只能保存一部分状态，待处理的 tool call、PTY、本地服务和模型循环仍要恢复。
 
-代价是 Agent 生命周期与 Sandbox 生命周期绑定得更紧。Agent 等待人工批准、定时唤醒或外部事件时，平台需要继续保留 Sandbox，或者同时保存工作区、进程和 Harness 状态。只保存文件系统不足以恢复一个正在运行的模型循环；恢复点还可能包含对话状态、待处理 tool call、PTY 和本地服务。
+Harness 版本也会散落在大量存量 Sandbox 中。修复一个权限问题以后，平台需要迁移或终止旧实例。模型密钥和外部工具凭据进入执行环境后，不可信代码与 Harness 进程又处于同一个故障边界。短期 token 和凭据代理可以降低风险，系统复杂度也随之增加。
 
-Harness 进入 Sandbox 后还要解决凭据问题。模型请求需要 API key 或网关 token，MCP 和外部系统也可能需要凭据。如果同一 Sandbox 内的不可信代码能够读取 Harness 的进程环境、配置文件或本地 socket，隔离只能保护宿主机，不能保护 Sandbox 内的 Harness 凭据。生产实现通常需要短期、任务绑定的模型网关 token，并把高权限审批和长期密钥保留在 Sandbox 外。
+## 长期 Agent 需要独立状态
 
-每个 Sandbox 都携带 Harness 也会增加镜像大小、冷启动内容和版本管理成本。长时间暂停的 Sandbox 可能停留在旧 Harness 版本；安全修复需要重建、迁移或强制终止这些实例。
+控制面 Harness 可以在没有 Sandbox 的情况下保存 Agent。对话、memory、预算、审批状态和运行事件继续存在，执行环境则按需要创建。Agent 等待消息或定时器时不占用 Sandbox；下一次运行可以连接原工作区，也可以从快照创建新环境。
 
-## 云端集中式 Harness
+有些步骤根本不需要执行环境。模型可以读取已经整理好的上下文，调用远程 MCP，或者等待用户确认。文件操作也可以先落到虚拟文件系统，真正需要 Shell、浏览器或本地进程时再申请 Sandbox。Agent 的持续存在不再等于一台机器持续运行。
 
-集中式架构把 Agent loop 放在受管控的服务中。Sandbox 只提供隔离计算、文件、浏览器和进程接口，不决定 Agent 的下一步动作。
+故障恢复也会简单一些。Sandbox 崩溃时，Harness 仍然保留已经完成的步骤和最后一次 observation。控制面可以换一台机器继续执行。Harness worker 自身故障时，则通过 event log、checkpoint 和 lease 在其他 worker 恢复。Agent 状态与执行环境有了各自的故障边界。
 
-Harness 不完全依赖某个 Sandbox。对话、memory、预算、审批状态和运行事件可以继续保存在控制面，而 Sandbox 按任务阶段创建、暂停、释放或替换。Agent 等待用户输入时可以释放计算资源；恢复后可以连接原 Sandbox、从快照创建新实例，也可以选择不同镜像、区域或硬件规格。
+这套架构的代价是远程执行协议。Shell、文件、PTY、浏览器和流式日志都要通过 API 表达。网络中断可能让控制面不知道命令是否已经完成，协议必须提供幂等键、租约、心跳、重连和明确的命令状态。大文件与长日志还需要对象存储或引用传递。控制面也会成为多租户共享故障域，需要限制单个 Agent 的并发、上下文内存、模型请求和事件写入。
 
-这种解耦让平台按任务阶段安排 Sandbox。代码修改可以使用通用 CPU 环境，训练或推理开始时再申请 GPU；浏览器登录环境可以和代码执行环境分开，各自使用不同的网络与凭据策略。
+## 多 Sandbox 属于控制面
 
-高风险工具适合放进一次性 Sandbox，用完就销毁。Sandbox 故障时，控制面保留 Agent trajectory，再从最近持久化的 observation 创建执行环境。Agent 等待审批、定时器或 webhook 时，平台也能释放持续运行的 Sandbox。
+长期 Agent 经常需要多个执行环境。代码 Agent 可以让几个 Sandbox 分别尝试不同修复方案，再比较测试结果。测试任务也可以并行使用不同操作系统、依赖版本和浏览器。浏览器登录环境、代码工作区和 GPU 任务还可能需要不同的网络与凭据策略。
 
-集中式 Harness 还可以让一个 Agent 同时控制多个 Sandbox。代码 Agent 可以为几个修复方案分别创建工作区，并行运行测试，最后在控制面比较结果。测试 Agent 也可以同时运行不同操作系统、依赖版本或浏览器组合。此时，Sandbox 是 Agent 按任务申请、使用和释放的计算资源。
+控制面 Harness 可以直接管理这些资源租约，记录每个分支的状态和预算，处理取消、部分失败与结果合并。Sandbox 内 Harness 当然也能申请其他 Sandbox，但它随后要持有调度权限，并在一个临时执行环境里承担资源管理职责。长期运行以后，平台通常还是要在外部补上任务表、调度器、审批服务和恢复状态。
 
-多 Sandbox 并发会增加调度成本。Harness 需要为每个分支保存任务状态、资源租约和预算，处理部分失败、超时、取消和结果合并。两个 Sandbox 同时修改同一个仓库时，还要明确分支、artifact 和最终提交的归并规则。缺少这些约束，增加 Sandbox 数量只会放大成本和不确定性。
+平台也可以给 Sandbox 内 Harness 增加外部 checkpoint、完整内存快照、凭据代理和 session scheduler，再让一个 session 跨 Sandbox 恢复。Perplexity 的 SPACE 就展示了 session 与单个 Sandbox 分离、暂停和分叉的设计。走到这一步，长期状态和资源编排已经回到 Sandbox 外，系统开始具备控制面 Harness 的主要特征。
 
 ![云端 Harness 的 Sandbox 生命周期与并行编排](/img/blog/managed-agents-architecture/control-plane-multi-sandbox.svg)
 
-集中式架构的主要成本位于远程执行协议。Shell、文件、PTY、浏览器和流式日志都要通过 API 表达。小文件读取和短命令会产生更多往返；大 observation 需要截断、压缩或存入对象存储后传引用。网络中断也会让 Harness 与仍在运行的 Sandbox 失去同步，因此执行 API 必须支持幂等请求、租约、心跳、重连和明确的命令状态。
+## 管控能力应留在控制面
 
-控制面本身会成为多租户共享故障域。Harness 服务需要限制单个 Agent 的并发、上下文内存、模型请求和事件写入，避免一个失控任务占满整个 worker。集中式架构仍要自己解决可靠性问题，只是恢复、审计和策略执行都集中在同一个管理位置。
+多用户 Agent 平台需要统一管理身份、权限、审批、预算和审计。Harness 在控制面时，这些规则可以在发起模型请求和执行工具前统一检查。模型密钥与长期凭据也可以留在受管服务中，Sandbox 只拿到一次操作需要的短期权限。
 
-## 生命周期与故障恢复
+Sandbox 仍然要限制网络出口和文件访问。控制面 Harness 也会接收仓库、网页和工具返回的不可信内容，prompt injection 依然可能诱导它调用高权限工具。Harness 的位置不会自动解决安全问题，它只是让策略有一个稳定的执行位置。
 
-两种架构最直接的区别是“Agent 还在，但 Sandbox 不在”是否为正常状态。
+对单次自动化任务，最短路径依然是把成熟 Harness 放进 Sandbox。对长期 Managed Agent，用户、会话与权限都持续存在，Sandbox 只是偶尔使用的计算资源。后者更需要一个独立于执行环境的控制面。
 
-| 运行状态 | Sandbox 内 Harness | 集中式云端 Harness |
-| --- | --- | --- |
-| 等待人工审批 | 保留 Sandbox，或快照 Harness 与工作区后停止 | Harness 保存 pending action，Sandbox 可以释放 |
-| 等待定时器或外部事件 | 需要暂停整个运行环境，或由外部服务重新启动 | 控制面保留 Agent 状态，到期后重新申请 Sandbox |
-| Sandbox 进程崩溃 | Harness 和工具环境可能同时丢失 | Harness 可保留 trajectory，重新连接或创建 Sandbox |
-| Harness worker 崩溃 | Sandbox 内本地状态可能仍在，但需要外部探测和接管 | 通过 event log、checkpoint 和 lease 在其他 worker 恢复 |
-| 环境升级 | Harness 与 Sandbox 镜像通常一起升级 | Harness 与 Sandbox 镜像可以分别灰度和回滚 |
-| 长期运行成本 | Agent 空闲时仍需保存整个 Sandbox 状态 | 控制面状态与计算资源可以分别计费和回收 |
+## CubePlex 的架构选择
 
-[Kubernetes Agent Sandbox](https://kubernetes.io/blog/2026/03/20/running-agents-on-kubernetes-with-agent-sandbox/)把 Agent 工作负载描述为有稳定身份、可暂停恢复、长时间空闲的 stateful singleton。这个模型适合 Sandbox 内 Harness，也给 Sandbox 增加了新的要求。它需要稳定网络身份、持久状态、warm pool 和 scale-to-zero，管理方式已经超出普通的短任务容器。
+CubePlex 选择控制面 Harness 与独立 Sandbox。Cubepi 管理 Agent loop、上下文、MCP 路由、审批和 trace，Sandbox 提供隔离的 Shell、文件、浏览器与产物执行环境。高频本地操作可以交给 Sandbox 内的受限 worker，Agent trajectory、长期凭据和审批状态仍由控制面持有。
 
-集中式 Harness 则更接近分布式工作流系统。它必须在执行命令前记录意图，在收到 observation 后推进状态，并通过幂等键区分“命令没有执行”和“命令已经执行但响应丢失”。否则 Sandbox 重连后可能重复发送消息、重复提交代码或重复调用外部 API。
+CubePlex 当前已经采用集中式 Cubepi run path 和独立 Sandbox。Managed Agent definition 与一对多 Sandbox 编排仍属于后续架构演进，不能当作已经交付的产品能力。现阶段应先固定 Managed Agent 的版本、运行身份和审计上下文，再把 Sandbox 作为可申请、替换和并行调度的执行资源。
 
-## 安全边界与凭据
-
-Sandbox 内 Harness 和集中式 Harness 都需要处理 prompt injection、工具滥用和凭据越权。区别在于高价值凭据是否进入执行环境。
-
-Sandbox 内 Harness 通常至少需要访问模型服务。如果直接注入长期 API key，Sandbox 中运行的代码可能读取并外传它。更安全的实现是让 Harness 使用短期 token 访问统一模型网关，由网关执行模型 allowlist、额度、用户归属和审计。外部工具凭据也应按 tool call 动态交换，避免以环境变量形式长期存在。
-
-集中式 Harness 可以让模型密钥、审批规则和长期凭据完全留在控制面，只给 Sandbox 下发单次命令所需的最小权限。但集中式 Harness 会接收来自仓库、网页和工具结果的不可信内容；它仍可能被间接 prompt injection 诱导，以合法身份调用高权限工具。工具权限、网络出口和审批需要受到独立策略约束，Harness 的运行位置本身不能保证安全。
-
-NIST 在 Agentic AI 安全建议中提出 workflow-bound credentials、持续授权、agent segmentation 和完整遥测。这些要求在两种架构中都成立，但集中式控制面通常更容易统一实施。[NIST Agentic AI Security](https://csrc.nist.gov/csrc/media/presentations/2026/agentic-ai-emerging-threats%2C-mitigations%2C-and-cha/1.3-agentic_ai-sotiropoulos.pdf)
-
-## 两种架构的适用条件
-
-| 维度 | Sandbox 内 Harness | 集中式云端 Harness |
-| --- | --- | --- |
-| 工具调用 | 本地 Shell、文件、PTY、浏览器调用直接 | 依赖远程执行协议与 observation 传输 |
-| Sandbox 生命周期 | 通常与 Agent run 绑定 | 可以按阶段申请、释放和替换 |
-| 多 Sandbox | 需要 Harness 再持有远程调度凭据，复杂度会上升 | 一个 Agent 可以直接管理多个资源租约 |
-| 模型与工具凭据 | 需要进入 Sandbox，或通过短期网关 token 获取 | 长期凭据可以保留在控制面 |
-| 状态恢复 | 需要同时恢复 Harness 状态与工作区 | Harness checkpoint 与 Sandbox snapshot 可以分开 |
-| 版本升级 | Harness 版本跟随镜像和存量实例 | Harness 与执行镜像独立发布 |
-| 客户 VPC / 边缘 | 自包含镜像更容易交付 | 需要控制面与客户执行环境之间的可靠通道 |
-| 多租户管控 | 每个实例隔离较直接，策略分发较复杂 | RBAC、预算、审计和审批容易统一 |
-| 高并发扩展 | 每个 Agent 都启动完整 Harness | Harness worker 与 Sandbox 可以分别扩缩容 |
-
-Sandbox 内 Harness 适合自包含 CLI、单一长期工作区、客户 VPC 内运行，以及本地工具交互远多于跨环境调度的任务。集中式 Harness 适合长时间等待、事件驱动、统一合规管控、按阶段切换执行环境和多 Sandbox 并行任务。
-
-两者也可以组合。控制面保存 Managed Agent 定义、版本、身份、审批和 durable state；Sandbox 内运行一个受限 worker，负责 PTY、文件索引、浏览器控制和批量本地操作。worker 可以一次执行一个结构化步骤并返回结果，但不持有长期模型密钥，也不成为 Agent 状态的唯一副本。这种划分保留了工具局部性，同时避免把整个 Managed Agent 的生命周期绑定到单个 Sandbox。
-
-## CubePlex 选择集中式 Harness
-
-CubePlex 选择集中式 Harness 与独立 Sandbox。Cubepi Agent loop、上下文、middleware、MCP 路由、审批、stream 和 trace 由云端控制面管理；Sandbox 提供隔离的 Shell、文件、浏览器和产物执行环境。
-
-这个选择让 Managed Agent 的生命周期独立于执行环境。AgentDefinition 及其不可变版本应该独立于某个 Sandbox 保存。对话、定时任务、trigger 或 IM 消息引用同一个 Managed Agent 时，控制面解析固定的 prompt、model、skills、MCP 和权限配置，再按本次运行需要申请执行环境。Agent 等待输入或事件时不需要持续占用 Sandbox。
-
-多 Sandbox 调度是另一个直接结果。一个 Managed Agent 不应被建模为“一台长期绑定的机器”。控制面可以为同一任务创建多个相互隔离的工作区，让子 Agent 或并行分支分别执行，再由 Harness 汇总结果、控制预算并回收资源。不同 Sandbox 还可以使用不同镜像、网络策略和硬件规格。
-
-高频工具操作仍可留在 Sandbox 内。受限的执行 worker 负责 PTY、代码索引、浏览器录制和大文件处理，可以减少 RPC 次数和大 observation 传输。Agent trajectory、长期凭据、审批状态和最终审计记录仍由控制面持有。
-
-本文讨论的是 CubePlex 的架构方向。CubePlex 当前已采用集中式 Cubepi run path 和独立 Sandbox；Managed Agent definition 与一对多 Sandbox 编排尚未作为完整产品能力交付。
-
-接下来，控制面应先固定 Managed Agent 的版本、运行身份和审计上下文，再把 Sandbox 作为可按任务申请、替换和并行调度的执行资源。Managed Agent 持续存在，Sandbox 按需使用。这条生命周期边界是 CubePlex 选择集中式 Harness 的主要原因。
+一次任务可以绑定一台 Sandbox。长期 Managed Agent 应当持续存在，并在需要执行时租用 Sandbox。这是 CubePlex 选择控制面 Harness 的原因。
 
 ## 参考资料
 
 - [OpenHands Runtime Architecture](https://docs.openhands.dev/openhands/usage/architecture/runtime)
-- [OpenAI Agents SDK Sandbox Agents](https://openai.github.io/openai-agents-python/sandbox/guide/)
-- [OpenAI Codex Cloud](https://openai.com/index/introducing-codex/)
+- [Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents/overview)
+- [QM](https://github.com/yc-software/qm)
 - [Claude Code Action](https://github.com/anthropics/claude-code-action)
-- [Kubernetes Agent Sandbox](https://kubernetes.io/blog/2026/03/20/running-agents-on-kubernetes-with-agent-sandbox/)
-- [NIST Agentic AI Emerging Threats, Mitigations, and Challenges](https://csrc.nist.gov/csrc/media/presentations/2026/agentic-ai-emerging-threats%2C-mitigations%2C-and-cha/1.3-agentic_ai-sotiropoulos.pdf)
+- [VibeKit](https://github.com/superagent-ai/vibekit)
+- [LiteLLM Agent Platform](https://github.com/BerriAI/litellm-agent-platform)
+- [Buzz](https://github.com/block/buzz)
+- [Manus Sandbox](https://manus.im/blog/manus-sandbox)
+- [Perplexity SPACE](https://hub-prod.perplexity.ai/hub/blog/secure-sandboxes-for-agents)
