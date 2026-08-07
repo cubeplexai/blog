@@ -1,4 +1,4 @@
-import RecentPosts from '@site/src/components/RecentPosts';
+import AllPosts from '@site/src/components/AllPosts';
 import type { Props } from '@theme/BlogSidebar';
 import type { ReactNode } from 'react';
 
@@ -7,7 +7,7 @@ export default function BlogSidebar({ sidebar }: Props): ReactNode {
 
   return (
     <aside className="col col--3 blog-recent-posts">
-      <RecentPosts sidebar={sidebar} />
+      <AllPosts sidebar={sidebar} />
     </aside>
   );
 }

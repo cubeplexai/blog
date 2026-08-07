@@ -1,42 +1,33 @@
 {
-  "blog.recentPosts.ariaLabel": {
-    "message": "最新文章"
+  "blog.allPosts.ariaLabel": {
+    "message": "全部文章"
   },
-  "blog.recentPosts.title": {
-    "message": "最新文章"
+  "blog.allPosts.title": {
+    "message": "全部文章"
+  },
+  "blog.allPosts.showAll": {
+    "message": "查看全部 {count} 篇文章"
+  },
+  "blog.allPosts.showLess": {
+    "message": "收起"
   },
   "blog.productCallout.eyebrow": {
-    "message": "继续构建"
+    "message": "开源项目"
   },
   "blog.productCallout.title": {
-    "message": "从智能体想法，到可靠的实际工作。"
+    "message": "把 Agent 接进团队的日常工作"
   },
   "blog.productCallout.cubeplexDescription": {
-    "message": "将对话、技能、共享记忆、MCP 集成与自动化纳入团队可治理的工作空间。"
+    "message": "面向团队的自托管 AI Agent 工作空间，用来处理文档、数据和跨系统任务，并统一管理权限与执行记录。"
   },
   "blog.productCallout.cubepiDescription": {
-    "message": "使用持久化、工具、流式输出和追踪来构建异步 Python 智能体，同时始终掌握运行时。"
+    "message": "高性能、可追踪、生产级持久化的 Python 原生异步 Agent 框架。"
   },
   "blog.productCallout.cubeplexCta": {
-    "message": "在 GitHub 查看 CubePlex"
+    "message": "查看 CubePlex 源码"
   },
   "blog.productCallout.cubepiCta": {
-    "message": "在 GitHub 查看 CubePi"
-  },
-  "blog.intro.kicker": {
-    "message": "CubePlex 博客"
-  },
-  "blog.intro.heading": {
-    "message": "受治理的智能体工作。"
-  },
-  "blog.intro.description": {
-    "message": "面向构建可治理、自托管智能体工作流团队的产品与工程笔记。"
-  },
-  "blog.intro.documentationCta": {
-    "message": "阅读文档"
-  },
-  "blog.intro.imageAlt": {
-    "message": "带有笔记本电脑和流程图的简洁技术工作空间"
+    "message": "查看 CubePi 源码"
   },
   "theme.ErrorPageContent.title": {
     "message": "页面已崩溃。",

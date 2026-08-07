@@ -1,0 +1,77 @@
+---
+slug: managed-agents-cloud-harness-vs-sandbox-harness
+title: Managed Agent Harness Architectures and Trade-offs
+description: A comparison of control-plane and sandbox-local harnesses for one-off automation, long-running agents, state recovery, multi-sandbox orchestration, and governance.
+image: /img/blog/managed-agents-harness-architecture-cover-en.webp
+authors: [xfgong]
+tags: [Managed Agents, Agent Harness, Sandbox, Agent Platform]
+---
+
+Cloud agent platforms commonly use one of two architectures. The first puts an existing harness such as Claude Code, Codex, or OpenCode inside a sandbox. VibeKit and LiteLLM Agent Platform represent this approach, while Buzz also reuses these harnesses. The second keeps the agent loop in the control plane and uses sandboxes only for execution. Claude Managed Agents and OpenHands use this boundary, while products such as Manus and Perplexity Computer also appear closer to centrally scheduled execution. The first architecture fits automation with a clear start and finish. The second is a better fit for Managed Agents that may run for weeks or months, wait for events, and serve multiple users.
+
+<!-- truncate -->
+
+## Harness placement determines the agent lifecycle
+
+The harness stores context, sends model requests, handles tool calls, and decides the next action. It also manages retries, approvals, budgets, and subagent scheduling. To locate the harness, look at which component owns the context and initiates the next model turn. A sandbox supplies execution resources such as files, processes, browsers, and network access.
+
+![Two harness runtime architectures for Managed Agents](/img/blog/managed-agents-architecture/harness-placement-comparison-en.svg)
+
+This article treats a sandbox as an isolated execution resource with command, file, process, and state lifecycle APIs. It does not repeat the comparison between containers, Kubernetes, and MicroVMs. For scheduling, pause and resume, and snapshot semantics across sandbox implementations, see [OpenSandbox vs. CubeSandbox: Choosing Between Kubernetes Resources and a MicroVM Runtime Stack](./opensandbox-vs-cubesandbox-agent-platform-selection).
+
+## Sandbox-local harnesses fit one-off tasks
+
+A sandbox-local harness has practical advantages. Shells, files, PTYs, and browsers are local, so tool calls do not need a remote execution protocol. Code indexing, large-file processing, and long-running terminal processes avoid repeated result transfers. The platform can also pin the harness, dependencies, and workspace in one image, making a run reproducible and easier to deliver into a customer VPC.
+
+This structure works best when one task maps to one runtime. Fixing an issue, generating a report, or processing a dataset has a clear beginning and end. Once the task finishes, the platform destroys the sandbox. Recovery and version migration rarely dominate the design, and multi-tenant isolation is straightforward when each task or user receives a separate container.
+
+Long-running agents change those assumptions. An agent may wait for approval, receive a webhook hours later, and return to the same project the following week. When the harness lives inside the sandbox, the platform must either keep that environment or suspend its processes, context, and workspace together. A filesystem snapshot captures only part of the state. Pending tool calls, PTYs, local services, and the model loop still need recovery semantics.
+
+Harness versions also accumulate across existing sandboxes. After a permission bug is fixed, the platform must migrate or terminate old instances. Model keys and external-tool credentials enter the same failure boundary as untrusted code and the harness process. Short-lived tokens and credential brokers reduce the risk, but add more infrastructure.
+
+## Long-running agents need independent state
+
+A control-plane harness can preserve an agent without preserving a sandbox. Conversation history, memory, budgets, approval state, and run events remain available while execution environments are created only when needed. An agent consumes no sandbox while it waits for a message or timer. Its next run can reconnect to the previous workspace or start a new environment from a snapshot.
+
+Some steps require no execution environment at all. The model can read prepared context, call a remote MCP server, or wait for confirmation. File operations can target a virtual filesystem until a shell, browser, or local process becomes necessary. Keeping the agent alive no longer means keeping one machine alive.
+
+Recovery becomes easier to separate. If a sandbox fails, the harness retains completed steps and the latest observation, then continues on another machine. If a harness worker fails, an event log, checkpoint, and lease can restore the run on another worker. Agent state and execution resources have separate failure boundaries.
+
+The cost is a remote execution protocol. Shells, files, PTYs, browsers, and streaming logs all need API representations. After a network interruption, the control plane may not know whether a command completed, so the protocol needs idempotency keys, leases, heartbeats, reconnection, and explicit command states. Large files and logs require object storage or reference-based transfer. The control plane also becomes a shared multi-tenant failure domain and must limit each agent's concurrency, context memory, model requests, and event writes.
+
+## Multi-sandbox orchestration belongs in the control plane
+
+Long-running agents often need more than one execution environment. A coding agent can test several fixes in separate sandboxes and compare the results. Test runs can cover different operating systems, dependency versions, or browsers in parallel. Authenticated browser sessions, code workspaces, and GPU jobs may also require different network and credential policies.
+
+A control-plane harness can manage those resource leases directly. It records the state and budget of each branch, then handles cancellation, partial failure, and result merging. A sandbox-local harness can request additional sandboxes, but it must then hold scheduling privileges and manage resources from a temporary execution environment. Over time, the platform usually adds an external task table, scheduler, approval service, and recovery state.
+
+A platform can also extend a sandbox-local harness with external checkpoints, full memory snapshots, credential brokers, and a session scheduler so that one session can resume across sandboxes. Perplexity SPACE demonstrates a design in which a session is separated from an individual sandbox and can be paused or branched. At that point, long-term state and resource orchestration have moved outside the sandbox, and the system has acquired the main characteristics of a control-plane harness.
+
+![Sandbox lifecycle and parallel orchestration under a cloud harness](/img/blog/managed-agents-architecture/control-plane-multi-sandbox-en.svg)
+
+## Governance belongs in the control plane
+
+A multi-user agent platform must manage identities, permissions, approvals, budgets, and audit records consistently. When the harness runs in the control plane, those policies can be evaluated before model requests and tool execution. Model keys and long-lived credentials can remain in the managed service while a sandbox receives only short-lived permission for a specific operation.
+
+Sandboxes still need network-egress and filesystem restrictions. A control-plane harness also consumes untrusted repository content, webpages, and tool results. Prompt injection can still induce it to call privileged tools. Harness placement does not solve security by itself; it gives policy enforcement a stable place to run.
+
+For one-off automation, putting a mature harness inside a sandbox remains the shortest path. For a long-running Managed Agent, users, sessions, and permissions persist while the sandbox is only an occasional compute resource. That model benefits from a control plane independent of the execution environment.
+
+## CubePlex architecture direction
+
+CubePlex uses a control-plane harness with independent sandboxes. CubePi manages the agent loop, context, MCP routing, approvals, and traces. Sandboxes provide isolated shells, files, browsers, and artifact execution environments. High-frequency local operations can run in a restricted sandbox worker, while the control plane retains the agent trajectory, long-lived credentials, and approval state.
+
+CubePlex already uses a centralized CubePi run path with independent sandboxes. Managed Agent definitions and one-to-many sandbox orchestration remain future architecture work and should not be presented as delivered product capabilities. The current priority is to fix each Managed Agent's version, runtime identity, and audit context, then treat sandboxes as execution resources that can be leased, replaced, and scheduled in parallel.
+
+One task can remain bound to one sandbox. A long-running Managed Agent should persist and lease sandboxes only when execution is required. That is why CubePlex chose a control-plane harness.
+
+## References
+
+- [OpenHands Runtime Architecture](https://docs.openhands.dev/openhands/usage/architecture/runtime)
+- [Claude Managed Agents](https://platform.claude.com/docs/en/managed-agents/overview)
+- [Claude Code Action](https://github.com/anthropics/claude-code-action)
+- [VibeKit](https://github.com/superagent-ai/vibekit)
+- [LiteLLM Agent Platform](https://github.com/BerriAI/litellm-agent-platform)
+- [Buzz](https://github.com/block/buzz)
+- [Manus Sandbox](https://manus.im/blog/manus-sandbox)
+- [Perplexity SPACE](https://hub-prod.perplexity.ai/hub/blog/secure-sandboxes-for-agents)

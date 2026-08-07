@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 1900" role="img" aria-labelledby="title desc">
+  <title id="title">Sandbox Lifecycle and Parallel Orchestration under a Cloud Harness</title>
+  <desc id="desc">A mobile-first vertical architecture diagram. The Managed Agent definition, harness, and durable state remain in the control plane while three sandbox leases perform different tasks. The harness merges results and releases the sandboxes.</desc>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#27272a" stroke-width="0.8"/></pattern>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4 0 8Z" fill="#6a83e3"/></marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4 0 8Z" fill="#34d399"/></marker>
+    <marker id="arrow-gray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4 0 8Z" fill="#71717a"/></marker>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap');
+      text{font-family:Inter,'PingFang SC','Noto Sans SC',sans-serif}.mono{font-family:'JetBrains Mono','PingFang SC','Noto Sans SC',monospace}
+      .title{fill:#f4f4f5;font-size:38px;font-weight:700;letter-spacing:-.6px}.subtitle{fill:#a1a1aa;font-size:20px}
+      .region-blue{fill:#0a0a0b;stroke:#6a83e3;stroke-width:2;stroke-dasharray:10 7}.region-green{fill:#0a0a0b;stroke:#34d399;stroke-width:2;stroke-dasharray:10 7}
+      .region-title{fill:#93a6ec;font-size:23px;font-weight:650}.region-title-green{fill:#6ee7b7;font-size:23px;font-weight:650}.region-copy{fill:#a1a1aa;font-size:18px}
+      .mask{fill:#0a0a0b}.box{fill:#0a0a0b;stroke:#3f3f46;stroke-width:1.8}.blue{fill:#14213d;stroke:#6a83e3;stroke-width:2.3}.green{fill:#0c2f28;stroke:#34d399;stroke-width:2.2}.violet{fill:#21163d;stroke:#a78bfa;stroke-width:2}.amber{fill:#2f2211;stroke:#fbbf24;stroke-width:2}
+      .name{fill:#f4f4f5;font-size:25px;font-weight:600}.sub{fill:#a1a1aa;font-size:18px}.chip{fill:#18181b;stroke:#3f3f46;stroke-width:1.5}.chip-text{fill:#d4d4d8;font-size:18px}
+      .line-blue{fill:none;stroke:#6a83e3;stroke-width:2.8;marker-end:url(#arrow-blue);stroke-linejoin:round}.line-green{fill:none;stroke:#34d399;stroke-width:2.6;marker-end:url(#arrow-green);stroke-linejoin:round}.line-gray{fill:none;stroke:#71717a;stroke-width:2.2;marker-end:url(#arrow-gray);stroke-linejoin:round}
+      .label{fill:#a1a1aa;font-size:18px}.foot-copy{fill:#a1a1aa;font-size:18px}
+    </style>
+  </defs>
+  <rect width="960" height="1900" fill="#18181b"/><rect width="960" height="1900" fill="url(#grid)"/>
+  <text x="36" y="52" class="title">Decoupling Harness and Sandbox Lifecycles</text>
+  <text x="36" y="84" class="subtitle">One Managed Agent can hold multiple concurrent compute leases.</text>
+
+  <path d="M480 300V350" class="line-blue"/><path d="M480 500V550" class="line-blue"/>
+  <path d="M480 680V780" class="line-blue"/>
+  <path d="M480 930V995" class="line-green"/><path d="M480 1145V1210" class="line-green"/>
+  <path d="M480 1360V1425" class="line-green"/><path d="M480 1550V1615" class="line-gray"/>
+  <path d="M480 1725V1780" class="line-gray"/>
+
+  <rect x="52" y="125" width="856" height="585" rx="18" class="region-blue"/>
+  <text x="82" y="166" class="region-title">Managed Agent Control Plane</text>
+  <text x="82" y="197" class="region-copy">Identity, run state, and policy remain independent of any sandbox.</text>
+
+  <rect x="110" y="235" width="740" height="65" rx="9" class="mask"/><rect x="110" y="235" width="740" height="65" rx="9" class="violet"/>
+  <text x="480" y="264" text-anchor="middle" class="name">AgentDefinition + Version</text><text x="480" y="289" text-anchor="middle" class="sub">instructions · model · tools · permissions</text>
+  <rect x="110" y="350" width="740" height="150" rx="10" class="mask"/><rect x="110" y="350" width="740" height="150" rx="10" class="blue"/>
+  <text x="480" y="389" text-anchor="middle" class="name">Cloud Agent Harness</text><text x="480" y="420" text-anchor="middle" class="sub">plan · model loop · fan-out · merge · recovery</text>
+  <rect x="155" y="449" width="180" height="34" rx="5" class="chip"/><text x="245" y="472" text-anchor="middle" class="chip-text">Budget</text>
+  <rect x="390" y="449" width="180" height="34" rx="5" class="chip"/><text x="480" y="472" text-anchor="middle" class="chip-text">Approval</text>
+  <rect x="625" y="449" width="180" height="34" rx="5" class="chip"/><text x="715" y="472" text-anchor="middle" class="chip-text">Recovery</text>
+  <rect x="110" y="550" width="740" height="130" rx="10" class="mask"/><rect x="110" y="550" width="740" height="130" rx="10" class="violet"/>
+  <text x="480" y="588" text-anchor="middle" class="name">Durable Run State</text><text x="480" y="619" text-anchor="middle" class="sub">trajectory · leases · events · artifacts</text>
+  <text x="480" y="654" text-anchor="middle" class="sub mono">checkpoint · idempotency keys</text>
+
+  <rect x="52" y="745" width="856" height="840" rx="18" class="region-green"/>
+  <text x="82" y="786" class="region-title-green">Sandbox Pool · Isolated Compute</text>
+  <text x="82" y="817" class="region-copy">Each work unit has its own image, network policy, and lifecycle.</text>
+
+  <rect x="120" y="850" width="720" height="150" rx="11" class="mask"/><rect x="120" y="850" width="720" height="150" rx="11" class="green"/>
+  <text x="480" y="889" text-anchor="middle" class="name">Sandbox A · Code</text><text x="480" y="920" text-anchor="middle" class="sub">Fix A / isolated Git branch</text>
+  <rect x="200" y="949" width="220" height="34" rx="5" class="chip"/><text x="310" y="972" text-anchor="middle" class="chip-text">Shell · Files</text>
+  <rect x="540" y="949" width="220" height="34" rx="5" class="chip"/><text x="650" y="972" text-anchor="middle" class="chip-text">Unit tests</text>
+
+  <rect x="120" y="1065" width="720" height="150" rx="11" class="mask"/><rect x="120" y="1065" width="720" height="150" rx="11" class="green"/>
+  <text x="480" y="1104" text-anchor="middle" class="name">Sandbox B · Browser</text><text x="480" y="1135" text-anchor="middle" class="sub">Page validation / isolated network and credentials</text>
+  <rect x="200" y="1164" width="220" height="34" rx="5" class="chip"/><text x="310" y="1187" text-anchor="middle" class="chip-text">Browser</text>
+  <rect x="540" y="1164" width="220" height="34" rx="5" class="chip"/><text x="650" y="1187" text-anchor="middle" class="chip-text">Screenshot</text>
+
+  <rect x="120" y="1280" width="720" height="150" rx="11" class="mask"/><rect x="120" y="1280" width="720" height="150" rx="11" class="green"/>
+  <text x="480" y="1319" text-anchor="middle" class="name">Sandbox C · GPU / Test Matrix</text><text x="480" y="1350" text-anchor="middle" class="sub">Special hardware / dependency combinations</text>
+  <rect x="200" y="1379" width="220" height="34" rx="5" class="chip"/><text x="310" y="1402" text-anchor="middle" class="chip-text">GPU job</text>
+  <rect x="540" y="1379" width="220" height="34" rx="5" class="chip"/><text x="650" y="1402" text-anchor="middle" class="chip-text">Test matrix</text>
+
+  <rect x="120" y="1490" width="720" height="60" rx="9" class="mask"/><rect x="120" y="1490" width="720" height="60" rx="9" class="box"/>
+  <text x="480" y="1517" text-anchor="middle" class="name">Results / Artifact References</text><text x="480" y="1541" text-anchor="middle" class="sub">patch · tests · screenshots · metrics</text>
+
+  <rect x="100" y="1615" width="760" height="110" rx="10" class="mask"/><rect x="100" y="1615" width="760" height="110" rx="10" class="blue"/>
+  <text x="480" y="1655" text-anchor="middle" class="name">Harness Merges Results and Plans the Next Turn</text>
+  <text x="480" y="1686" text-anchor="middle" class="sub">handle partial failures · merge artifacts · release leases</text>
+  <text x="480" y="1712" text-anchor="middle" class="sub">continue · pause · request approval</text>
+
+  <rect x="100" y="1780" width="760" height="72" rx="10" class="mask"/><rect x="100" y="1780" width="760" height="72" rx="10" class="amber"/>
+  <text x="480" y="1810" text-anchor="middle" class="name">Waiting for Approval / Timer / Webhook</text>
+  <text x="480" y="1838" text-anchor="middle" class="sub">Agent state persists with zero active sandboxes.</text>
+
+  <text x="510" y="752" class="label mono">fan-out</text><text x="510" y="1598" class="label mono">fan-in</text>
+  <rect x="52" y="1868" width="856" height="1" fill="#3f3f46"/>
+  <text x="52" y="1892" class="foot-copy">The Managed Agent persists; sandboxes are created, replaced, and released on demand.</text>
+</svg>

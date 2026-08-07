@@ -12,11 +12,11 @@ function ProductCallout(): ReactNode {
   return (
     <section className="blog-product-callout" aria-labelledby="blog-product-callout-title">
       <p className="blog-product-callout__eyebrow">
-        <Translate id="blog.productCallout.eyebrow">Build the next step</Translate>
+        <Translate id="blog.productCallout.eyebrow">Open-source projects</Translate>
       </p>
       <h2 id="blog-product-callout-title">
         <Translate id="blog.productCallout.title">
-          From agent ideas to dependable work.
+          Bring agents into your team's day-to-day work
         </Translate>
       </h2>
       <div className="blog-product-callout__products">
@@ -24,26 +24,26 @@ function ProductCallout(): ReactNode {
           <h3>CubePlex</h3>
           <p>
             <Translate id="blog.productCallout.cubeplexDescription">
-              Bring conversations, skills, shared memory, MCP integrations, and automation into a
-              governed workspace for your team.
+              A self-hosted AI agent workspace for teams to handle document, data, and cross-system
+              work with centralized access control and execution records.
             </Translate>
           </p>
           <a
             className="blog-product-callout__link"
             href="https://github.com/cubeplexai/cubeplex">
-            <Translate id="blog.productCallout.cubeplexCta">View CubePlex on GitHub</Translate>
+            <Translate id="blog.productCallout.cubeplexCta">View CubePlex source</Translate>
           </a>
         </section>
         <section className="blog-product-callout__product">
           <h3>CubePi</h3>
           <p>
             <Translate id="blog.productCallout.cubepiDescription">
-              Build async Python agents with persistence, tools, streaming, and tracing—without
-              losing sight of the runtime.
+              A high-performance, traceable, async-native Python agent framework with
+              production-grade persistence.
             </Translate>
           </p>
           <a className="blog-product-callout__link" href="https://github.com/cubeplexai/cubepi">
-            <Translate id="blog.productCallout.cubepiCta">View CubePi on GitHub</Translate>
+            <Translate id="blog.productCallout.cubepiCta">View CubePi source</Translate>
           </a>
         </section>
       </div>
