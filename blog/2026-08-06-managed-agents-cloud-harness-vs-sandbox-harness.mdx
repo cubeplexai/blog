@@ -117,7 +117,7 @@ The two architectures can also be combined. The control plane keeps the Managed 
 
 ## CubePlex architecture direction
 
-CubePlex uses a centralized harness with independent sandboxes. The Cubepi agent loop, context, middleware, MCP routing, approvals, streams, and traces are managed by the cloud control plane. Sandboxes provide isolated shells, files, browsers, and artifact execution environments.
+CubePlex uses a centralized harness with independent sandboxes. The CubePi agent loop, context, middleware, MCP routing, approvals, streams, and traces are managed by the cloud control plane. Sandboxes provide isolated shells, files, browsers, and artifact execution environments.
 
 This choice separates the Managed Agent lifecycle from its execution environment. An `AgentDefinition` and its immutable versions should be stored independently of any sandbox. When a conversation, scheduled job, trigger, or IM message references the same Managed Agent, the control plane resolves a fixed prompt, model, skills, MCP configuration, and permissions before allocating an execution environment for that run. An agent does not need to retain a sandbox while waiting for input or an event.
 
@@ -125,7 +125,7 @@ Multi-sandbox scheduling follows from the same boundary. A Managed Agent should 
 
 This boundary does not require every tool operation to return to the control plane individually. A restricted execution worker inside the sandbox can handle PTYs, code indexing, browser recording, and large-file processing to reduce high-frequency RPC and large observation transfers. The control plane still owns the agent trajectory, long-lived credentials, approval state, and final audit record.
 
-This article describes CubePlex's architecture direction. CubePlex currently uses a centralized Cubepi run path with independent sandboxes. Managed Agent definitions and one-to-many sandbox orchestration have not yet been delivered as complete product capabilities. The next step is to fix each Managed Agent's version, runtime identity, and audit context in the control plane, then treat sandboxes as execution resources that can be leased, replaced, and scheduled in parallel for each task. The agent persists; sandboxes are used on demand. That lifecycle boundary is the main reason CubePlex chose a centralized harness.
+This article describes CubePlex's architecture direction. CubePlex currently uses a centralized CubePi run path with independent sandboxes. Managed Agent definitions and one-to-many sandbox orchestration have not yet been delivered as complete product capabilities. The next step is to fix each Managed Agent's version, runtime identity, and audit context in the control plane, then treat sandboxes as execution resources that can be leased, replaced, and scheduled in parallel for each task. The agent persists; sandboxes are used on demand. That lifecycle boundary is the main reason CubePlex chose a centralized harness.
 
 ## References
 

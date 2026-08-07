@@ -58,9 +58,9 @@ Sandbox 仍然要限制网络出口和文件访问。控制面 Harness 也会接
 
 ## CubePlex 的架构选择
 
-CubePlex 选择控制面 Harness 与独立 Sandbox。Cubepi 管理 Agent loop、上下文、MCP 路由、审批和 trace，Sandbox 提供隔离的 Shell、文件、浏览器与产物执行环境。高频本地操作可以交给 Sandbox 内的受限 worker，Agent trajectory、长期凭据和审批状态仍由控制面持有。
+CubePlex 选择控制面 Harness 与独立 Sandbox。CubePi 管理 Agent loop、上下文、MCP 路由、审批和 trace，Sandbox 提供隔离的 Shell、文件、浏览器与产物执行环境。高频本地操作可以交给 Sandbox 内的受限 worker，Agent trajectory、长期凭据和审批状态仍由控制面持有。
 
-CubePlex 当前已经采用集中式 Cubepi run path 和独立 Sandbox。Managed Agent definition 与一对多 Sandbox 编排仍属于后续架构演进，不能当作已经交付的产品能力。现阶段应先固定 Managed Agent 的版本、运行身份和审计上下文，再把 Sandbox 作为可申请、替换和并行调度的执行资源。
+CubePlex 当前已经采用集中式 CubePi run path 和独立 Sandbox。Managed Agent definition 与一对多 Sandbox 编排仍属于后续架构演进，不能当作已经交付的产品能力。现阶段应先固定 Managed Agent 的版本、运行身份和审计上下文，再把 Sandbox 作为可申请、替换和并行调度的执行资源。
 
 一次任务可以绑定一台 Sandbox。长期 Managed Agent 应当持续存在，并在需要执行时租用 Sandbox。这是 CubePlex 选择控制面 Harness 的原因。
 
