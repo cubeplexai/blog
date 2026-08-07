@@ -23,21 +23,6 @@
   "blog.productCallout.cubepiCta": {
     "message": "查看 CubePi 源码"
   },
-  "blog.intro.kicker": {
-    "message": "CubePlex 博客"
-  },
-  "blog.intro.heading": {
-    "message": "受治理的智能体工作。"
-  },
-  "blog.intro.description": {
-    "message": "面向构建可治理、自托管智能体工作流团队的产品与工程笔记。"
-  },
-  "blog.intro.documentationCta": {
-    "message": "阅读文档"
-  },
-  "blog.intro.imageAlt": {
-    "message": "带有笔记本电脑和流程图的简洁技术工作空间"
-  },
   "theme.ErrorPageContent.title": {
     "message": "页面已崩溃。",
     "description": "The title of the fallback page when the page crashed"
