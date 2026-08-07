@@ -469,12 +469,6 @@ a.blog-post__visual:hover .blog-post__image {
   font-size: 18px;
 }
 
-.blog-post .markdown > p:first-child {
-  color: var(--ink-9);
-  font-size: 20px;
-  line-height: 1.55;
-}
-
 .blog-post .markdown h2 {
   margin: 56px 0 20px;
   font-size: 28px;
@@ -799,10 +793,6 @@ a.blog-post__visual:hover .blog-post__image {
 
   .blog-post .markdown {
     font-size: 16px;
-  }
-
-  .blog-post .markdown > p:first-child {
-    font-size: 18px;
   }
 
   .blog-post h1 {
