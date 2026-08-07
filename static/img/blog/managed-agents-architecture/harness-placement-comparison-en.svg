@@ -1,72 +1,106 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 1700" role="img" aria-labelledby="title desc">
-  <title id="title">Two Managed Agent Harness Architectures</title>
-  <desc id="desc">A mobile-first vertical architecture diagram. The upper panel places the harness and tool environment in one sandbox. The lower panel keeps the cloud harness independent and controls multiple sandboxes through an execution API.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Two Harness Architectures for Managed Agents</title>
+  <desc id="desc">Where the agent loop, durable state, and runtime credentials live determines the system boundary.</desc>
   <defs>
-    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#27272a" stroke-width="0.8"/></pattern>
-    <marker id="arrow-blue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4 0 8Z" fill="#6a83e3"/></marker>
-    <marker id="arrow-gray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4 0 8Z" fill="#71717a"/></marker>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#27272a" stroke-width=".7"/></pattern>
+    <marker id="arrow-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5 0 7Z" fill="#6a83e3"/></marker>
+    <marker id="arrow-gray" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5 0 7Z" fill="#71717a"/></marker>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap');
-      text{font-family:Inter,'PingFang SC','Noto Sans SC',sans-serif}.mono{font-family:'JetBrains Mono','PingFang SC','Noto Sans SC',monospace}
-      .title{fill:#f4f4f5;font-size:38px;font-weight:700;letter-spacing:-.6px}.subtitle{fill:#a1a1aa;font-size:20px}
-      .panel{fill:#0a0a0b;stroke:#3f3f46;stroke-width:2}.panel-title{fill:#93a6ec;font-size:26px;font-weight:650}.panel-copy{fill:#a1a1aa;font-size:18px}
-      .region-blue{fill:#0a0a0b;stroke:#6a83e3;stroke-width:2;stroke-dasharray:10 7}.region-green{fill:#0a0a0b;stroke:#34d399;stroke-width:2;stroke-dasharray:10 7}
-      .region-label-blue{fill:#93a6ec;font-size:18px;font-weight:650;letter-spacing:.5px}.region-label-green{fill:#6ee7b7;font-size:18px;font-weight:650;letter-spacing:.5px}
-      .mask{fill:#0a0a0b}.blue{fill:#14213d;stroke:#6a83e3;stroke-width:2.3}.green{fill:#0c2f28;stroke:#34d399;stroke-width:2.2}.violet{fill:#21163d;stroke:#a78bfa;stroke-width:2}.amber{fill:#2f2211;stroke:#fbbf24;stroke-width:2}
-      .name{fill:#f4f4f5;font-size:25px;font-weight:600}.sub{fill:#a1a1aa;font-size:18px}
-      .line-blue{fill:none;stroke:#6a83e3;stroke-width:2.8;marker-end:url(#arrow-blue);stroke-linejoin:round}.line-gray{fill:none;stroke:#71717a;stroke-width:2.2;marker-end:url(#arrow-gray);stroke-linejoin:round}
-      .foot{fill:#0a0a0b;stroke:#3f3f46;stroke-width:1.8}.foot-title{fill:#93a6ec;font-size:20px;font-weight:650}.foot-copy{fill:#a1a1aa;font-size:18px}
+      text{font-family:Inter,'PingFang SC','Noto Sans SC',sans-serif}
+      .mono{font-family:'JetBrains Mono','PingFang SC','Noto Sans SC',monospace}
+      .title{fill:#f4f4f5;font-size:30px;font-weight:700;letter-spacing:-.5px}
+      .subtitle{fill:#a1a1aa;font-size:15px}
+      .panel{fill:#0a0a0b;stroke:#3f3f46;stroke-width:1.3}
+      .panel-title{fill:#93a6ec;font-size:17px;font-weight:650}
+      .panel-copy{fill:#71717a;font-size:12px}
+      .box{fill:#0a0a0b;stroke:#3f3f46;stroke-width:1.25}
+      .key{fill:#14213d;stroke:#6a83e3;stroke-width:1.7}
+      .sandbox-frame{fill:#0c2f28;stroke:#34d399;stroke-width:1.7}
+      .secret{fill:#101014;stroke:#52525b;stroke-width:1.25}
+      .name{fill:#f4f4f5;font-size:15px;font-weight:600}
+      .sub{fill:#a1a1aa;font-size:11.5px}
+      .tiny{fill:#71717a;font-size:10.5px}
+      .label{fill:#93a6ec;font-size:10.5px;font-weight:600}
+      .line-blue{fill:none;stroke:#6a83e3;stroke-width:1.8;marker-end:url(#arrow-blue);stroke-linejoin:round}
+      .line-gray{fill:none;stroke:#71717a;stroke-width:1.4;marker-end:url(#arrow-gray);stroke-linejoin:round}
+      .line-secret{fill:none;stroke:#6a83e3;stroke-width:1.3;stroke-dasharray:5 5;marker-end:url(#arrow-blue);stroke-linejoin:round}
+      .chip{fill:#18181b;stroke:#3f3f46;stroke-width:1}
+      .chip-text{fill:#d4d4d8;font-size:10.5px}
+      .foot{fill:#0a0a0b;stroke:#3f3f46;stroke-width:1.1}
+      .foot-title{fill:#93a6ec;font-size:11px;font-weight:650}
+      .foot-copy{fill:#a1a1aa;font-size:11px}
     </style>
   </defs>
-  <rect width="960" height="1700" fill="#18181b"/><rect width="960" height="1700" fill="url(#grid)"/>
-  <text x="36" y="52" class="title">Two Managed Agent Harness Architectures</text>
-  <text x="36" y="84" class="subtitle">The boundary depends on who owns the agent loop and durable state.</text>
+  <rect width="1600" height="1000" fill="#18181b"/><rect width="1600" height="1000" fill="url(#grid)"/>
 
-  <path d="M248 285V350" class="line-blue"/><path d="M709 285V418H754" class="line-gray"/>
-  <path d="M480 510V555" class="line-blue"/><path d="M480 660V700" class="line-blue"/>
-  <rect x="28" y="118" width="904" height="680" rx="18" class="panel"/>
-  <text x="56" y="160" class="panel-title">Sandbox-Local Harness</text>
-  <text x="56" y="190" class="panel-copy">The model loop and tool processes share one environment and lifecycle.</text>
+  <text x="46" y="54" class="title">Two Harness Architectures for Managed Agents</text><text x="46" y="82" class="subtitle">Where the agent loop, durable state, and runtime credentials live determines the system boundary.</text>
+  <rect x="42" y="118" width="735" height="790" rx="14" class="panel"/><rect x="823" y="118" width="735" height="790" rx="14" class="panel"/>
+  <text x="72" y="153" class="panel-title">Harness inside the sandbox</text><text x="72" y="176" class="panel-copy">The model loop, tool processes, and runtime credentials share one environment</text>
+  <text x="853" y="153" class="panel-title">Control-plane harness</text><text x="853" y="176" class="panel-copy">Agent state and long-lived credentials persist independently of sandbox leases</text>
 
-  <rect x="70" y="225" width="356" height="82" rx="9" class="mask"/><rect x="70" y="225" width="356" height="82" rx="9" class="blue"/>
-  <text x="248" y="259" text-anchor="middle" class="name">Managed Agent Control Plane</text><text x="248" y="285" text-anchor="middle" class="sub">definition · queue · status</text>
-  <rect x="576" y="225" width="266" height="82" rx="9" class="mask"/><rect x="576" y="225" width="266" height="82" rx="9" class="violet"/>
-  <text x="709" y="259" text-anchor="middle" class="name">Model Provider</text><text x="709" y="285" text-anchor="middle" class="sub">remote inference API</text>
+  <path d="M235 284V350H410V390" class="line-blue"/><path d="M650 390V325H642V284" class="line-gray"/><path d="M410 480V530" class="line-blue"/><path d="M410 620V670" class="line-blue"/>
+  <rect x="82" y="215" width="306" height="69" rx="7" class="key"/>
+  <text x="235" y="245.5" text-anchor="middle" class="name" style="font-size:14px">Managed Agent Control Plane</text>
+  <text x="235" y="266.5" text-anchor="middle" class="sub">definition · queue · status</text>
 
-  <rect x="66" y="350" width="828" height="414" rx="14" class="region-blue"/><text x="88" y="380" class="region-label-blue mono">SANDBOX · ONE RUNNING AGENT</text>
-  <rect x="112" y="410" width="646" height="100" rx="10" class="mask"/><rect x="112" y="410" width="646" height="100" rx="10" class="blue"/>
-  <text x="435" y="448" text-anchor="middle" class="name">Agent Harness</text><text x="435" y="479" text-anchor="middle" class="sub">context · model loop · retry · approval</text>
-  <rect x="112" y="555" width="736" height="105" rx="10" class="mask"/><rect x="112" y="555" width="736" height="105" rx="10" class="green"/>
-  <text x="480" y="592" text-anchor="middle" class="name">Local Tool Runtime</text><text x="480" y="624" text-anchor="middle" class="sub">Shell / PTY · Files · Browser · Workspace / MCP</text>
-  <rect x="205" y="700" width="550" height="58" rx="8" class="mask"/><rect x="205" y="700" width="550" height="58" rx="8" class="amber"/>
-  <text x="480" y="726" text-anchor="middle" class="name">One Lifecycle and Failure Boundary</text><text x="480" y="749" text-anchor="middle" class="sub">Stopping requires both harness and workspace recovery.</text>
+  <rect x="510" y="215" width="264" height="69" rx="7" class="box"/>
+  <text x="642" y="245.5" text-anchor="middle" class="name">Model Provider</text>
+  <text x="642" y="266.5" text-anchor="middle" class="sub">remote inference API</text>
 
-  <path d="M480 1085V1140" class="line-blue"/>
-  <path d="M480 1262V1310H184V1350" class="line-blue"/><path d="M480 1262V1350" class="line-blue"/><path d="M480 1310H776V1350" class="line-blue"/>
-  <rect x="28" y="822" width="904" height="720" rx="18" class="panel"/>
-  <text x="56" y="864" class="panel-title">Centralized Cloud Harness</text>
-  <text x="56" y="894" class="panel-copy">Agent state stays in the control plane; sandboxes are replaceable leases.</text>
+  <rect x="72" y="330" width="675" height="525" rx="11" class="sandbox-frame"/><text x="94" y="362" class="label mono">SANDBOX · ONE AGENT</text>
+  <rect x="115" y="390" width="590" height="90" rx="7" class="key"/>
+  <text x="410" y="431" text-anchor="middle" class="name" style="font-size:17px">Agent Harness</text>
+  <text x="410" y="452" text-anchor="middle" class="sub">context · model loop · retry · approval</text>
 
-  <rect x="66" y="930" width="828" height="356" rx="14" class="region-blue"/><text x="88" y="960" class="region-label-blue mono">MANAGED AGENT CONTROL PLANE</text>
-  <rect x="96" y="995" width="230" height="90" rx="9" class="mask"/><rect x="96" y="995" width="230" height="90" rx="9" class="violet"/>
-  <text x="211" y="1031" text-anchor="middle" class="name">Agent Definition</text><text x="211" y="1061" text-anchor="middle" class="sub">version · policy</text>
-  <rect x="365" y="995" width="230" height="90" rx="9" class="mask"/><rect x="365" y="995" width="230" height="90" rx="9" class="violet"/>
-  <text x="480" y="1031" text-anchor="middle" class="name">Durable State</text><text x="480" y="1061" text-anchor="middle" class="sub">trajectory · events</text>
-  <rect x="634" y="995" width="230" height="90" rx="9" class="mask"/><rect x="634" y="995" width="230" height="90" rx="9" class="amber"/>
-  <text x="749" y="1031" text-anchor="middle" class="name">Policy / Vault</text><text x="749" y="1061" text-anchor="middle" class="sub">RBAC · secrets</text>
-  <rect x="230" y="1140" width="500" height="122" rx="10" class="mask"/><rect x="230" y="1140" width="500" height="122" rx="10" class="blue"/>
-  <text x="480" y="1182" text-anchor="middle" class="name">Cloud Agent Harness</text><text x="480" y="1214" text-anchor="middle" class="sub">context · model loop · scheduling · recovery</text>
+  <rect x="115" y="530" width="590" height="90" rx="7" class="box"/>
+  <text x="410" y="571" text-anchor="middle" class="name" style="font-size:16px">Local Tool Runtime</text>
+  <text x="410" y="592" text-anchor="middle" class="sub">Shell / PTY · Files · Browser · Workspace / MCP</text>
 
-  <rect x="66" y="1310" width="828" height="192" rx="14" class="region-green"/><text x="88" y="1340" class="region-label-green mono">ISOLATED SANDBOX LEASES</text>
-  <rect x="92" y="1350" width="184" height="116" rx="9" class="mask"/><rect x="92" y="1350" width="184" height="116" rx="9" class="green"/>
-  <text x="184" y="1390" text-anchor="middle" class="name">Sandbox A</text><text x="184" y="1421" text-anchor="middle" class="sub">Code</text><text x="184" y="1451" text-anchor="middle" class="sub mono">ephemeral</text>
-  <rect x="388" y="1350" width="184" height="116" rx="9" class="mask"/><rect x="388" y="1350" width="184" height="116" rx="9" class="green"/>
-  <text x="480" y="1390" text-anchor="middle" class="name">Sandbox B</text><text x="480" y="1421" text-anchor="middle" class="sub">Browser</text><text x="480" y="1451" text-anchor="middle" class="sub mono">replaceable</text>
-  <rect x="684" y="1350" width="184" height="116" rx="9" class="mask"/><rect x="684" y="1350" width="184" height="116" rx="9" class="green"/>
-  <text x="776" y="1390" text-anchor="middle" class="name">Sandbox C</text><text x="776" y="1421" text-anchor="middle" class="sub">GPU / Matrix</text><text x="776" y="1451" text-anchor="middle" class="sub mono">parallel</text>
+  <rect x="115" y="670" width="590" height="105" rx="7" class="secret"/>
+  <text x="410" y="699" text-anchor="middle" class="name" style="font-size:16px">Sandbox env / secrets</text>
+  <text x="410" y="720" text-anchor="middle" class="sub">model key · MCP tokens · application env</text>
+  <text x="410" y="740" text-anchor="middle" class="tiny mono">same boundary as the harness and tool processes</text>
+  <rect x="115" y="670" width="5" height="105" rx="2" fill="#6a83e3"/>
+  <text x="410" y="824" text-anchor="middle" class="tiny">Harness, tool runtime, env, and secrets start and stop with the sandbox</text>
 
-  <rect x="28" y="1570" width="904" height="92" rx="12" class="foot"/>
-  <text x="54" y="1604" class="foot-title">Architectural Tradeoff</text>
-  <text x="54" y="1634" class="foot-copy">Top: local tool access, with the agent bound to one sandbox.</text>
-  <text x="54" y="1658" class="foot-copy">Bottom: a remote protocol enables independent state and multi-sandbox work.</text>
+  <path d="M958 284V350" class="line-blue"/><path d="M1190 284V330H1190V350" class="line-gray"/><path d="M1370 284V330H1190V350" class="line-secret"/>
+  <path d="M1190 445V505" class="line-blue"/><path d="M1190 575V645H965V690" class="line-blue"/><path d="M1190 645V690" class="line-blue"/><path d="M1190 645H1415V690" class="line-blue"/>
+  <path d="M1370 284V625H1450V675" class="line-secret"/>
+  <rect x="850" y="215" width="215" height="69" rx="7" class="box"/>
+  <text x="957.5" y="245.5" text-anchor="middle" class="name" style="font-size:14px">Agent Definition</text>
+  <text x="957.5" y="266.5" text-anchor="middle" class="sub">version · policy</text>
+
+  <rect x="1082" y="215" width="215" height="69" rx="7" class="box"/>
+  <text x="1189.5" y="245.5" text-anchor="middle" class="name" style="font-size:14px">Durable State</text>
+  <text x="1189.5" y="266.5" text-anchor="middle" class="sub">trajectory · events</text>
+
+  <rect x="1314" y="215" width="215" height="69" rx="7" class="secret"/>
+  <text x="1421.5" y="245.5" text-anchor="middle" class="name" style="font-size:13px">Secret Vault / Broker</text>
+  <text x="1421.5" y="266.5" text-anchor="middle" class="sub">long-lived credentials · RBAC</text>
+
+  <rect x="1314" y="215" width="5" height="69" rx="2" fill="#6a83e3"/>
+  <rect x="930" y="350" width="520" height="95" rx="7" class="key"/>
+  <text x="1190" y="393.5" text-anchor="middle" class="name" style="font-size:17px">Cloud Agent Harness</text>
+  <text x="1190" y="414.5" text-anchor="middle" class="sub">model loop · scheduling · recovery</text>
+
+  <rect x="960" y="505" width="460" height="70" rx="7" class="box"/>
+  <text x="1190" y="536" text-anchor="middle" class="name" style="font-size:14px">Execution API / Lease Manager</text>
+  <text x="1190" y="557" text-anchor="middle" class="sub">create, replace, release, and inject task context</text>
+
+  <text x="1450" y="615" text-anchor="end" class="label">scoped env / short-lived tokens only</text>
+  <rect x="850" y="650" width="680" height="205" rx="11" class="box"/><text x="872" y="680" class="label mono">SANDBOX LEASES</text>
+  <rect x="875" y="690" width="180" height="108" rx="7" class="sandbox-frame"/>
+  <text x="965" y="740" text-anchor="middle" class="name" style="font-size:14px">Sandbox A</text>
+  <text x="965" y="761" text-anchor="middle" class="sub">Code · task env</text>
+
+  <rect x="1100" y="690" width="180" height="108" rx="7" class="sandbox-frame"/>
+  <text x="1190" y="740" text-anchor="middle" class="name" style="font-size:14px">Sandbox B</text>
+  <text x="1190" y="761" text-anchor="middle" class="sub">Browser · session token</text>
+
+  <rect x="1325" y="690" width="180" height="108" rx="7" class="sandbox-frame"/>
+  <text x="1415" y="740" text-anchor="middle" class="name" style="font-size:14px">Sandbox C</text>
+  <text x="1415" y="761" text-anchor="middle" class="sub">GPU · job env</text>
+
+
+  <rect x="42" y="930" width="1516" height="48" rx="7" class="foot"/><text x="62" y="950" class="foot-title">Credential boundary</text><text x="62" y="968" class="foot-copy">Left: runtime credentials enter the sandbox and share the harness fault boundary. Right: long-lived secrets stay in the control plane; each lease receives only task-scoped access.</text>
 </svg>

@@ -61,8 +61,6 @@ For one-off automation, putting a mature harness inside a sandbox remains the sh
 
 CubePlex uses a control-plane harness with independent sandboxes. CubePi manages the agent loop, context, MCP routing, approvals, and traces. Sandboxes provide isolated shells, files, browsers, and artifact execution environments. High-frequency local operations can run in a restricted sandbox worker, while the control plane retains the agent trajectory, long-lived credentials, and approval state.
 
-CubePlex already uses a centralized CubePi run path with independent sandboxes. Managed Agent definitions and one-to-many sandbox orchestration remain future architecture work and should not be presented as delivered product capabilities. The current priority is to fix each Managed Agent's version, runtime identity, and audit context, then treat sandboxes as execution resources that can be leased, replaced, and scheduled in parallel.
-
 One task can remain bound to one sandbox. A long-running Managed Agent should persist and lease sandboxes only when execution is required. That is why CubePlex chose a control-plane harness.
 
 ## References
