@@ -101,9 +101,9 @@ function placementDiagram(locale) {
   <text x="72" y="153" class="panel-title">${escapeXml(t.leftTitle)}</text><text x="72" y="176" class="panel-copy">${escapeXml(t.leftCopy)}</text>
   <text x="853" y="153" class="panel-title">${escapeXml(t.rightTitle)}</text><text x="853" y="176" class="panel-copy">${escapeXml(t.rightCopy)}</text>
 
-  <path d="M235 284V350H410V390" class="line-blue"/><path d="M650 390V325H642V284" class="line-gray"/><path d="M410 480V530" class="line-blue"/><path d="M410 620V670" class="line-blue"/>
+  <path d="M235 284V350H410V390" class="line-blue"/><path d="M542 390V284" class="line-gray"/><path d="M410 480V530" class="line-blue"/><path d="M410 620V670" class="line-blue"/>
   ${box({x:82,y:215,w:306,h:69,kind:'key',name:t.cp,sub:t.cpSub,nameSize:14})}
-  ${box({x:510,y:215,w:264,h:69,name:t.provider,sub:t.providerSub})}
+  ${box({x:410,y:215,w:264,h:69,name:t.provider,sub:t.providerSub})}
   <rect x="72" y="330" width="675" height="525" rx="11" class="sandbox-frame"/><text x="94" y="362" class="label mono">${escapeXml(t.sandbox)}</text>
   ${box({x:115,y:390,w:590,h:90,kind:'key',name:t.harness,sub:t.harnessSub,nameSize:17})}
   ${box({x:115,y:530,w:590,h:90,name:t.runtime,sub:t.runtimeSub,nameSize:16})}
