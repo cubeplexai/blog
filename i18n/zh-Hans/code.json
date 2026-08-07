@@ -6,22 +6,22 @@
     "message": "最新文章"
   },
   "blog.productCallout.eyebrow": {
-    "message": "继续构建"
+    "message": "开源项目"
   },
   "blog.productCallout.title": {
-    "message": "从智能体想法，到可靠的实际工作。"
+    "message": "把 Agent 接进团队的日常工作"
   },
   "blog.productCallout.cubeplexDescription": {
-    "message": "将对话、技能、共享记忆、MCP 集成与自动化纳入团队可治理的工作空间。"
+    "message": "CubePlex 把 Agent、团队知识、外部工具和自动化任务放在同一个工作空间里。谁能用、用了什么、任务跑到哪一步，都能统一管理。"
   },
   "blog.productCallout.cubepiDescription": {
-    "message": "使用持久化、工具、流式输出和追踪来构建异步 Python 智能体，同时始终掌握运行时。"
+    "message": "用 Python 构建可以持续运行的异步 Agent，持久化、工具调用、流式输出和运行追踪都由运行时处理。"
   },
   "blog.productCallout.cubeplexCta": {
-    "message": "在 GitHub 查看 CubePlex"
+    "message": "查看 CubePlex 源码"
   },
   "blog.productCallout.cubepiCta": {
-    "message": "在 GitHub 查看 CubePi"
+    "message": "查看 CubePi 源码"
   },
   "blog.intro.kicker": {
     "message": "CubePlex 博客"
