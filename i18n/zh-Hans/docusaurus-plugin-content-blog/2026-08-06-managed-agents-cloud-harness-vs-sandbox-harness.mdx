@@ -1,36 +1,32 @@
 ---
 slug: managed-agents-cloud-harness-vs-sandbox-harness
-title: Managed Agents 的两种运行架构：云端 Harness 与 Sandbox 内 Harness
+title: 云端与 Sandbox 内 Harness 的 Managed Agent 架构
 description: 比较集中式云端 Harness 与 Sandbox 内 Harness 的生命周期、并行执行、安全边界、故障恢复和运维成本，并说明 CubePlex 的架构选择。
 authors: [xfgong]
 tags: [Managed Agents, Agent Harness, Sandbox, Agent 平台]
 ---
 
-Managed Agent 通常保存 prompt、模型和工具配置。平台还要决定由哪个进程持有 Agent loop：谁保存上下文，谁发起模型请求，谁处理 tool call，谁执行审批、重试、取消和恢复。
+我把 OpenHands、OpenAI Agents SDK、Codex Cloud 和 Claude Code Action 的公开资料放在一起看时，先遇到一个容易混淆的说法，“Agent runs in a sandbox”。这句话只交代了工具在哪里执行，没有交代谁保存上下文、发起模型请求，又是谁处理 tool call 和恢复运行。
 
-目前常见的运行架构有两种。一种把 Harness 安装进每个 Sandbox，让 Agent loop 与工作区在同一个隔离环境内运行；另一种把 Harness 作为统一的云端服务，由它通过 API 调度一个或多个 Sandbox。两者都能提供隔离执行，但 Agent 与 Sandbox 的生命周期、故障边界和扩展方式不同。
+Managed Agent 通常保存 prompt、模型和工具配置。平台还要确定哪个进程持有 Agent loop。目前常见的做法有两种。一种把 Harness 安装进每个 Sandbox，让 Agent loop 与工作区在同一个隔离环境内运行；另一种把 Harness 做成统一的云端服务，由它通过 API 调度一个或多个 Sandbox。两者都能隔离执行环境，但 Agent 与 Sandbox 的生命周期、故障边界和扩展方式不同。
 
 <!-- truncate -->
 
 ## Harness 的运行边界
 
-本文所说的 Harness，是模型之外负责推进 Agent 运行的软件层，通常包含以下职责：
+本文所说的 Harness，是模型之外负责推进 Agent 运行的软件层。它组装 system prompt、对话历史、skills 和 memory，发起模型请求，解析 tool call，再把 observation 送回模型。
 
-- 组装 system prompt、对话历史、skills 和 memory；
-- 发起模型请求，解析 tool call，再把 observation 送回模型；
-- 管理上下文压缩、token 预算、重试、取消和人工审批；
-- 绑定 Shell、文件、浏览器、MCP 和子 Agent 等工具；
-- 保存运行事件、trace、成本和最终产物。
+上下文压缩、token 预算、重试、取消和人工审批也由 Harness 管理。它还要绑定 Shell、文件、浏览器、MCP 和子 Agent 等工具，并保存运行事件、trace、成本和最终产物。
 
 判断 Harness 位于哪里，不能只看产品是否写了“Agent runs in a sandbox”。如果模型循环在云端，Sandbox 只接收命令并返回结果，它仍是集中式 Harness。只有当持有上下文并推进模型 turn 的进程也运行在 Sandbox 内，才属于 Sandbox 内 Harness。
 
-[OpenHands 的 Runtime 文档](https://docs.openhands.dev/openhands/usage/architecture/runtime)给出了集中式实现：后端产生 action，通过 REST 发送给容器中的 Action Execution Server，容器执行后返回 observation。[OpenAI Agents SDK 的 SandboxAgent](https://openai.github.io/openai-agents-python/sandbox/guide/)也由 `Runner` 准备 Agent、绑定 Sandbox session 并推进模型 turn，Sandbox 负责工作区和工具执行。
+[OpenHands 的 Runtime 文档](https://docs.openhands.dev/openhands/usage/architecture/runtime)给出了集中式实现。后端产生 action，通过 REST 发送给容器中的 Action Execution Server，容器执行后返回 observation。[OpenAI Agents SDK 的 SandboxAgent](https://openai.github.io/openai-agents-python/sandbox/guide/)也由 `Runner` 准备 Agent、绑定 Sandbox session 并推进模型 turn，Sandbox 负责工作区和工具执行。
 
-另一侧，[OpenAI 对 Codex Cloud 的说明](https://openai.com/index/introducing-codex/)明确写明 Agent 整体运行在独立云端容器中。[Claude Code Action](https://github.com/anthropics/claude-code-action)则把 Claude Code 的执行逻辑完整放在 GitHub runner 上，再从 runner 访问模型服务。这些实现更接近 Sandbox 内 Harness。
+[OpenAI 对 Codex Cloud 的说明](https://openai.com/index/introducing-codex/)明确写明 Agent 整体运行在独立云端容器中。[Claude Code Action](https://github.com/anthropics/claude-code-action)把 Claude Code 的执行逻辑完整放在 GitHub runner 上，再从 runner 访问模型服务。这两种实现更接近 Sandbox 内 Harness。
 
 ![Managed Agents 的两种 Harness 运行架构](/img/blog/managed-agents-architecture/harness-placement-comparison.svg)
 
-本文把 Sandbox 统一视为提供命令、文件、进程和状态生命周期的隔离执行资源，不重复比较容器、Kubernetes 与 MicroVM 的资源模型。不同 Sandbox 实现的调度、暂停、恢复和快照语义，可参考上一篇文章：[《OpenSandbox 与 CubeSandbox 选型：Kubernetes 资源模型与 MicroVM 执行栈》](./opensandbox-vs-cubesandbox-agent-platform-selection)。
+本文把 Sandbox 统一视为提供命令、文件、进程和状态生命周期的隔离执行资源，不重复比较容器、Kubernetes 与 MicroVM 的资源模型。不同 Sandbox 实现的调度、暂停、恢复和快照语义，可参考上一篇文章[《OpenSandbox 与 CubeSandbox 选型》](./opensandbox-vs-cubesandbox-agent-platform-selection)。
 
 ## Sandbox 内 Harness
 
@@ -52,23 +48,19 @@ Harness 进入 Sandbox 后还要解决凭据问题。模型请求需要 API key 
 
 Harness 不完全依赖某个 Sandbox。对话、memory、预算、审批状态和运行事件可以继续保存在控制面，而 Sandbox 按任务阶段创建、暂停、释放或替换。Agent 等待用户输入时可以释放计算资源；恢复后可以连接原 Sandbox、从快照创建新实例，也可以选择不同镜像、区域或硬件规格。
 
-这种解耦让 Sandbox 生命周期策略更灵活：
+这种解耦让平台按任务阶段安排 Sandbox。代码修改可以使用通用 CPU 环境，训练或推理开始时再申请 GPU；浏览器登录环境可以和代码执行环境分开，各自使用不同的网络与凭据策略。
 
-- 代码修改阶段使用通用 CPU Sandbox，模型训练或推理阶段再申请 GPU Sandbox；
-- 浏览器登录环境与代码执行环境分开，分别配置网络和凭据；
-- 高风险工具放进一次性 Sandbox，用完即销毁；
-- Sandbox 故障时保留 Agent trajectory，从最近的持久化 observation 重新创建执行环境；
-- Agent 等待审批、定时器或 webhook 时不占用持续运行的 Sandbox。
+高风险工具适合放进一次性 Sandbox，用完就销毁。Sandbox 故障时，控制面保留 Agent trajectory，再从最近持久化的 observation 创建执行环境。Agent 等待审批、定时器或 webhook 时，平台也能释放持续运行的 Sandbox。
 
-集中式 Harness 还可以让一个 Agent 同时控制多个 Sandbox。代码 Agent 可以为三个修复方案分别创建工作区，并行运行测试，最后在控制面比较结果；研究 Agent 可以把不同数据源分配到独立环境；测试 Agent 可以同时运行不同操作系统、依赖版本或浏览器组合。Sandbox 从“Agent 所在的机器”变成 Agent 可以申请、使用和释放的计算资源。
+集中式 Harness 还可以让一个 Agent 同时控制多个 Sandbox。代码 Agent 可以为几个修复方案分别创建工作区，并行运行测试，最后在控制面比较结果。测试 Agent 也可以同时运行不同操作系统、依赖版本或浏览器组合。此时，Sandbox 是 Agent 按任务申请、使用和释放的计算资源。
 
-多 Sandbox 并发并不是免费的。Harness 需要为每个分支保存任务状态、资源租约和预算，处理部分失败、超时、取消和结果合并。两个 Sandbox 同时修改同一个仓库时，还要明确分支、artifact 和最终提交的归并规则。没有这些约束，增加 Sandbox 数量只会放大成本和不确定性。
+多 Sandbox 并发会增加调度成本。Harness 需要为每个分支保存任务状态、资源租约和预算，处理部分失败、超时、取消和结果合并。两个 Sandbox 同时修改同一个仓库时，还要明确分支、artifact 和最终提交的归并规则。缺少这些约束，增加 Sandbox 数量只会放大成本和不确定性。
 
 ![云端 Harness 的 Sandbox 生命周期与并行编排](/img/blog/managed-agents-architecture/control-plane-multi-sandbox.svg)
 
 集中式架构的主要成本位于远程执行协议。Shell、文件、PTY、浏览器和流式日志都要通过 API 表达。小文件读取和短命令会产生更多往返；大 observation 需要截断、压缩或存入对象存储后传引用。网络中断也会让 Harness 与仍在运行的 Sandbox 失去同步，因此执行 API 必须支持幂等请求、租约、心跳、重连和明确的命令状态。
 
-控制面本身会成为多租户共享故障域。Harness 服务需要限制单个 Agent 的并发、上下文内存、模型请求和事件写入，避免一个失控任务占满整个 worker。集中式并不自动带来可靠性，它只是把恢复、审计和策略执行放到了一个更容易统一管理的位置。
+控制面本身会成为多租户共享故障域。Harness 服务需要限制单个 Agent 的并发、上下文内存、模型请求和事件写入，避免一个失控任务占满整个 worker。集中式架构仍要自己解决可靠性问题，只是恢复、审计和策略执行都集中在同一个管理位置。
 
 ## 生命周期与故障恢复
 
@@ -83,7 +75,7 @@ Harness 不完全依赖某个 Sandbox。对话、memory、预算、审批状态�
 | 环境升级 | Harness 与 Sandbox 镜像通常一起升级 | Harness 与 Sandbox 镜像可以分别灰度和回滚 |
 | 长期运行成本 | Agent 空闲时仍需保存整个 Sandbox 状态 | 控制面状态与计算资源可以分别计费和回收 |
 
-[Kubernetes Agent Sandbox](https://kubernetes.io/blog/2026/03/20/running-agents-on-kubernetes-with-agent-sandbox/)把 Agent 工作负载描述为有稳定身份、可暂停恢复、长时间空闲的 stateful singleton。这个模型适合 Sandbox 内 Harness，但它也说明了需要额外解决的问题：Sandbox 不再是普通的短任务容器，而是需要稳定网络身份、持久状态、warm pool 和 scale-to-zero 的运行单元。
+[Kubernetes Agent Sandbox](https://kubernetes.io/blog/2026/03/20/running-agents-on-kubernetes-with-agent-sandbox/)把 Agent 工作负载描述为有稳定身份、可暂停恢复、长时间空闲的 stateful singleton。这个模型适合 Sandbox 内 Harness，也给 Sandbox 增加了新的要求。它需要稳定网络身份、持久状态、warm pool 和 scale-to-zero，管理方式已经超出普通的短任务容器。
 
 集中式 Harness 则更接近分布式工作流系统。它必须在执行命令前记录意图，在收到 observation 后推进状态，并通过幂等键区分“命令没有执行”和“命令已经执行但响应丢失”。否则 Sandbox 重连后可能重复发送消息、重复提交代码或重复调用外部 API。
 
@@ -93,7 +85,7 @@ Sandbox 内 Harness 和集中式 Harness 都需要处理 prompt injection、工�
 
 Sandbox 内 Harness 通常至少需要访问模型服务。如果直接注入长期 API key，Sandbox 中运行的代码可能读取并外传它。更安全的实现是让 Harness 使用短期 token 访问统一模型网关，由网关执行模型 allowlist、额度、用户归属和审计。外部工具凭据也应按 tool call 动态交换，避免以环境变量形式长期存在。
 
-集中式 Harness 可以让模型密钥、审批规则和长期凭据完全留在控制面，只给 Sandbox 下发单次命令所需的最小权限。但集中式 Harness 会接收来自仓库、网页和工具结果的不可信内容；它仍可能被间接 prompt injection 诱导，以合法身份调用高权限工具。安全性取决于工具权限、网络出口和审批是否受到独立策略约束，而不是 Harness 是否在 Sandbox 外。
+集中式 Harness 可以让模型密钥、审批规则和长期凭据完全留在控制面，只给 Sandbox 下发单次命令所需的最小权限。但集中式 Harness 会接收来自仓库、网页和工具结果的不可信内容；它仍可能被间接 prompt injection 诱导，以合法身份调用高权限工具。工具权限、网络出口和审批需要受到独立策略约束，Harness 的运行位置本身不能保证安全。
 
 NIST 在 Agentic AI 安全建议中提出 workflow-bound credentials、持续授权、agent segmentation 和完整遥测。这些要求在两种架构中都成立，但集中式控制面通常更容易统一实施。[NIST Agentic AI Security](https://csrc.nist.gov/csrc/media/presentations/2026/agentic-ai-emerging-threats%2C-mitigations%2C-and-cha/1.3-agentic_ai-sotiropoulos.pdf)
 
@@ -123,15 +115,17 @@ CubePlex 选择集中式 Harness 与独立 Sandbox。Cubepi Agent loop、上下�
 
 多 Sandbox 调度是另一个直接结果。一个 Managed Agent 不应被建模为“一台长期绑定的机器”。控制面可以为同一任务创建多个相互隔离的工作区，让子 Agent 或并行分支分别执行，再由 Harness 汇总结果、控制预算并回收资源。不同 Sandbox 还可以使用不同镜像、网络策略和硬件规格。
 
-这并不要求所有工具操作都逐条回到控制面。对于 PTY、代码索引、浏览器录制和大文件处理，可以在 Sandbox 内增加受限的执行 worker，减少高频 RPC 和大 observation 传输。Agent trajectory、长期凭据、审批状态和最终审计记录仍由控制面持有。
+高频工具操作仍可留在 Sandbox 内。受限的执行 worker 负责 PTY、代码索引、浏览器录制和大文件处理，可以减少 RPC 次数和大 observation 传输。Agent trajectory、长期凭据、审批状态和最终审计记录仍由控制面持有。
 
-本文讨论的是 CubePlex 的架构方向。CubePlex 当前已采用集中式 Cubepi run path 和独立 Sandbox；Managed Agent definition 与一对多 Sandbox 编排尚未作为完整产品能力交付。基于现有边界，演进顺序也很明确：控制面先固定 Managed Agent 的版本、运行身份和审计上下文，再把 Sandbox 抽象为可按任务申请、替换和并行调度的执行资源。Agent 持续存在，Sandbox 按需使用，这是 CubePlex 选择集中式 Harness 的主要原因。
+本文讨论的是 CubePlex 的架构方向。CubePlex 当前已采用集中式 Cubepi run path 和独立 Sandbox；Managed Agent definition 与一对多 Sandbox 编排尚未作为完整产品能力交付。
+
+接下来，控制面应先固定 Managed Agent 的版本、运行身份和审计上下文，再把 Sandbox 作为可按任务申请、替换和并行调度的执行资源。Managed Agent 持续存在，Sandbox 按需使用。这条生命周期边界是 CubePlex 选择集中式 Harness 的主要原因。
 
 ## 参考资料
 
 - [OpenHands Runtime Architecture](https://docs.openhands.dev/openhands/usage/architecture/runtime)
-- [OpenAI Agents SDK：Sandbox Agents](https://openai.github.io/openai-agents-python/sandbox/guide/)
+- [OpenAI Agents SDK Sandbox Agents](https://openai.github.io/openai-agents-python/sandbox/guide/)
 - [OpenAI Codex Cloud](https://openai.com/index/introducing-codex/)
 - [Claude Code Action](https://github.com/anthropics/claude-code-action)
 - [Kubernetes Agent Sandbox](https://kubernetes.io/blog/2026/03/20/running-agents-on-kubernetes-with-agent-sandbox/)
-- [NIST：Agentic AI Emerging Threats, Mitigations, and Challenges](https://csrc.nist.gov/csrc/media/presentations/2026/agentic-ai-emerging-threats%2C-mitigations%2C-and-cha/1.3-agentic_ai-sotiropoulos.pdf)
+- [NIST Agentic AI Emerging Threats, Mitigations, and Challenges](https://csrc.nist.gov/csrc/media/presentations/2026/agentic-ai-emerging-threats%2C-mitigations%2C-and-cha/1.3-agentic_ai-sotiropoulos.pdf)
