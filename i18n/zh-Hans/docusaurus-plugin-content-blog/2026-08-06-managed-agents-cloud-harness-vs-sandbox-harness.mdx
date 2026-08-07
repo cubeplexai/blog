@@ -6,9 +6,11 @@ authors: [xfgong]
 tags: [Managed Agents, Agent Harness, Sandbox, Agent 平台]
 ---
 
-Cloud Managed Agent 目前有两种典型运行架构。第一种把 Agent Harness 和工具环境一起放进 Sandbox，Agent loop 与工作区共享生命周期。Codex Cloud 和 Claude Code Action 接近这条路线。
+Cloud Managed Agent 目前有两种典型运行架构。第一种把 Agent Harness 和工具环境一起放进 Sandbox，Agent loop 与工作区共享生命周期。Claude Code Action 是较明确的例子，整个 Action 都在 GitHub runner 上运行。Codex Cloud 把每个任务放进独立云端环境，也更接近这类封装，不过公开资料没有详细说明模型 loop 的进程边界。
 
-第二种把 Harness 放在云端控制面，Sandbox 只接收命令、维护工作区并返回执行结果。OpenHands 和 OpenAI Agents SDK 的 SandboxAgent 采用这类边界。
+第二种把 Harness 放在云端控制面。OpenHands 是这类架构的代表实现，后端向容器内的执行服务发送 action，再接收 observation。Sandbox 处理命令和工作区，Agent loop 留在后端。
+
+OpenAI Agents SDK 的 `SandboxAgent` 也采用类似分工。它仍通过普通 `Runner` API 运行，outer runtime 持有审批、trace、handoff 和恢复记录，sandbox session 负责命令、文件变更和环境隔离。这个功能目前处于 beta，适合用来说明 SDK 的架构边界，不宜和成熟的 Cloud Managed Agent 产品并列。
 
 两种架构都能隔离执行环境。Sandbox 内 Harness 更看重本地工具调用和自包含交付；集中式 Harness 把 Agent 生命周期与 Sandbox 分开，也更容易让一个 Agent 并行调度多个执行环境。对应的代价分别落在状态恢复、凭据管理和远程执行协议上。
 
@@ -22,9 +24,11 @@ Cloud Managed Agent 目前有两种典型运行架构。第一种把 Agent Harne
 
 判断 Harness 位于哪里，不能只看产品是否写了“Agent runs in a sandbox”。如果模型循环在云端，Sandbox 只接收命令并返回结果，它仍是集中式 Harness。只有当持有上下文并推进模型 turn 的进程也运行在 Sandbox 内，才属于 Sandbox 内 Harness。
 
-[OpenHands 的 Runtime 文档](https://docs.openhands.dev/openhands/usage/architecture/runtime)给出了集中式实现。后端产生 action，通过 REST 发送给容器中的 Action Execution Server，容器执行后返回 observation。[OpenAI Agents SDK 的 SandboxAgent](https://openai.github.io/openai-agents-python/sandbox/guide/)也由 `Runner` 准备 Agent、绑定 Sandbox session 并推进模型 turn，Sandbox 负责工作区和工具执行。
+[OpenHands 的 Runtime 文档](https://docs.openhands.dev/openhands/usage/architecture/runtime)给出了集中式实现。后端产生 action，通过 REST 发送给容器中的 Action Execution Server，容器执行后返回 observation。
 
-[OpenAI 对 Codex Cloud 的说明](https://openai.com/index/introducing-codex/)明确写明 Agent 整体运行在独立云端容器中。[Claude Code Action](https://github.com/anthropics/claude-code-action)把 Claude Code 的执行逻辑完整放在 GitHub runner 上，再从 runner 访问模型服务。这两种实现更接近 Sandbox 内 Harness。
+[OpenAI Agents SDK 的 SandboxAgent](https://openai.github.io/openai-agents-python/sandbox/guide/)仍是完整的 `Agent`，保留 instructions、tools、handoff 和 model settings，并通过普通 `Runner` API 运行。官方文档把审批、trace、handoff 和恢复记录留在 outer runtime，sandbox session 负责命令、文件变更和环境隔离。Filesystem、Shell、Skills、Memory 和 Compaction 都可以作为 sandbox capability，因此把它概括成“只执行命令”会漏掉工作区和运行时能力。它目前是 beta SDK 能力，本文把它当作架构边界的例子，不把它当作已经成熟的 Cloud Managed Agent 产品。
+
+[OpenAI 对 Codex Cloud 的说明](https://openai.com/index/introducing-codex/)明确写明每个任务运行在独立云端环境中，但没有进一步说明模型 loop 的进程边界。[Claude Code Action](https://github.com/anthropics/claude-code-action)把 Claude Code 的执行逻辑完整放在 GitHub runner 上，再从 runner 访问模型服务。Claude Code Action 是 Sandbox 内 Harness 更明确的产品例子。
 
 ![Managed Agents 的两种 Harness 运行架构](/img/blog/managed-agents-architecture/harness-placement-comparison.svg)
 
