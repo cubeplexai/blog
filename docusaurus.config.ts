@@ -18,6 +18,9 @@ const classicOptions: ClassicOptions = {
       copyright: `Copyright © ${new Date().getFullYear()} CubePlex.`,
     },
   },
+  gtag: {
+    trackingID: 'G-QE95ELVWCP',
+  },
   theme: {
     customCss: './src/css/custom.css',
   },
