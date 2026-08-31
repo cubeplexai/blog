@@ -35,42 +35,32 @@ const titleMarkup = titleLines
   .map((line, index) => `<tspan x="64" dy="${index === 0 ? 0 : 64}">${line}</tspan>`)
   .join('');
 
-const logo = await readFile(resolve('static/img/cubeplex-lockup-on-dark.svg'));
+const logo = await readFile(resolve('static/img/cubeplex-lockup-on-light.svg'));
 const encodedLogo = logo.toString('base64');
 const projectLogos = await Promise.all(logoPaths.map(async (logoPath) => (await readFile(resolve(logoPath))).toString('base64')));
 const subtitleMarkup = subtitle
-  ? `<text x="64" y="342" fill="#c4c9d4" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="500">${escapeXml(subtitle)}</text>`
+  ? `<text x="64" y="372" fill="#4b5563" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="500">${escapeXml(subtitle)}</text>`
   : '';
 const projectLogoMarkup = projectLogos.length === 2
   ? `
     <g transform="translate(64 356)">
-      <rect width="48" height="48" rx="12" fill="#10151f" fill-opacity="0.9" stroke="#31445f"/>
+      <rect width="48" height="48" rx="12" fill="#fcfcfa" stroke="#e6ebf2" stroke-width="2"/>
       <image href="data:image/svg+xml;base64,${projectLogos[0]}" x="8" y="8" width="32" height="32" preserveAspectRatio="xMidYMid meet"/>
-      <path d="M58 24H74" stroke="#6a83e3" stroke-width="2" stroke-linecap="round"/>
-      <rect x="84" width="48" height="48" rx="12" fill="#10151f" fill-opacity="0.9" stroke="#31445f"/>
+      <path d="M58 24H74" stroke="#1463e9" stroke-width="2" stroke-linecap="round"/>
+      <rect x="84" width="48" height="48" rx="12" fill="#fcfcfa" stroke="#e6ebf2" stroke-width="2"/>
       <image href="data:image/svg+xml;base64,${projectLogos[1]}" x="92" y="8" width="32" height="32" preserveAspectRatio="xMidYMid meet"/>
     </g>`
   : '';
 const overlay = Buffer.from(`
   <svg width="${coverWidth}" height="${coverHeight}" viewBox="0 0 ${coverWidth} ${coverHeight}" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="scrim" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#05070b" stop-opacity="0.94"/>
-        <stop offset="0.48" stop-color="#05070b" stop-opacity="0.58"/>
-        <stop offset="0.72" stop-color="#05070b" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    <rect width="${coverWidth}" height="${coverHeight}" fill="url(#scrim)"/>
-    <image href="data:image/svg+xml;base64,${encodedLogo}" x="64" y="48" width="176" height="40"/>
-    <text x="64" y="180" fill="#f4f4f5" font-family="Inter, Arial, sans-serif" font-size="58" font-weight="700" letter-spacing="-2.3">
+    <image href="data:image/svg+xml;base64,${encodedLogo}" x="64" y="68" width="176" height="40"/>
+    <rect x="64" y="140" width="52" height="6" rx="3" fill="#1463e9"/>
+    <text x="64" y="214" fill="#17191c" font-family="Inter, Arial, sans-serif" font-size="58" font-weight="700" letter-spacing="-2.3">
       ${titleMarkup}
     </text>
     ${subtitleMarkup}
     ${projectLogoMarkup}
-    <rect x="64" y="438" width="50" height="3" fill="#6a83e3"/>
-    <text x="64" y="470" fill="#d4d4d8" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="500">
-      CubePlex Blog
-    </text>
+    <path d="M64 438H114" stroke="#1463e9" stroke-width="3" stroke-linecap="round"/>
   </svg>
 `);
 

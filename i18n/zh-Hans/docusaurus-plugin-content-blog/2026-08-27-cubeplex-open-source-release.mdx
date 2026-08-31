@@ -1,0 +1,68 @@
+---
+slug: cubeplex-open-source-release
+title: CubePlex 正式开源
+description: CubePlex 现已以 Apache-2.0 许可证开源。它是一套面向团队工作区的企业级智能体平台，提供 Managed Agent、权限治理、隔离 Sandbox 与 Docker Compose、Kubernetes 部署资产。
+authors: [xfgong]
+tags: [CubePlex, 开源, 企业级智能体平台, Managed Agents, Agent 平台, 自托管]
+image: /img/blog/cubeplex-open-source-release-cover.webp
+---
+
+今天，我们正式开源 CubePlex：一套面向团队工作区的企业级智能体平台。源码以 Apache-2.0 许可证发布在 [GitHub](https://github.com/cubeplexai/cubeplex)，包括后端、Web 应用、部署资产、产品文档与贡献说明。
+
+团队需要让 Agent 在共享工作区里继续处理文件、工具、记忆和产物，并把模型访问、外部连接、权限和成本置于可管理的边界内。CubePlex 以这些边界组织团队协作和 Agent 执行。开源后，团队可以在自己的基础设施上部署、审查和扩展这套系统。
+
+<!-- truncate -->
+
+## 当前发布的内容
+
+仓库包含一套完整的全栈实现：后端提供 API、Agent runtime、会话与工作区数据；前端提供团队使用的 Web 界面；`deploy/` 下提供 Docker Compose 和 Kubernetes Helm 部署资产；`docs/` 中保留产品与工程说明。
+
+Agent runtime 建立在 [CubePi](https://github.com/cubeplexai/cubepi) 之上。CubePi 负责多模型接入、工具执行、流式输出、中间件和 checkpoint；CubePlex 在其上补上组织、工作区、成员角色、模型访问策略与团队协作所需的应用层能力。
+
+本次开源的功能包括：
+
+- 多模型对话与流式响应；
+- 个人、工作区和组织范围的 Memory；
+- 内置、组织上传和远程注册表来源的 Skills；
+- 支持静态凭据或 OAuth 的 MCP 工具目录，并按工作区授权；
+- 具有持久工作状态的隔离 Sandbox；
+- 会话中的文件、预览、代码和图片等版本化产物；
+- 定时、间隔、一次性任务与 webhook 触发的 Automation；
+- Slack、Discord、Teams、飞书、钉钉等 IM 入口；
+- 组织、工作区、角色、模型访问策略与成本跟踪。
+
+这些功能以当前 `main` 分支的实现和文档为准。开源并不意味着所有部署组合都有相同的安全边界或运行语义；部署前应按目标环境阅读对应文档并完成验证。
+
+## 企业级智能体平台的管理边界
+
+CubePlex 把组织、工作区和成员关系作为企业级智能体平台的基础边界。Agent 的对话、可访问的模型、Skill、MCP 工具和 Memory 都在这些边界内配置；团队可以在同一个工作区中共享上下文和交付物，同时限制不同工作区之间的访问。
+
+执行环境与控制面分开。Sandbox 用于运行命令、处理文件、启动浏览器或其他需要本地进程的工作，并保存工作目录、安装的依赖和工作树状态。Agent runtime、会话状态和访问策略由平台侧持有。这个划分让 Sandbox 可以按执行需要启用或替换，而不会把团队的身份、会话和长期状态绑定到一台持续运行的机器上。
+
+外部模型提供方、MCP server 和 IM 平台不属于 CubePlex 的信任边界。它们的连接配置、权限范围、凭据生命周期与网络策略需要由部署者逐项确认。尤其是执行不可信代码或连接企业系统时，Sandbox 隔离、出口策略和凭据注入方式都应按环境评估。
+
+## 自托管部署
+
+CubePlex 提供两种部署路径。
+
+Docker Compose 适合单机部署和较小规模的自托管环境。Kubernetes 部署通过 Helm 交付，适合需要集群资源管理、持久卷、Ingress 和更完整 Sandbox 集成的环境。两种方式使用同一套后端和前端镜像，部署仓库中也包含健康检查和端到端验证脚本。
+
+Docker runtime 下的 Sandbox 支持命令执行和持久工作目录，但不提供 Kubernetes egress secret injection，也不提供可持久化到磁盘的 pause/resume checkpoint。需要这些能力时，应使用 Kubernetes 部署并按文档配置对应组件。这个限制是当前实现边界，不应被忽略为一般性的“部署差异”。
+
+部署指南：
+
+- [Docker Compose](https://cubeplex.ai/docs/deployment/docker-compose)
+- [Kubernetes（Helm）](https://cubeplex.ai/docs/deployment/kubernetes)
+
+## 参与项目
+
+可以从仓库的 README 开始，按照贡献说明配置本地开发环境。项目使用 Python、TypeScript、pnpm 和 Docker；提交前的检查覆盖后端、前端和端到端流程。Issue 和 Pull Request 是讨论问题、提交修复和提出改进的入口。
+
+我们希望与使用团队 Agent 的开发者、平台工程师和安全工程师一起完善 CubePlex。欢迎反馈部署问题、Sandbox 隔离与网络边界、MCP 和 Skills 的连接体验，以及团队协作中的实际工作流。
+
+## 源码与文档
+
+- [CubePlex GitHub 仓库](https://github.com/cubeplexai/cubeplex)
+- [Apache-2.0 许可证](https://github.com/cubeplexai/cubeplex/blob/main/LICENSE)
+- [CubePlex 文档](https://docs.cubeplex.ai)
+- [贡献指南](https://github.com/cubeplexai/cubeplex/blob/main/CONTRIBUTING.md)

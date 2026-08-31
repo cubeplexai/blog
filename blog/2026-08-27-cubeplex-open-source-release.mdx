@@ -1,0 +1,68 @@
+---
+slug: cubeplex-open-source-release
+title: CubePlex Is Now Open Source
+description: CubePlex is now available under Apache-2.0. It is an enterprise agent platform for team workspaces, with managed agents, governed access, isolated sandboxes, and Docker Compose and Kubernetes deployment assets.
+authors: [xfgong]
+tags: [CubePlex, Open Source, Enterprise Agent Platform, Managed Agents, Agent Platform, Self-hosting]
+image: /img/blog/cubeplex-open-source-release-cover-en.webp
+---
+
+Today, we are formally open-sourcing CubePlex, an enterprise agent platform for team workspaces. The source is available under the Apache-2.0 license on [GitHub](https://github.com/cubeplexai/cubeplex), including the backend, web application, deployment assets, product documentation, and contribution guide.
+
+Teams need agents to continue working with shared files, tools, memory, and artifacts, while model access, external connections, permissions, and cost remain within manageable boundaries. CubePlex organizes team collaboration and agent execution around those boundaries. With the source now available, teams can deploy, inspect, and extend the system on their own infrastructure.
+
+<!-- truncate -->
+
+## What is available now
+
+The repository contains the full-stack implementation: the backend provides APIs, the agent runtime, and conversation and workspace data; the frontend provides the web application for teams; `deploy/` contains Docker Compose and Kubernetes Helm assets; and `docs/` contains product and engineering documentation.
+
+The agent runtime is built on [CubePi](https://github.com/cubeplexai/cubepi), which provides multi-provider model access, tool execution, streaming, middleware, and checkpoints. CubePlex adds the application layer needed for organizations, workspaces, member roles, model access policies, and team collaboration.
+
+The current release includes:
+
+- Multi-model chat with streaming responses;
+- Personal, workspace, and organization-scoped memory;
+- Built-in, organization-uploaded, and remote-registry skills;
+- An MCP tool catalog with static credentials or OAuth, granted per workspace;
+- Isolated sandboxes with persistent working state;
+- Versioned in-thread artifacts such as files, previews, code, and images;
+- Scheduled, interval, one-shot, and webhook-triggered automation;
+- IM entry points for Slack, Discord, Teams, Feishu, DingTalk, and more;
+- Organizations, workspaces, roles, model access policies, and cost tracking.
+
+These capabilities describe the implementation and documentation on the current `main` branch. Open source does not mean every deployment combination has the same security boundary or runtime semantics. Read the guide for the intended environment and complete its verification steps before deploying.
+
+## Management boundaries for enterprise agents
+
+CubePlex uses organizations, workspaces, and memberships as the primary boundaries of an enterprise agent platform. An agent's conversations, available models, skills, MCP tools, and memory are configured within them. A team can share context and deliverables in a workspace while retaining separation from other workspaces.
+
+The execution environment is separate from the control plane. Sandboxes run commands, process files, start browsers, and handle other work that needs local processes; they retain the working directory, installed dependencies, and working tree. The platform holds the agent runtime, conversation state, and access policies. This lets a sandbox be started or replaced for execution without binding the team's identity, conversations, and durable state to one continuously running machine.
+
+External model providers, MCP servers, and IM platforms remain outside the CubePlex trust boundary. Deployers need to validate their connection settings, scopes, credential lifetimes, and network policy individually. When agents run untrusted code or connect to enterprise systems, sandbox isolation, egress policy, and credential injection deserve environment-specific review.
+
+## Self-hosted deployment
+
+CubePlex provides two deployment paths.
+
+Docker Compose is suitable for a single host and smaller self-hosted environments. Kubernetes is delivered through Helm for environments that need cluster resource management, persistent volumes, Ingress, and fuller sandbox integration. Both use the same backend and frontend images, and the deployment repository includes health and end-to-end verification scripts.
+
+In Docker runtime, sandboxes support command execution and persistent working directories, but do not provide Kubernetes egress secret injection or pause/resume checkpoints that persist to disk. Deploy Kubernetes and configure the corresponding components when those capabilities are required. This is a current implementation boundary, not a generic deployment distinction.
+
+Deployment guides:
+
+- [Docker Compose](https://cubeplex.ai/docs/deployment/docker-compose)
+- [Kubernetes with Helm](https://cubeplex.ai/docs/deployment/kubernetes)
+
+## Contributing
+
+Start with the repository README and follow the contribution guide to configure a local development environment. The project uses Python, TypeScript, pnpm, and Docker; its pre-submit checks cover backend, frontend, and end-to-end flows. Issues and pull requests are the places to discuss problems, submit fixes, and propose improvements.
+
+We welcome feedback from developers, platform engineers, and security engineers who operate agents for teams. Deployment issues, sandbox isolation and network boundaries, MCP and skills connection experience, and real team workflows are all especially valuable.
+
+## Source and documentation
+
+- [CubePlex on GitHub](https://github.com/cubeplexai/cubeplex)
+- [Apache-2.0 license](https://github.com/cubeplexai/cubeplex/blob/main/LICENSE)
+- [CubePlex documentation](https://docs.cubeplex.ai)
+- [Contribution guide](https://github.com/cubeplexai/cubeplex/blob/main/CONTRIBUTING.md)
