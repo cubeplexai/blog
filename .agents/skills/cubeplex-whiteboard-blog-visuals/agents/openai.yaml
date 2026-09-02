@@ -1,0 +1,4 @@
+interface:
+  display_name: "CubePlex Whiteboard Blog Visuals"
+  short_description: "Create CubePlex whiteboard-style blog visuals."
+  default_prompt: "Use $cubeplex-whiteboard-blog-visuals to plan a supporting image for this CubePlex blog post."

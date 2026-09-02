@@ -45,6 +45,7 @@ use `coverAspectRatio: '2:1'`; new 5:2 posts should omit that legacy marker.
 
 ## 图表与视觉
 
+- 为博客文章创建、构思、审阅或修改贴图、图解和封面时，先读取并遵循 `.agents/skills/cubeplex-whiteboard-blog-visuals/SKILL.md`。它定义白板式技术插图的构图、色彩、提示词和视觉验收；封面仍须遵循上方的 5:2 生成、标题与 SVG lockup 叠加流程。
 - 视觉参考是 `static/img/blog/opensandbox-vs-cubesandbox/` 下的 SVG：深色 CubePlex 画布、细网格、黑色面板、蓝色主路径和灰色辅助节点。不要直接使用 diagram skill 的默认主题。
 - Managed Agents 图的源文件由 `scripts/create-managed-agents-diagrams.mjs` 生成，修改布局、颜色或标签时改生成脚本，不要只改导出的 SVG。
 - 当前图表为横版：`harness-placement-comparison` 为两种 Harness 架构并排对比，`control-plane-multi-sandbox` 为控制面与多 Sandbox lease 编排。中英文 SVG 和 `@2x.png` 都要同步生成。
