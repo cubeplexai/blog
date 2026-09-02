@@ -7,6 +7,7 @@ import argparse
 import html
 import re
 import shutil
+import subprocess
 from pathlib import Path
 
 
@@ -76,6 +77,22 @@ def render_inline(text: str, source_url: str, expand_links: bool = False) -> str
     return text
 
 
+def convert_to_png(src: Path, destination: Path) -> None:
+    try:
+        from PIL import Image
+
+        with Image.open(src) as img:
+            img.save(destination, "PNG")
+    except ImportError:
+        if shutil.which("sips") is None:
+            raise RuntimeError(f"Cannot convert {src} to PNG: install Pillow or run on macOS with sips")
+        subprocess.run(
+            ["sips", "-s", "format", "png", str(src), "--out", str(destination)],
+            check=True,
+            capture_output=True,
+        )
+
+
 def resolve_image(src: str, repo: Path, output_dir: Path) -> str:
     path = repo / "static" / src.lstrip("/") if src.startswith("/img/") else repo / src
     if path.suffix.lower() == ".svg":
@@ -84,6 +101,13 @@ def resolve_image(src: str, repo: Path, output_dir: Path) -> str:
         path = png_2x if png_2x.exists() else png
     if not path.exists():
         raise FileNotFoundError(f"Article image not found: {path}")
+    if path.suffix.lower() == ".webp":
+        # WeChat material upload rejects WebP, and publisher skips body images
+        # whose filename contains "cover" (they are assumed to be the thumb),
+        # so the converted copy is a PNG named ...-hero.png.
+        destination = output_dir / f"{path.stem.replace('cover', 'hero')}.png"
+        convert_to_png(path, destination)
+        return destination.name
     destination = output_dir / path.name
     shutil.copy2(path, destination)
     return destination.name
@@ -101,6 +125,17 @@ def render_post(source_path: Path, output_path: Path, public_url: str, repo: Pat
 
     parts: list[str] = []
     skip_references = False
+
+    cover_src = metadata.get("image")
+    if cover_src:
+        local_src = resolve_image(cover_src, repo, output_path.parent)
+        parts.append(
+            '<p style="margin: 0 0 24px 0 !important; padding: 0 !important; '
+            'text-align: center !important; text-indent: 0 !important;">'
+            f'<img src="{html.escape(local_src, quote=True)}" alt="{html.escape(title, quote=True)}" '
+            f'style="margin: 0 !important; padding: 0 !important; border: 1px solid {TOKENS["border"]} !important; '
+            'border-radius: 8px !important; width: 100% !important; text-indent: 0 !important;"></p>'
+        )
 
     for block in split_blocks(body):
         if block.startswith("## "):
