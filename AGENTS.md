@@ -40,7 +40,7 @@ use `coverAspectRatio: '2:1'`; new 5:2 posts should omit that legacy marker.
 - 中文文章位于 `i18n/zh-Hans/docusaurus-plugin-content-blog/`，英文对应文章位于 `blog/`。修改中文内容时，检查英文版本是否需要同步。
 - Managed Agents 文章的主要判断是：Sandbox 内 Harness 更适合有明确开始和结束的单次自动化任务；长期运行、等待事件或服务多个用户的 Managed Agent 更适合由控制面持有 Harness，Sandbox 作为可租用、可替换、可并行的执行资源。
 - 不把未来架构写成已交付能力。当前文章不再包含 Managed Agent definition、一对多 Sandbox 编排等产品状态声明；CubePlex 的产品选择只在文章结尾讨论。
-- 公众号稿从当前 MDX 重新生成，不从旧的 `/tmp` HTML 手工摘录。文章内容有变化时，先改 MDX，再运行 formatter。
+- 公众号稿源文件位于 `wechat/` 目录（提交 GitHub 存档，不属于 Docusaurus 站点，不发布到博客）。公众号稿从 `wechat/` 下当前 MDX 重新生成，不从旧的 `/tmp` HTML 手工摘录；文章内容有变化时，先改 MDX，再运行 formatter。目录约定见 `wechat/README.md`。
 - 公众号稿已按要求移除参考资料、博客原文链接和普通 HTML 外链；文末沿用“关于 / CubePi / CubePlex”介绍，GitHub 地址作为普通文本。
 
 ## 图表与视觉
@@ -57,14 +57,15 @@ use `coverAspectRatio: '2:1'`; new 5:2 posts should omit that legacy marker.
 
 - 项目内 skill 位于 `.agents/skills/wechat-publisher/`。凭据只写入该目录下被忽略的 `config.json`，不要提交、打印或粘贴 AppSecret；`token_cache.json` 同样被忽略。
 - CubePlex 固定排版规范见 `.agents/skills/wechat-publisher/references/CUBEPLEX_STYLE.md`，转换器为 `.agents/skills/wechat-publisher/scripts/cubeplex_formatter.py`。
-- 生成预览：
+- 生成预览（源文件用 `wechat/` 下的 MDX；`--link-map` 把站内相对链接映射为已发表的公众号文章链接，映射文件为 `.agents/skills/wechat-publisher/references/wechat-links.json`）：
 
   ```bash
   python3 .agents/skills/wechat-publisher/scripts/cubeplex_formatter.py \
-    i18n/zh-Hans/docusaurus-plugin-content-blog/2026-08-06-managed-agents-cloud-harness-vs-sandbox-harness.mdx \
-    /tmp/wechat-managed-agents/article_styled.html \
-    --url https://cubeplex.ai/blog/zh-Hans/managed-agents-cloud-harness-vs-sandbox-harness \
-    --repo /Users/chris/work/blog
+    wechat/2026-08-27-cubeplex-open-source-release.mdx \
+    /tmp/wechat-open-source/article_styled.html \
+    --url https://cubeplex.ai/blog/zh-Hans/cubeplex-open-source-release \
+    --repo /Users/chris/work/blog \
+    --link-map .agents/skills/wechat-publisher/references/wechat-links.json
   ```
 
 - 必须先让用户查看 `/tmp/wechat-managed-agents/article_styled.html` 并明确确认，再调用微信 API。publisher 的目标是微信公众号草稿箱，不是直接群发。
