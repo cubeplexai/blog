@@ -48,7 +48,7 @@ def parse_front_matter(source: str) -> tuple[dict[str, str], str]:
     return metadata, match.group(2)
 
 
-def render_inline(text: str, source_url: str) -> str:
+def render_inline(text: str, source_url: str, expand_links: bool = False) -> str:
     placeholders: list[str] = []
 
     def keep(value: str) -> str:
@@ -56,8 +56,10 @@ def render_inline(text: str, source_url: str) -> str:
         return f"@@CUBEPLEX{len(placeholders) - 1}@@"
 
     def link(match: re.Match[str]) -> str:
-        label = html.escape(match.group(1), quote=False)
-        return keep(label)
+        label, url = match.group(1), match.group(2)
+        if expand_links and url.startswith("http") and label != url:
+            return keep(f"{html.escape(label, quote=False)}：{html.escape(url, quote=False)}")
+        return keep(html.escape(label, quote=False))
 
     text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", link, text)
     text = html.escape(text, quote=False)
@@ -145,7 +147,7 @@ def render_post(source_path: Path, output_path: Path, public_url: str, repo: Pat
                     '<p style="margin: 0 0 12px 0 !important; padding: 0 0 0 15px !important; '
                     f'border-left: 2px solid {TOKENS["border"]} !important; color: {TOKENS["muted"]} !important; '
                     'font-size: 14px !important; font-weight: 400 !important; line-height: 1.75 !important; '
-                    f'text-align: left !important; text-indent: 0 !important;">{render_inline(item, public_url)}</p>'
+                    f'text-align: left !important; text-indent: 0 !important;">{render_inline(item, public_url, expand_links=True)}</p>'
                 )
             continue
 
