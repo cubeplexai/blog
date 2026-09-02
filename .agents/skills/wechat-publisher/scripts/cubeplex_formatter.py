@@ -49,8 +49,14 @@ def parse_front_matter(source: str) -> tuple[dict[str, str], str]:
     return metadata, match.group(2)
 
 
-def render_inline(text: str, source_url: str, expand_links: bool = False) -> str:
+def render_inline(
+    text: str,
+    source_url: str,
+    expand_links: bool = False,
+    link_map: dict[str, str] | None = None,
+) -> str:
     placeholders: list[str] = []
+    link_map = link_map or {}
 
     def keep(value: str) -> str:
         placeholders.append(value)
@@ -58,8 +64,15 @@ def render_inline(text: str, source_url: str, expand_links: bool = False) -> str
 
     def link(match: re.Match[str]) -> str:
         label, url = match.group(1), match.group(2)
-        if expand_links and url.startswith("http") and label != url:
-            return keep(f"{html.escape(label, quote=False)}：{html.escape(url, quote=False)}")
+        resolved = link_map.get(url, url)
+        if resolved.startswith("https://mp.weixin.qq.com/"):
+            anchor = (
+                f'<a href="{html.escape(resolved, quote=True)}" target="_blank" '
+                f'style="{LINK_STYLE}">{html.escape(label, quote=False)}</a>'
+            )
+            return keep(anchor)
+        if expand_links and resolved.startswith("http") and label != resolved:
+            return keep(f"{html.escape(label, quote=False)}：{html.escape(resolved, quote=False)}")
         return keep(html.escape(label, quote=False))
 
     text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", link, text)
@@ -118,7 +131,13 @@ def split_blocks(body: str) -> list[str]:
     return [block.strip() for block in re.split(r"\n\s*\n", body) if block.strip()]
 
 
-def render_post(source_path: Path, output_path: Path, public_url: str, repo: Path) -> tuple[str, str]:
+def render_post(
+    source_path: Path,
+    output_path: Path,
+    public_url: str,
+    repo: Path,
+    link_map: dict[str, str] | None = None,
+) -> tuple[str, str]:
     metadata, body = parse_front_matter(source_path.read_text(encoding="utf-8"))
     title = metadata.get("title", source_path.stem)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -145,7 +164,7 @@ def render_post(source_path: Path, output_path: Path, public_url: str, repo: Pat
                 continue
             if skip_references:
                 continue
-            heading = render_inline(heading_text, public_url)
+            heading = render_inline(heading_text, public_url, link_map=link_map)
             parts.append(
                 '<p style="margin: 42px 0 18px 0 !important; padding: 0 0 9px 0 !important; '
                 f'border-bottom: 1px solid {TOKENS["border"]} !important; color: {TOKENS["accent"]} !important; '
@@ -182,12 +201,12 @@ def render_post(source_path: Path, output_path: Path, public_url: str, repo: Pat
                     '<p style="margin: 0 0 12px 0 !important; padding: 0 0 0 15px !important; '
                     f'border-left: 2px solid {TOKENS["border"]} !important; color: {TOKENS["muted"]} !important; '
                     'font-size: 14px !important; font-weight: 400 !important; line-height: 1.75 !important; '
-                    f'text-align: left !important; text-indent: 0 !important;">{render_inline(item, public_url, expand_links=True)}</p>'
+                    f'text-align: left !important; text-indent: 0 !important;">{render_inline(item, public_url, expand_links=True, link_map=link_map)}</p>'
                 )
             continue
 
         paragraph = " ".join(line.strip() for line in block.splitlines())
-        parts.append(f'<p style="{BODY_STYLE}">{render_inline(paragraph, public_url)}</p>')
+        parts.append(f'<p style="{BODY_STYLE}">{render_inline(paragraph, public_url, link_map=link_map)}</p>')
 
     about_border = f"border-top: 1px solid {TOKENS['border']} !important;"
     about_heading = (
@@ -218,13 +237,24 @@ def render_post(source_path: Path, output_path: Path, public_url: str, repo: Pat
 
 
 def main() -> None:
+    import json
+
     parser = argparse.ArgumentParser()
     parser.add_argument("source", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--url", required=True)
     parser.add_argument("--repo", type=Path, required=True)
+    parser.add_argument(
+        "--link-map",
+        type=Path,
+        help="Optional JSON file mapping article link URLs to replacement URLs; "
+        "targets on https://mp.weixin.qq.com/ are kept as clickable <a> links",
+    )
     args = parser.parse_args()
-    title, description = render_post(args.source, args.output, args.url, args.repo)
+    link_map: dict[str, str] = {}
+    if args.link_map:
+        link_map = json.loads(args.link_map.read_text(encoding="utf-8"))
+    title, description = render_post(args.source, args.output, args.url, args.repo, link_map)
     print(f"title={title}")
     print(f"description={description}")
     print(f"output={args.output}")
