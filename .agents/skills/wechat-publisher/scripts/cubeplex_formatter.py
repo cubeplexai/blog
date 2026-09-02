@@ -227,7 +227,7 @@ def render_post(
         f'<p style="margin: 0 0 6px 0 !important; padding: 0 !important; {about_body}">原生支持异步的 Python Agent Harness 框架，专为高性能、高可读性及生产级持久化能力而设计。</p>',
         f'<p style="margin: 0 0 20px 0 !important; padding: 0 !important; {about_body}">https://github.com/cubeplexai/cubepi</p>',
         f'<p style="margin: 0 0 6px 0 !important; padding: 0 !important; {about_heading}">CubePlex</p>',
-        f'<p style="margin: 0 0 6px 0 !important; padding: 0 !important; {about_body}">CubePlex 是一个全栈 AI 智能体工作空间。你可以在这一个平台内使用多模型对话、可安装技能、持久化记忆、MCP 工具集成以及任务自动化功能。</p>',
+        f'<p style="margin: 0 0 6px 0 !important; padding: 0 !important; {about_body}">CubePlex 是为团队构建的企业级智能体平台。Agent 的 Skills、Memory、工具、自动化任务和整个工作现场都在 Workspace 里持久保存，任务可以交接，经验可以复用，交付物以版本化产物留存。</p>',
         f'<p style="margin: 0 !important; padding: 0 !important; {about_body}">https://github.com/cubeplexai/cubeplex</p>',
     ])
 

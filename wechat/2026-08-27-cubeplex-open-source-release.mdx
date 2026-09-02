@@ -1,7 +1,7 @@
 ---
 slug: cubeplex-open-source-release
 title: CubePlex -- 企业级 Agent 平台正式开源
-description: CubePlex 现已以 Apache-2.0 许可证开源。它是一套面向团队工作区的企业级智能体平台，用 Workspace 管理 Prompt、Skills、MCP 与成员角色，并通过 Cloud Harness 和隔离 Sandbox 运行 Agent。
+description: CubePlex 现已以 Apache-2.0 许可证开源。它是一套面向团队工作区的企业级智能体平台，用 Workspace 管理 Skills、Memory、MCP 与成员角色，并通过 Cloud Harness 和隔离 Sandbox 运行 Agent。
 authors: [xfgong]
 tags: [CubePlex, 开源, 企业级智能体平台, Managed Agents, Agent 平台, Cloud Harness, 自托管]
 image: /img/blog/cubeplex-open-source-release-cover.webp
@@ -11,11 +11,11 @@ image: /img/blog/cubeplex-open-source-release-cover.webp
 
 大家很快碰到了同一个问题。模型和系统内置的 Skills 只能处理通用任务，业务背景、内部系统的调用方式、例外情况的处理经验，这些只存在于团队内部，得有人一点点教给 Agent。一个同事调顺的流程，换个人接手，常常又得从头来一遍。
 
-后来 Hermes Agent、WorkBuddy 等产品继续把 Agent 带进更多人的日常工作。我们也一直在关注和使用这些产品。个人 Agent 越来越好用，进入团队以后却还缺少一套稳定的组织方式。谁来维护工作区的 Prompt，谁负责安装和升级 Skills，MCP 连接由谁配置，普通成员能够使用哪些能力，这些事情不能再靠每个人各自维护一份配置。
+后来 Hermes Agent、WorkBuddy 等产品继续把 Agent 带进更多人的日常工作。我们也一直在关注和使用这些产品。个人 Agent 越来越好用，进入团队以后却还缺少一套稳定的组织方式。谁来维护和升级 Skills，MCP 连接由谁配置，普通成员能够使用哪些能力，这些事情不能再靠每个人各自维护一份配置。
 
 这就是我们开始做 CubePlex 的原因。
 
-今天，我们正式开源 CubePlex。CubePlex 是一套面向团队工作区的企业级智能体平台。它让团队集中管理 Agent 使用的 Prompt、Skills 和 MCP，并通过 Cloud Harness 与隔离 Sandbox 运行任务。
+今天，我们正式开源 CubePlex。CubePlex 是一套面向团队工作区的企业级智能体平台。它让团队集中管理 Agent 的 Skills、Memory 和 MCP 工具，并通过 Cloud Harness 与隔离 Sandbox 运行任务。
 
 <!-- truncate -->
 
@@ -23,9 +23,9 @@ image: /img/blog/cubeplex-open-source-release-cover.webp
 
 企业里的 Agent 最终会学到很多只有团队内部才知道的东西。销售团队有自己的客户跟进方法，研发团队知道发布和回滚的顺序，财务、人力和法务也都有长期形成的处理规则。这些业务逻辑很少存在于某一个 SaaS 接口里，更多时候散落在文档、口头经验和一次次具体操作中。
 
-Skills 适合保存这类工作方法。它可以告诉 Agent 应该读取哪些资料，按照什么顺序调用工具，结果需要满足哪些检查项。MCP 负责连接代码仓库、数据库和内部服务。Workspace Prompt 则提供团队共同遵守的背景和要求。
+Skills 适合保存这类工作方法。它可以告诉 Agent 应该读取哪些资料，按照什么顺序调用工具，结果需要满足哪些检查项。MCP 负责连接代码仓库、数据库和内部服务。Memory 则保存团队共同的背景和约定。
 
-有了这些内容，还需要有人管理。CubePlex 的 Workspace 有明确的成员和角色。Workspace Admin 可以维护 Prompt、Skills、MCP 和成员权限，Workspace Member 直接使用已经配置好的 Agent。普通成员不需要安装依赖，也不必知道服务凭据放在哪里。他提出任务时，Agent 会加载当前 Workspace 已经启用的工作方法和工具。
+有了这些内容，还需要有人管理。CubePlex 的 Workspace 有明确的成员和角色。Workspace Admin 可以维护 Skills、Memory、MCP 和成员权限，Workspace Member 直接使用已经配置好的 Agent。普通成员不需要安装依赖，也不必知道服务凭据放在哪里。他提出任务时，Agent 会加载当前 Workspace 已经启用的工作方法和工具。
 
 Skills 也有自己的版本。团队可以先在一个 Workspace 中试用内部 Skill，确认流程跑通以后再推广到更多工作区。管理员升级版本后，后续对话使用新的版本。业务专家负责把方法写对，平台管理员负责发布和维护，其他成员拿来完成工作。经验由此有了明确的归属，也有了继续修改的地方。
 
