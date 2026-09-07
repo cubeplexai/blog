@@ -1,1 +1,57 @@
-PLACEHOLDER_ZH
+---
+slug: yc-qm-multiplayer-agent-harness
+title: Quartermaster（QM）：YC 开源的 Multiplayer Agent Harness
+description: YC 以 MIT 许可证公开了内部使用的 multiplayer agent harness QM。它按人与房间切开 scope，用 headless core 承接身份、策略与调度，并在自述边界内给出安全姿态。
+authors: [xfgong]
+tags: [Quartermaster, QM, Agent Harness, Multiplayer Agents, YC, Open Source]
+image: /img/blog/yc-qm-multiplayer-agent-harness-cover.svg
+---
+
+2026 年 7 月，Y Combinator 把内部使用的 multiplayer agent harness [QM（Quartermaster）](https://github.com/yc-software/qm) 以 MIT 许可证放到公开仓库。GitHub 上 `yc-software/qm` 的创建时间为 2026-07-29；本文源码核对到提交 `95b5a6a`。个人助手可以勉强扩成“全公司共用的一个 Agent”，但身份、记忆、凭据和副作用会缠在一起。QM 的做法是：每个人、每个房间先有自己的隔离工作现场，再在 Slack 与 Web 上会合。
+
+<!-- truncate -->
+
+## 个人 Agent 扩成公司级之后会断在哪里
+
+个人 Agent 通常绑定一个人的对话、本机目录和登录态。把它直接交给整家公司时，至少会出现几类冲突。
+
+多人共用同一套记忆与文件时，项目知识和个人偏好无法分开。凭据一旦进入共享执行环境，很难说明谁在用、用了什么。频道里的协作又需要共同上下文，不能要求每个人各自重建现场。公司还需要统一的安全姿态、可用模型与 harness，以及可审计的副作用。这些问题不是功能清单缺几项，而是边界没有按参与者切开。
+
+## 设计前提：先按「人 / 房间」切开
+
+QM 用 scope 表示工作边界。源码中的 `ScopeKind` 为 `personal`、`channel`、`team`、`org`、`group`（见 `src/types.ts`）。Project 不是单独的 scope 种类：`projectScopeId` 把它映射为 `group:` 前缀的 scope（见 `src/projects/project-store.ts`）。
+
+每个个人与每个房间可以拥有各自的 memory、文件、keychain 视图、权限、cron、web app 与 durable sandbox。Skills 归 scope 所有，通过 grant 分享，晋升到全 org 需要管理员把关。目标不是维护一个“公司大脑”，而是在需要协作时显式授权，在默认情况下保持隔离。
+
+## 架构怎么落实这条边界
+
+README 给出的因果链很短。Headless core 负责 API、identity、policy、scheduler 与 agent loop，持久化落在 Postgres。Pi、OpenCode、Codex、Claude Code 都可以驱动同一套 core，部署不绑死单一 harness 厂商。Agent 的固定工具面里有 `execute`：命令跑在该 scope 自己的隔离 sandbox 里，安装过的工具会留下来，成为这个 scope 的 durable computer。
+
+Web UI、Admin、Portal 是挂在 core HTTP API 上的可选插件；Slack 是 core 启动并直接监督的进程内插件。公司特有的 org 配置、自定义 tools/skills、sandbox 镜像与基础设施不在通用 core 里，而在由 [`qm init`](https://github.com/yc-software/qm/blob/main/cli/README.md) 生成的 deployment directory，部署落在运营方自己的云账号。
+
+浏览器路径需要单独记一笔：SECURITY.md 写明，browser runner 内的动作不再进入 command policy 或人机审批，依赖任务级同意与 runner 的花费检查，流量经 browser provider 出去，而不是 QM 的 egress proxy。它与 shell 命令门禁不是同一道闸。
+
+## 安全与自述边界
+
+组织选择一种安全姿态，更窄的 scope 只能收紧，不能放宽：
+
+- **Strict** — 除两个无副作用的回合结束工具外，每次 harness 工具调用都要人批准。
+- **Auto**（默认）— 分类器审查带 provenance 标签的外部数据与部分工具结果；部署可指向自有筛选代理。
+- **Dangerous** — 不做内容筛选，工具调用之间也不暂停。
+
+预声明的 command policy（审批规则与硬拒绝，例如递归删除、破坏性 SQL）在所有姿态下都生效，包括 Dangerous。
+
+SECURITY.md 的表述需要原样对待：QM “is early, experimental software”；“not a hardened public or multi-tenant service boundary”。已知限制包括：command policy “is bypassable”（混淆、编码、先写脚本再执行可以绕过），它是“speed bump”，不是 sandbox 边界；sandbox 内使用中的凭据是明文；安全筛选不完整且偏启发式；管理员可以读取敏感内容（有审计，但不再次征得用户同意）。部署前需要针对具体环境做安全与运维审查，不能把文档里的设计目标当成已经兑现的保证。
+
+## 适合谁试、怎样上手
+
+更适合已经以 Slack 为日常协作面、能在 Fly 或 AWS（或 Docker 相关路径）上运维、并接受实验性软件的团队。上手入口是依赖 `@yc-software/qm` 的组织部署仓库，执行 `qm init`，再按仓库内的 [`deployment.md`](https://github.com/yc-software/qm/blob/main/deployment.md) 与 getting-started 文档推进；本文不展开逐步教程。
+
+后续文章会单独讨论 workspace 式控制面与这类 multiplayer harness 的分工。本文只固定 QM 在 `95b5a6a` 上公开陈述的设计与边界。
+
+## 源码与版本
+
+- 仓库：[yc-software/qm](https://github.com/yc-software/qm)（MIT）
+- 公开仓库创建时间：2026-07-29（GitHub）
+- 本文核对提交：`95b5a6a`
+- 主要依据：`README.md`、`SECURITY.md`、`src/types.ts`、`src/projects/project-store.ts`、`deployment.md`
