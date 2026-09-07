@@ -1,0 +1,58 @@
+---
+slug: yc-qm-multiplayer-agent-harness
+title: "Quartermaster (QM): YC's Open-Source Multiplayer Agent Harness"
+description: YC released QM, the multiplayer agent harness it uses internally, under MIT. QM cuts work by person and room, runs a headless core for identity, policy, and scheduling, and states its security limits plainly.
+authors: [xfgong]
+tags: [Quartermaster, QM, Agent Harness, Multiplayer Agents, YC, Open Source]
+image: /img/blog/yc-qm-multiplayer-agent-harness-cover-en.svg
+---
+
+
+In July 2026, Y Combinator published [QM (Quartermaster)](https://github.com/yc-software/qm), the multiplayer agent harness it uses internally, under the MIT license. The public GitHub repository `yc-software/qm` was created on 2026-07-29; this article is pinned to commit `95b5a6a`. Personal assistants can be stretched into a single company-wide agent, but identity, memory, credentials, and side effects tangle quickly. QM starts the other way: each person and each room gets an isolated work site, then people meet in Slack and on the web.
+
+<!-- truncate -->
+
+## What breaks when a personal agent becomes company-wide
+
+A personal agent is usually tied to one person's chat, local directories, and login state. Handing that pattern to a whole company creates several collisions at once.
+
+Shared memory and files mix project knowledge with personal preference. Credentials that enter a shared execution environment are hard to attribute. Channel work needs common context without forcing everyone to rebuild the scene. The company still needs one security posture, a controlled set of models and harnesses, and auditable side effects. The failure is not a missing feature row; it is a missing cut between participants.
+
+## Design premise: cut by person and room first
+
+QM represents work boundaries as scopes. In source, `ScopeKind` is `personal`, `channel`, `team`, `org`, and `group` (`src/types.ts`). A project is not its own kind: `projectScopeId` maps it onto a `group:`-prefixed scope (`src/projects/project-store.ts`).
+
+Each person and each room can own its own memory, files, keychain view, permissions, crons, web apps, and durable sandbox. Skills are scope-owned and shared by grant; promotion to the whole org is admin-gated. The point is not one company brain. Default to isolation, and share only with an explicit grant.
+
+## How the architecture carries that cut
+
+The README's causal chain is short. A headless core owns the API, identity, policy, scheduler, and agent loop, with Postgres for durable state. Pi, OpenCode, Codex, and Claude Code can all drive the same core, so a deployment is not locked to one harness vendor. The agent's small fixed tool surface includes `execute`, which runs commands in that scope's own isolated sandbox - its durable computer, where installed tools stay installed.
+
+The web UI, admin panel, and public portal are optional plugins over the core HTTP API. Slack is an optional in-process plugin that core starts and supervises. Company-specific org config, custom tools and skills, sandbox image, and infrastructure live in a deployment directory materialized by [`qm init`](https://github.com/yc-software/qm/blob/main/cli/README.md), running in the operator's own cloud account.
+
+Browser actions need a separate note. SECURITY.md states that actions inside the browser runner do not re-enter command policy or human-in-the-loop approval. They rely on task-level consent and the runner's spend checks, and browser traffic exits through the browser provider rather than QM's egress proxy. That path is not the same gate as shell command policy.
+
+## Security and stated limits
+
+An organization picks one security posture; narrower scopes can only tighten it:
+
+- **Strict** - every harness tool call pauses for human approval, except the two no-effect turn enders.
+- **Auto** (default) - a classifier screens provenance-labelled external data and supported tool results; a deployment can point that at its own screening proxy.
+- **Dangerous** - no content screening and no pauses between tool calls.
+
+The predeclared command policy - approval rules and hard denials for things like recursive deletes or destructive SQL - applies in every posture, including Dangerous.
+
+SECURITY.md should be read in its own words: QM "is early, experimental software" and "not a hardened public or multi-tenant service boundary." Known limits include that command policy "is bypassable" (obfuscation, encoding, or write-then-execute can evade it) and is a "speed bump," not a sandbox boundary; credentials are plaintext while in use inside a sandbox; security screening is incomplete and heuristic; admins can read sensitive content (audited, not separately consent-gated). Treat the design goals as goals. A deployment still needs its own security and operations review.
+
+## Who should try it, and how to start
+
+QM fits Slack-native teams that can run Fly or AWS (or related Docker paths) and will accept experimental software. The entry point is an org-owned deployment repository that depends on `@yc-software/qm`, run `qm init`, then follow [`deployment.md`](https://github.com/yc-software/qm/blob/main/deployment.md) and the getting-started docs. This article is not a step-by-step tutorial.
+
+A later post will look at workspace-style control planes alongside multiplayer harnesses like this. Here the only claim is what QM states publicly at `95b5a6a`.
+
+## Source and revision
+
+- Repository: [yc-software/qm](https://github.com/yc-software/qm) (MIT)
+- Public repository created: 2026-07-29 (GitHub)
+- Pinned revision: `95b5a6a`
+- Primary sources: `README.md`, `SECURITY.md`, `src/types.ts`, `src/projects/project-store.ts`, `deployment.md`
