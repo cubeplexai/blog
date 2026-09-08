@@ -131,6 +131,42 @@ def split_blocks(body: str) -> list[str]:
     return [block.strip() for block in re.split(r"\n\s*\n", body) if block.strip()]
 
 
+def render_table(block: str, source_url: str, link_map: dict[str, str] | None = None) -> str | None:
+    """Render a simple Markdown table with WeChat-safe inline styles."""
+    lines = [line.strip() for line in block.splitlines()]
+    if len(lines) < 2 or not re.fullmatch(r"\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?", lines[1]):
+        return None
+
+    def cells(line: str) -> list[str]:
+        return [cell.strip() for cell in line.strip().strip("|").split("|")]
+
+    header = cells(lines[0])
+    rows = [cells(line) for line in lines[2:] if line.strip()]
+    cell_style = (
+        f"border: 1px solid {TOKENS['border']} !important; padding: 9px 10px !important; "
+        f"color: {TOKENS['body']} !important; font-size: 13px !important; line-height: 1.6 !important; "
+        "vertical-align: top !important; text-align: left !important; text-indent: 0 !important;"
+    )
+    head_style = cell_style + f" background-color: {TOKENS['soft']} !important; font-weight: 700 !important;"
+    header_html = "".join(
+        f'<td style="{head_style}">{render_inline(cell, source_url, link_map=link_map)}</td>' for cell in header
+    )
+    row_html = []
+    for row in rows:
+        padded = row + [""] * max(0, len(header) - len(row))
+        row_html.append(
+            "<tr>" + "".join(
+                f'<td style="{cell_style}">{render_inline(cell, source_url, link_map=link_map)}</td>'
+                for cell in padded[:len(header)]
+            ) + "</tr>"
+        )
+    return (
+        '<table cellspacing="0" cellpadding="0" style="margin: 0 0 24px 0 !important; padding: 0 !important; '
+        'width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important;">'
+        f"<tr>{header_html}</tr>{''.join(row_html)}</table>"
+    )
+
+
 def render_post(
     source_path: Path,
     output_path: Path,
@@ -139,6 +175,11 @@ def render_post(
     link_map: dict[str, str] | None = None,
 ) -> tuple[str, str]:
     metadata, body = parse_front_matter(source_path.read_text(encoding="utf-8"))
+    source_ref = metadata.pop("source", "")
+    if source_ref:
+        canonical_path = (source_path.parent / source_ref).resolve()
+        canonical_metadata, body = parse_front_matter(canonical_path.read_text(encoding="utf-8"))
+        metadata = {**canonical_metadata, **metadata}
     title = metadata.get("title", source_path.stem)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -159,7 +200,7 @@ def render_post(
     for block in split_blocks(body):
         if block.startswith("## "):
             heading_text = block[3:].strip()
-            if heading_text == "参考资料":
+            if heading_text in {"参考资料", "来源", "来源与版本", "Sources", "Sources and revisions"}:
                 skip_references = True
                 continue
             if skip_references:
@@ -174,6 +215,11 @@ def render_post(
             continue
 
         if skip_references:
+            continue
+
+        table = render_table(block, public_url, link_map)
+        if table is not None:
+            parts.append(table)
             continue
 
         image_match = re.fullmatch(r"!\[([^\]]*)\]\(([^)]+)\)", block)
