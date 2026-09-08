@@ -22,6 +22,13 @@ the source. For example, write that a trigger pipeline currently accepts only
 `inline` targets and returns `not implemented` for another target; do not tell
 the reader that the author has chosen not to describe it as a capability.
 
+Official CubePlex posts speak for the product. State shipped product behavior
+directly as “CubePlex supports”, “CubePlex provides”, or “CubePlex uses”, rather
+than distancing the author with “CubePlex documentation describes” or “the
+documentation says”. Cite a versioned document or source file when it supports
+a specific implementation detail, release scope, or limitation; the citation is
+evidence, not a substitute for the product's own voice.
+
 ## Blog cover images
 
 Create two final WebP cover assets for every new article. Keep both visually

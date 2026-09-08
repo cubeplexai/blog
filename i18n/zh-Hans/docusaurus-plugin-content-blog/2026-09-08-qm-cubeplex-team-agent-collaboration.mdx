@@ -17,7 +17,7 @@ YC 在 QM 的[发布说明](https://qm.ycombinator.com/)中写过这段经历：
 
 QM 的重点是让个人 Agent 保持个人属性，同时允许它进入频道和项目协作。Skill 归某个 scope 所有，通过 grant 才能交给其他 scope；推广到全组织由管理员决定。组织可以统一选择安全姿态、模型和 harness，但不会因此取得每个个人环境的默认共享权。
 
-CubePlex 的公开文档把组织、Workspace、角色和模型访问策略放在同一套团队治理模型中。Workspace sandbox 保存文件、包和工作树，重启后继续使用；memory 有个人、Workspace 和组织三个范围；MCP connector 按 Workspace 授权。这里的中心不是“一个人拥有一台 Agent 电脑”，而是一个团队在 Workspace 中积累工作文件、Skill、记忆和交付物。
+CubePlex 将组织、Workspace、角色和模型访问策略放在同一套团队治理模型中。Workspace sandbox 保存文件、包和工作树，重启后继续使用；memory 有个人、Workspace 和组织三个范围；MCP connector 按 Workspace 授权。这里的中心不是“一个人拥有一台 Agent 电脑”，而是一个团队在 Workspace 中积累工作文件、Skill、记忆和交付物。
 
 两者都拒绝把全部上下文塞进一个公司级 Agent，但共享的起点不同。QM 先保护个人与房间的边界，再通过 grant 扩散资源；CubePlex 先提供受组织治理的 Workspace，再把个人与组织范围的记忆放入同一个工作流。这是产品设计上的侧重，不表示哪一种天然更安全。
 
@@ -25,7 +25,7 @@ CubePlex 的公开文档把组织、Workspace、角色和模型访问策略放�
 
 QM 的 core 负责身份、策略、调度和 agent loop。公司特有的配置、tools、skills、sandbox 镜像与基础设施则放在 deployment directory，由运营方部署到自己的云账号。QM README 还定义了一种私有 fork 的维护方式：私有内容留在 `deploy/layers/`，通用 core 跟随上游；`update-qm` 创建上游同步 PR，`upstream-pr` 把不含组织信息的修复送回社区。
 
-CubePlex 的文档描述的是另一种交付方式：同一个产品可用 Docker Compose 或 Kubernetes 自托管，平台自身提供组织、Workspace、角色、模型访问策略和成本跟踪。对已经有统一平台运维、多个 IM 入口和共享连接器目录的团队，这会减少为每个组织维护一套 QM deployment repository 的工作。对希望把运行时、镜像和组织定制长期保留在自己的 fork 中的团队，QM 的部署边界更直接。
+CubePlex 采用另一种交付方式：同一个产品可用 Docker Compose 或 Kubernetes 自托管，平台提供组织、Workspace、角色、模型访问策略和成本跟踪。对已经有统一平台运维、多个 IM 入口和共享连接器目录的团队，这会减少为每个组织维护一套 QM deployment repository 的工作。对希望把运行时、镜像和组织定制长期保留在自己的 fork 中的团队，QM 的部署边界更直接。
 
 比较的焦点在组织定制与团队治理。前者把组织定制看作开源 core 外的一层部署资产；后者把团队治理作为平台中的一等对象。团队应先决定谁维护运行环境、谁管理共享工具和谁批准组织级变更，再选协作单元。
 
@@ -33,7 +33,7 @@ CubePlex 的文档描述的是另一种交付方式：同一个产品可用 Dock
 
 两套系统都没有把 Sandbox 当作完整的 Agent 定义。QM 的 headless core 持有 API、身份、策略、调度和 agent loop；`execute` 把命令送进对应 scope 的 sandbox。Sandbox 保留工具安装和工作文件，但模型循环不在其中。
 
-CubePlex 当前 README 将 Agent runtime 描述为基于 CubePi，负责多模型访问、工具执行、流式输出、中间件和 durable checkpoint；Workspace sandbox 是有持久工作状态的隔离执行环境。当前后端代码也显示，`RunManager` 在服务侧构建并驱动 CubePi agent，再把 sandbox 作为执行依赖传入。这个边界让会话、审批和流式事件不必依附于某一个 shell 进程，同时保留 Workspace 的长期文件和包。
+CubePlex 的 Agent runtime 基于 CubePi，负责多模型访问、工具执行、流式输出、中间件和 durable checkpoint；Workspace sandbox 是有持久工作状态的隔离执行环境。在 v0.7.2 中，`RunManager` 在服务侧构建并驱动 CubePi agent，再把 sandbox 作为执行依赖传入。这个边界让会话、审批和流式事件不必依附于某一个 shell 进程，同时保留 Workspace 的长期文件和包。
 
 二者的共同点很重要：模型循环、身份和策略留在可治理的一侧，Sandbox 承担受限的文件、命令和浏览器工作。差别在于 QM 的 sandbox 随个人或房间 scope 建立；CubePlex 的 sandbox 随 Workspace 保存工作状态。实际部署还要检查网络出口、凭据注入、浏览器路径和审计保留期，不能只看组件名称。
 
