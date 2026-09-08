@@ -7,7 +7,7 @@ authors: [xfgong]
 tags: [Quartermaster, QM, QM Alternative, YC QM, CubePlex, Agent Harness, Agent Workspace, Team Agent Platform, Team Workspace]
 ---
 
-QM 和 CubePlex 都在处理同一件事：当 Agent 不再只服务一个人，团队怎样共享工作，又不把权限、上下文和运行环境混在一起。两者的出发点不同。QM 来自 YC 管理 50 多个个人 Agent 的经验；CubePlex 把 Workspace 作为团队工作的基本单元。这篇文章比较已经公开的设计和当前实现，不把尚未交付的 Managed Agent 设计写成产品能力。
+QM 和 CubePlex 都在处理同一件事：当 Agent 不再只服务一个人，团队怎样共享工作，又不把权限、上下文和运行环境混在一起。两者的出发点不同。QM 来自 YC 管理 50 多个个人 Agent 的经验；CubePlex 把 Workspace 作为团队工作的基本单元。协作单元、治理位置、运行时和当前实现范围由此不同。
 
 <!-- truncate -->
 
@@ -41,13 +41,13 @@ CubePlex 当前 README 将 Agent runtime 描述为基于 CubePi，负责多模�
 
 QM 的 SECURITY.md 明确把自身称为 early、experimental 软件，不是硬化的公有或多租户服务边界。它的 command policy 可能被混淆、编码或“先写后执行”绕过；sandbox 内使用中的凭据是明文；浏览器 runner 也不会重新经过 command policy 或人工审批。这些限制属于当前公开文档，不应被 scope 的设计掩盖。
 
-CubePlex 当前已经提供 Workspace sandbox、个人/Workspace/组织记忆、按 Workspace 授权的 MCP connector、自动化触发器和多种 IM bridge。源码中的 trigger pipeline 目前只执行 `inline` target；`target_type=managed_agent` 会返回“not implemented”。因此，把长期复用、可由触发器唤醒的 Managed Agent 当成 CubePlex 的架构方向可以讨论，把它写成已发布功能则不准确。
+CubePlex 当前已经提供 Workspace sandbox、个人/Workspace/组织记忆、按 Workspace 授权的 MCP connector、自动化触发器和多种 IM bridge。源码中的 trigger pipeline 目前只执行 `inline` target；`target_type=managed_agent` 会返回“not implemented”。长期复用、可由触发器唤醒的 Managed Agent 目前没有可运行的 trigger target。
 
 ## 结论
 
 QM 适合把个人 Agent 扩展为组织协作：个人环境先独立，频道和项目需要什么再显式共享，部署仓库也是团队维护边界的一部分。CubePlex 更适合把 Agent 放进已有团队 Workspace：共享 sandbox、memory、Skill、MCP 和交付物与角色、模型策略、成本和多入口协作放在同一平台中。
 
-这是一项作者判断，依据的是两边当前公开材料和源码，而不是性能、安全性或功能完备度的排名。需要选择时，先画出团队自己的 Workspace、个人上下文、凭据和运行环境分别归谁管理；答案通常会比“哪个 Agent 更强”更有用。
+需要选择时，先画出团队自己的 Workspace、个人上下文、凭据和运行环境分别归谁管理。这个边界通常比“哪个 Agent 更强”更影响实际部署。
 
 ## 来源与版本
 

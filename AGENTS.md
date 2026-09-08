@@ -8,6 +8,20 @@ Chinese titles, outlines, and MDX posts. Prefer direct, specific statements over
 metaphors, parallel slogans, hypothetical setups, rhetorical questions, and
 chat-style navigation.
 
+## Reader-facing prose
+
+Blog posts address readers, not the editor or the writing process. Do not put
+editorial instructions, research disclaimers, or promises about what “this
+article” will or will not do into a title, description, introduction, body, or
+conclusion. Avoid formulations such as “本文不把……写成……”, “this article does
+not…”, “作者判断”, or explanations of how the draft was researched.
+
+When a feature is unshipped or partially implemented, state the reader-relevant
+fact directly: name the current behavior, the missing path or constraint, and
+the source. For example, write that a trigger pipeline currently accepts only
+`inline` targets and returns `not implemented` for another target; do not tell
+the reader that the author has chosen not to describe it as a capability.
+
 ## Blog cover images
 
 Create two final WebP cover assets for every new article. Keep both visually
