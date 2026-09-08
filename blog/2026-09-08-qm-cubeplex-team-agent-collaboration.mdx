@@ -1,57 +1,51 @@
 ---
 slug: qm-cubeplex-team-agent-collaboration
-title: "QM and CubePlex: Collaboration Boundaries for Team Agents"
-description: QM grew out of YC's experience operating a fleet of personal agents; CubePlex centers team work on a workspace. This comparison examines their collaboration units, governance, runtime boundaries, and current implementation scope.
+title: "From Agent Computers to Team Delivery: QM and CubePlex"
+description: QM gives people and channels their own agent computers. CubePlex organizes context, execution, and deliverables around a team workspace. They answer different organizational problems.
 image: /img/blog/qm-cubeplex-team-agent-collaboration-cover-en.webp
 authors: [xfgong]
 tags: [Quartermaster, QM, QM Alternative, YC QM, CubePlex, Agent Harness, Agent Workspace, Team Agent Platform, Team Workspace]
 ---
 
-QM and CubePlex address the same problem: once an agent serves more than one person, how can a team share work without mixing permissions, context, and runtime environments? They start in different places. QM grew out of YC's experience operating a fleet of personal agents. CubePlex treats the workspace as the basic unit of team work. Their collaboration units, governance, runtime boundaries, and current implementation scope therefore differ.
+QM establishes an important point: company agents cannot be personal assistants sharing one Slack bot. After YC had deployed dozens of personal agents internally, QM placed memory, files, credential views, permissions, schedules, and durable sandboxes inside scopes. A person, channel, project, and organization each have a boundary; sharing happens through grants. It answers the problem of operating many agent computers inside one company.
+
+CubePlex starts elsewhere. Teams rarely lack an agent that can run a command. They lack a place where work can keep moving: research, connector access, working files, and intermediate output must remain usable when a member changes, an entry point changes, or the next task begins. CubePlex therefore makes the workspace—not an individual agent computer—the unit of collaboration.
 
 <!-- truncate -->
 
-## Two collaboration units
+## QM defines the boundary of an agent fleet
 
-QM's [launch note](https://qm.ycombinator.com/) describes YC's path: a Ruby agent loop gained crons and webhooks, then more than 50 Hermes personal agents were provisioned for employees. Managing the fleet became difficult. QM answers with scopes. Personal, channel, team, organization, group, and project work occupy distinct scopes; each person and each room can have its own memory, files, keychain view, permissions, crons, web apps, and durable sandbox.
+QM's scope model is serious and necessary. An employee's personal agent should not receive default access to colleagues' files or credentials. A channel needs shared context without acquiring everybody's environment. QM's headless core owns identity, policy, scheduling, and the agent loop; `execute` sends commands into the relevant scope's durable sandbox. Slack, the web interface, and the admin interface are surfaces over that core.
 
-QM keeps a personal agent personal while allowing it to participate in channels and projects. A skill belongs to one scope and reaches another only through a grant; an administrator decides whether it becomes organization-wide. The organization can choose a security posture, models, and harnesses without receiving default access to every personal environment.
+That lets a technical team operate agents as a fleet of customizable work computers. Organization-specific tools, skills, sandbox images, and infrastructure live in a deployment directory. A team that needs deep customization can maintain a private fork while keeping core aligned with upstream. This is compelling for companies that already have platform engineering and want runtime and organization customization to remain in their own repository.
 
-CubePlex puts organizations, workspaces, roles, and model-access policy in one team-governance model. A workspace sandbox preserves files, packages, and the working tree across restarts; memory can be personal, workspace-scoped, or organization-scoped; MCP connectors are granted per workspace. The center of gravity is a team workspace that accumulates files, skills, memory, and deliverables, rather than a personal agent computer.
+It also makes the adoption cost explicit. Deploying QM is not installing a chat application: a team has to own the cloud account, identity, model credentials, networking, images, upgrades, and incident response. QM's public README positions it as a self-hosted harness for startups. Its Kubernetes sandbox backend remains an open PR whose description says live-cluster validation is still outstanding. Contemporary PRs and issues are still refining external-content screening, credential delivery, and audit records. This is not a claim that one product is more advanced. It is the practical question: is the company prepared to operate an agent fleet?
 
-Both designs avoid putting all context into one company-wide agent, but sharing starts at a different point. QM protects personal and room boundaries first, then spreads resources by grant. CubePlex provides an organization-governed workspace first, then brings personal and organization memory into the same work flow. That is a product-design emphasis, not a claim that either model is inherently safer.
+## Team work should outlive an individual agent
 
-## Where governance lives
+Competitive research, launch preparation, and a customer proposal usually pass through several people. One person starts the work from Feishu or the web, another adds source material, an agent checks repositories, documents, and web pages, and someone reviews a document, spreadsheet, image, or code change. What must persist is not one agent's conversation. It is the context and result of the work.
 
-QM's core owns identity, policy, scheduling, and the agent loop. Company-specific configuration, tools, skills, sandbox images, and infrastructure live in a deployment directory in the operator's cloud account. The README also defines a private-fork workflow: private material remains in `deploy/layers/`, generic core follows upstream, `update-qm` opens sync PRs, and `upstream-pr` returns organization-neutral fixes to the community.
+CubePlex holds that set of assets in one workspace. Members and roles determine who participates. The workspace sandbox preserves files, packages, and the working tree. Personal, workspace, and organization memory separate individual preferences, team facts, and organization knowledge. MCP connectors are granted per workspace. Files, previews, code, and images are retained as artifacts in the thread. The team can continue the same work when a member leaves, the entry point changes, or the next task starts.
 
-CubePlex takes a different delivery model. The same product can be self-hosted with Docker Compose or Kubernetes, while the platform provides organizations, workspaces, roles, model-access policy, and cost tracking. Teams with one platform operation model, multiple IM entry points, and a shared connector catalog may avoid maintaining a QM deployment repository for each organization. Teams that want runtime images and organization customizations to live long-term in their own fork may find QM's deployment boundary more direct.
+That does not pool all data into a company-wide agent. Personal memory remains personal, and a connector must still be explicitly granted to a workspace. The difference is that a workspace for a piece of team work is the default shared object, rather than a collection of personal or room scopes whose sharing relationships are assembled one at a time.
 
-The comparison centers on organization customization and team governance. QM treats organization customization as deployment assets outside an open-source core. CubePlex makes team governance a first-class platform concern. A team should decide who operates the runtime, manages shared tools, and approves organization-level changes before choosing its collaboration unit.
+## Runtime is an execution resource, not the owner of collaboration
 
-## Runtime and sandbox boundaries
+Both systems separate sandboxes from the model loop. QM makes each scope's sandbox that scope's durable computer. CubePlex's Agent runtime is built on CubePi and handles multi-model access, tool execution, streaming, middleware, and durable checkpoints in the service; a workspace sandbox retains the execution state. In v0.7.2, `RunManager` constructs and drives the agent in the service, then passes the sandbox as an execution dependency.
 
-Neither system treats a sandbox as the complete definition of an agent. QM's headless core holds the API, identity, policy, scheduler, and agent loop; `execute` sends commands into the relevant scope's sandbox. The sandbox retains installed tools and working files, but not the model loop.
+That choice changes daily team work. Binding a sandbox to a person or channel suits an organization that wants every scope to own a separate computer. Binding one to a workspace suits a project group that needs to preserve its code, source material, skills, and outputs. CubePlex can run on Docker Compose or Kubernetes, while providing workspace, role, model-policy, cost-tracking, and multi-surface collaboration without requiring a QM deployment repository for every organization.
 
-CubePlex's Agent runtime is built on CubePi for multi-model access, tool execution, streaming, middleware, and durable checkpoints. Its workspace sandbox is an isolated execution environment with persistent working state. In v0.7.2, `RunManager` constructs and drives a CubePi agent in the service, then passes a sandbox as an execution dependency. This keeps sessions, approvals, and streamed events from depending on one shell process while retaining long-lived workspace files and packages.
+CubePlex provides scheduled and webhook automation triggers. Its current trigger pipeline runs only `inline` targets; `managed_agent` targets are not yet implemented. That does not affect interactive workspace collaboration, but it means that long-lived Managed Agents awakened by events are not a shipped capability.
 
-The shared architecture is meaningful: model loops, identities, and policy live on a governable side; sandboxes run constrained file, command, and browser work. QM ties a sandbox to a personal or room scope. CubePlex preserves work in a workspace sandbox. A real deployment still needs to evaluate egress, credential injection, browser paths, and audit retention; component names are not enough.
+## Choose operational ownership, not a feature checklist
 
-## Current capabilities and future design
+QM suits a team extending personal agents into organizational collaboration: personal environments remain distinct, channels and projects share on demand, and engineers maintain the deployment layer and runtime.
 
-QM's SECURITY.md calls it early, experimental software rather than a hardened public or multi-tenant boundary. Its command policy can be evaded by obfuscation, encoding, or write-then-execute patterns; credentials in active use in a sandbox are plaintext; browser-runner actions do not re-enter command policy or human approval. These are current public limits, not details the scope model removes.
-
-CubePlex currently provides workspace sandboxes, personal/workspace/organization memory, workspace-granted MCP connectors, automation triggers, and several IM bridges. Its trigger pipeline currently runs only the `inline` target; a `target_type=managed_agent` returns “not implemented.” Long-lived, reusable Managed Agents that wake from triggers do not yet have a runnable trigger target.
-
-## Conclusion
-
-QM suits organizations extending personal agents into collaboration: personal environments stay distinct, channels and projects share only what they need, and the deployment repository is itself a maintenance boundary. CubePlex suits teams placing agents in an existing workspace: shared sandboxes, memory, skills, MCP, and deliverables sit in one platform alongside roles, model policy, cost, and multiple collaboration surfaces.
-
-Before choosing, map who owns the team's workspace, personal context, credentials, and runtime. Those boundaries usually affect deployment more than which agent appears stronger in a demo.
+CubePlex suits an organization that wants agents to become part of its team workflow: work begins with an entry point, members, permissions, and model policy; runs in a shared sandbox; and ends as an artifact the team can continue to use. For those teams, the important outcome is not another agent computer. It is agent work that does not disappear with one person, channel, or conversation.
 
 ## Sources and revisions
 
-- [YC's QM launch note](https://qm.ycombinator.com/)
-- [QM README at `95b5a6a`](https://github.com/yc-software/qm/blob/95b5a6a9941ce517f478147b1c6fa8365a16afa0/README.md) and [SECURITY.md](https://github.com/yc-software/qm/blob/95b5a6a9941ce517f478147b1c6fa8365a16afa0/SECURITY.md)
+- [QM README at `1a6b0e4`](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/README.md) and [SECURITY.md](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/SECURITY.md)
+- QM public work: [Kubernetes sandbox backend](https://github.com/yc-software/qm/pull/954), [Auto-posture content screening](https://github.com/yc-software/qm/pull/970), [credentials in sandbox process listings](https://github.com/yc-software/qm/issues/917), and [non-durable security-screen records](https://github.com/yc-software/qm/issues/868)
 - [CubePlex README at `a54442cf` (v0.7.2)](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/README.md)
 - [CubePlex RunManager](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/streams/run_manager.py) and [trigger pipeline](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/triggers/pipeline.py)
