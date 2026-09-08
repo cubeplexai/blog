@@ -7,7 +7,7 @@ authors: [xfgong]
 tags: [Quartermaster, QM, QM Alternative, YC QM, CubePlex, Agent Harness, Agent Workspace, Team Agent Platform, Team Workspace]
 ---
 
-QM and CubePlex address the same problem: once an agent serves more than one person, how can a team share work without mixing permissions, context, and runtime environments? They start in different places. QM grew out of YC's experience operating a fleet of personal agents. CubePlex treats the workspace as the basic unit of team work. This article compares public designs and current implementation, and does not present unshipped Managed Agent work as a product capability.
+QM and CubePlex address the same problem: once an agent serves more than one person, how can a team share work without mixing permissions, context, and runtime environments? They start in different places. QM grew out of YC's experience operating a fleet of personal agents. CubePlex treats the workspace as the basic unit of team work. Their collaboration units, governance, runtime boundaries, and current implementation scope therefore differ.
 
 <!-- truncate -->
 
@@ -41,13 +41,13 @@ The shared architecture is meaningful: model loops, identities, and policy live 
 
 QM's SECURITY.md calls it early, experimental software rather than a hardened public or multi-tenant boundary. Its command policy can be evaded by obfuscation, encoding, or write-then-execute patterns; credentials in active use in a sandbox are plaintext; browser-runner actions do not re-enter command policy or human approval. These are current public limits, not details the scope model removes.
 
-CubePlex currently provides workspace sandboxes, personal/workspace/organization memory, workspace-granted MCP connectors, automation triggers, and several IM bridges. Its trigger pipeline currently runs only the `inline` target; a `target_type=managed_agent` returns “not implemented.” Long-lived, reusable Managed Agents that can wake from triggers remain an architectural direction worth discussing, but not a released CubePlex capability.
+CubePlex currently provides workspace sandboxes, personal/workspace/organization memory, workspace-granted MCP connectors, automation triggers, and several IM bridges. Its trigger pipeline currently runs only the `inline` target; a `target_type=managed_agent` returns “not implemented.” Long-lived, reusable Managed Agents that wake from triggers do not yet have a runnable trigger target.
 
 ## Conclusion
 
 QM suits organizations extending personal agents into collaboration: personal environments stay distinct, channels and projects share only what they need, and the deployment repository is itself a maintenance boundary. CubePlex suits teams placing agents in an existing workspace: shared sandboxes, memory, skills, MCP, and deliverables sit in one platform alongside roles, model policy, cost, and multiple collaboration surfaces.
 
-This is an author judgment based on current public material and source, not a ranking of performance, security, or completeness. Before choosing, map who owns the team's workspace, personal context, credentials, and runtime. That usually matters more than which agent appears stronger in a demo.
+Before choosing, map who owns the team's workspace, personal context, credentials, and runtime. Those boundaries usually affect deployment more than which agent appears stronger in a demo.
 
 ## Sources and revisions
 
