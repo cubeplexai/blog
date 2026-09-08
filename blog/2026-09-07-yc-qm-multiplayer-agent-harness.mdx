@@ -1,0 +1,48 @@
+---
+slug: yc-qm-multiplayer-agent-harness
+title: "Quartermaster (QM): YC's Open-Source Multiplayer Agent Harness"
+description: YC ran into collaboration and operational problems while managing more than 50 personal agents. QM separates personal work, shared spaces, and organizational governance, then carries those boundaries into its core and per-scope sandboxes.
+authors: [xfgong]
+tags: [Quartermaster, QM, Agent Harness, Multiplayer Agents, YC, Open Source]
+image: /img/blog/yc-qm-multiplayer-agent-harness-cover-en.svg
+---
+
+YC open-sourced QM (Quartermaster) in July 2026. Its [launch note](https://qm.ycombinator.com/) describes starting with a Ruby agent loop that could reach internal data, adding crons and webhooks, and later giving individual employees more than 50 Hermes personal agents. Those agents were flexible, but managing the fleet became difficult.
+
+QM is the result of that experience. It aims to retain the flexibility of a personal agent while giving an organization a way to manage models, permissions, and the runtime. Employees and projects get agents as needed; collaboration happens in Slack channels, group messages, and projects, rather than by handing one person's environment to the entire company.
+
+<!-- truncate -->
+
+## The management problem YC ran into
+
+The first Ruby loop was easy for employees to use, but it could do only so much. Adding crons and webhooks let agents continue working when nobody was there. As personal agents multiplied, the management work shifted to their permissions, configuration, and runtime.
+
+YC wanted Hermes-level flexibility and the simplicity of its original system. The launch note also says it wanted to own and host the system itself. QM is built for startups around that choice: it gives people and projects their own workspaces, then supplies shared rules for collaboration and organizational control.
+
+## Personal work and shared spaces
+
+QM represents work boundaries as scopes. Personal, channel, team, organization, and group work each have a scope; projects use a group-style scope. Each person and each room can hold its own memory, files, keychain view, permissions, crons, web apps, and durable sandbox.
+
+QM does not default to a company-wide agent with every piece of context. People can configure an agent as their own while carrying the same identity and configuration into channels and projects. A skill belongs to one scope and moves to another only through a grant; promotion to the whole organization is an administrator decision. Personal experience, project collaboration, and organization-wide assets therefore have different owners and routes for reuse.
+
+The organization keeps a distinct responsibility as well. It controls which harnesses and models are available, chooses a security posture, and manages skills that are visible across the organization. Employees do not need to rebuild their environment for every channel, while administrators do not have to treat personal credentials and private context as public resources.
+
+## A generic core and organization-specific work
+
+The runtime follows those boundaries. QM's headless core handles the API, identity, policy, scheduler, and agent loop; Postgres stores durable state. Commands enter the sandbox for the relevant scope through `execute`. Tools installed there persist, making that sandbox the scope's long-lived working environment.
+
+QM separates its generic core from organization-specific work. Org configuration, custom tools and skills, sandbox images, and infrastructure live in a deployment directory that `qm init` deploys to the operator's cloud account. The README also describes a private-fork workflow: an organization keeps private material in `deploy/layers/` while keeping core identical to upstream; `update-qm` merges upstream and opens a sync PR, while `upstream-pr` sends organization-neutral fixes back to QM. This lets a team maintain its own agent environment without giving up the upstream project.
+
+The web UI, admin panel, and portal are plugins over the core HTTP API; core starts and supervises Slack directly. For users, identity and configuration carry between Slack and the web. For operators, identity, policy, and auditing remain in one control point.
+
+## Limits stated in the documentation
+
+QM remains early, experimental software, not a hardened public or multi-tenant service boundary. Its command policy can stop some dangerous commands, but obfuscation, encoding, or write-then-execute patterns can still evade it. Credentials in active use inside a sandbox are plaintext, and content screening is incomplete. Admin reads of sensitive content are audited, but do not require a separate consent step.
+
+That defines where QM fits. It offers a way to manage personal agents and shared work; it does not replace a deployment's own security and operations review. Browser-runner actions also do not re-enter command policy or human approval, so operators need to assess that path separately.
+
+## Sources
+
+- [YC's QM launch note](https://qm.ycombinator.com/)
+- [QM README at `95b5a6a`](https://github.com/yc-software/qm/blob/95b5a6a9941ce517f478147b1c6fa8365a16afa0/README.md)
+- [SECURITY.md at `95b5a6a`](https://github.com/yc-software/qm/blob/95b5a6a9941ce517f478147b1c6fa8365a16afa0/SECURITY.md)
