@@ -1,0 +1,57 @@
+---
+slug: qm-cubeplex-team-agent-collaboration
+title: QM 与 CubePlex：团队 Agent 的协作边界
+description: QM 从 YC 管理个人 Agent fleet 的经验出发；CubePlex 把团队工作放进 Workspace。本文对照两者的协作单元、治理位置、运行时与当前实现范围。
+image: /img/blog/qm-cubeplex-team-agent-collaboration-cover.webp
+authors: [xfgong]
+tags: [Quartermaster, QM, QM Alternative, YC QM, CubePlex, Agent Harness, Agent Workspace, Team Agent Platform, Team Workspace]
+---
+
+QM 和 CubePlex 都在处理同一件事：当 Agent 不再只服务一个人，团队怎样共享工作，又不把权限、上下文和运行环境混在一起。两者的出发点不同。QM 来自 YC 管理 50 多个个人 Agent 的经验；CubePlex 把 Workspace 作为团队工作的基本单元。这篇文章比较已经公开的设计和当前实现，不把尚未交付的 Managed Agent 设计写成产品能力。
+
+<!-- truncate -->
+
+## 两种协作单元
+
+YC 在 QM 的[发布说明](https://qm.ycombinator.com/)中写过这段经历：团队先有一个 Ruby agent loop，随后加入 cron 和 webhook；为员工部署 50 多个 Hermes 个人 Agent 后，fleet 的管理开始变难。QM 的回答是 scope。个人、频道、团队、组织、群组和项目分别落在不同 scope 中；每个人和每个房间都可以有自己的 memory、文件、keychain 视图、权限、cron、web app 和持久 sandbox。
+
+QM 的重点是让个人 Agent 保持个人属性，同时允许它进入频道和项目协作。Skill 归某个 scope 所有，通过 grant 才能交给其他 scope；推广到全组织由管理员决定。组织可以统一选择安全姿态、模型和 harness，但不会因此取得每个个人环境的默认共享权。
+
+CubePlex 的公开文档把组织、Workspace、角色和模型访问策略放在同一套团队治理模型中。Workspace sandbox 保存文件、包和工作树，重启后继续使用；memory 有个人、Workspace 和组织三个范围；MCP connector 按 Workspace 授权。这里的中心不是“一个人拥有一台 Agent 电脑”，而是一个团队在 Workspace 中积累工作文件、Skill、记忆和交付物。
+
+两者都拒绝把全部上下文塞进一个公司级 Agent，但共享的起点不同。QM 先保护个人与房间的边界，再通过 grant 扩散资源；CubePlex 先提供受组织治理的 Workspace，再把个人与组织范围的记忆放入同一个工作流。这是产品设计上的侧重，不表示哪一种天然更安全。
+
+## 治理在什么位置
+
+QM 的 core 负责身份、策略、调度和 agent loop。公司特有的配置、tools、skills、sandbox 镜像与基础设施则放在 deployment directory，由运营方部署到自己的云账号。QM README 还定义了一种私有 fork 的维护方式：私有内容留在 `deploy/layers/`，通用 core 跟随上游；`update-qm` 创建上游同步 PR，`upstream-pr` 把不含组织信息的修复送回社区。
+
+CubePlex 的文档描述的是另一种交付方式：同一个产品可用 Docker Compose 或 Kubernetes 自托管，平台自身提供组织、Workspace、角色、模型访问策略和成本跟踪。对已经有统一平台运维、多个 IM 入口和共享连接器目录的团队，这会减少为每个组织维护一套 QM deployment repository 的工作。对希望把运行时、镜像和组织定制长期保留在自己的 fork 中的团队，QM 的部署边界更直接。
+
+比较的焦点在组织定制与团队治理。前者把组织定制看作开源 core 外的一层部署资产；后者把团队治理作为平台中的一等对象。团队应先决定谁维护运行环境、谁管理共享工具和谁批准组织级变更，再选协作单元。
+
+## 运行时与 Sandbox
+
+两套系统都没有把 Sandbox 当作完整的 Agent 定义。QM 的 headless core 持有 API、身份、策略、调度和 agent loop；`execute` 把命令送进对应 scope 的 sandbox。Sandbox 保留工具安装和工作文件，但模型循环不在其中。
+
+CubePlex 当前 README 将 Agent runtime 描述为基于 CubePi，负责多模型访问、工具执行、流式输出、中间件和 durable checkpoint；Workspace sandbox 是有持久工作状态的隔离执行环境。当前后端代码也显示，`RunManager` 在服务侧构建并驱动 CubePi agent，再把 sandbox 作为执行依赖传入。这个边界让会话、审批和流式事件不必依附于某一个 shell 进程，同时保留 Workspace 的长期文件和包。
+
+二者的共同点很重要：模型循环、身份和策略留在可治理的一侧，Sandbox 承担受限的文件、命令和浏览器工作。差别在于 QM 的 sandbox 随个人或房间 scope 建立；CubePlex 的 sandbox 随 Workspace 保存工作状态。实际部署还要检查网络出口、凭据注入、浏览器路径和审计保留期，不能只看组件名称。
+
+## 当前能力与后续设计
+
+QM 的 SECURITY.md 明确把自身称为 early、experimental 软件，不是硬化的公有或多租户服务边界。它的 command policy 可能被混淆、编码或“先写后执行”绕过；sandbox 内使用中的凭据是明文；浏览器 runner 也不会重新经过 command policy 或人工审批。这些限制属于当前公开文档，不应被 scope 的设计掩盖。
+
+CubePlex 当前已经提供 Workspace sandbox、个人/Workspace/组织记忆、按 Workspace 授权的 MCP connector、自动化触发器和多种 IM bridge。源码中的 trigger pipeline 目前只执行 `inline` target；`target_type=managed_agent` 会返回“not implemented”。因此，把长期复用、可由触发器唤醒的 Managed Agent 当成 CubePlex 的架构方向可以讨论，把它写成已发布功能则不准确。
+
+## 结论
+
+QM 适合把个人 Agent 扩展为组织协作：个人环境先独立，频道和项目需要什么再显式共享，部署仓库也是团队维护边界的一部分。CubePlex 更适合把 Agent 放进已有团队 Workspace：共享 sandbox、memory、Skill、MCP 和交付物与角色、模型策略、成本和多入口协作放在同一平台中。
+
+这是一项作者判断，依据的是两边当前公开材料和源码，而不是性能、安全性或功能完备度的排名。需要选择时，先画出团队自己的 Workspace、个人上下文、凭据和运行环境分别归谁管理；答案通常会比“哪个 Agent 更强”更有用。
+
+## 来源与版本
+
+- [YC 的 QM 发布说明](https://qm.ycombinator.com/)
+- [QM README（提交 `95b5a6a`）](https://github.com/yc-software/qm/blob/95b5a6a9941ce517f478147b1c6fa8365a16afa0/README.md) 与 [SECURITY.md](https://github.com/yc-software/qm/blob/95b5a6a9941ce517f478147b1c6fa8365a16afa0/SECURITY.md)
+- [CubePlex README（提交 `a54442cf`，v0.7.2）](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/README.md)
+- [CubePlex RunManager](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/streams/run_manager.py) 与 [trigger pipeline](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/triggers/pipeline.py)

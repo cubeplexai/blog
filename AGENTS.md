@@ -10,30 +10,45 @@ chat-style navigation.
 
 ## Blog cover images
 
-Create new article cover images as final 5:2 WebP assets at `1280x512`. Keep the
-cover visually aligned with the article title and the CubePlex editorial style.
+Create two final WebP cover assets for every new article. Keep both visually
+aligned with the article title and the CubePlex editorial style:
 
-1. Generate a text-free 5:2 background with the built-in image generation tool.
-   Reserve uncluttered space for the title. Do not ask the image model to render
-   the title or CubePlex logo.
-2. Use `scripts/create-blog-cover.mjs` to resize/crop the generated background,
-   add the exact title, and overlay the existing CubePlex SVG lockup. For example:
+- the site cover is 5:2 at `1280x512`, named `<slug>-cover.webp` (or
+  `<slug>-cover-en.webp`);
+- the share cover is `1356x1056` (the exact ratio of
+  `cubeplex-open-source-release-share-zh.jpg`), named `<slug>-cover-share.webp`
+  (or `<slug>-cover-share-en.webp`). It is for platforms that use a taller
+  preview card and does not replace the front matter site-cover path.
+
+1. Generate text-free backgrounds for both output ratios with the built-in image
+   generation tool. Reserve uncluttered space for the title. Do not ask the image
+   model to render the title or CubePlex logo.
+2. Use `scripts/create-blog-cover.mjs` to resize/crop each background, add the
+   exact title, and overlay the existing CubePlex SVG lockup. Use
+   `--highlight-lines` and `--highlight-widths` to place a restrained yellow
+   marker behind one or two important title lines; the marker sits behind black
+   text and is not a substitute for contrast. For example:
 
    ```bash
-   pnpm create:cover <generated-image> static/img/blog/<slug>-cover.webp
+   pnpm create:cover <wide-background> static/img/blog/<slug>-cover.webp \
+     --title $'Exact title\\nwith line breaks' --highlight-lines 2 --highlight-widths 360
+   pnpm create:cover <share-background> static/img/blog/<slug>-cover-share.webp \
+     --preset share --title $'Exact title\\nwith line breaks' --highlight-lines 2 --highlight-widths 440
    ```
 
-3. Inspect the exported cover locally before changing an article front matter
-   `image` field or committing it. Check that the title is readable, the logo is
-   crisp, the crop is 5:2, and no generated text or logo remains in the background.
+3. Inspect both exported covers locally before changing an article front matter
+   `image` field or committing them. Check that the title is readable, the logo is
+   crisp, the crop matches its output ratio, the yellow marker does not obscure
+   text, and no generated text or logo remains in the background.
 4. Use `pnpm optimize:images --replace` only for approved legacy PNG cover assets.
    It intentionally keeps those existing covers at 1280x640 (2:1) and removes
    the corresponding source PNG files. Do not use it for new covers or on an
    image that must remain an editable source.
 
-Generated blog cover assets are committed under `static/img/blog/` and referenced
-from each post's front matter as `/img/blog/<filename>.webp`. Existing 2:1 posts
-use `coverAspectRatio: '2:1'`; new 5:2 posts should omit that legacy marker.
+Generated blog cover assets are committed under `static/img/blog/`. Front matter
+references the 5:2 asset as `/img/blog/<filename>.webp`; share assets are committed
+alongside it for platform-specific distribution. Existing 2:1 posts use
+`coverAspectRatio: '2:1'`; new 5:2 posts should omit that legacy marker.
 
 ## 内容源与双语
 
