@@ -1,51 +1,68 @@
 ---
 slug: qm-cubeplex-team-agent-collaboration
 title: 从 Agent computer 到团队交付：QM 与 CubePlex 的两条路径
-description: QM 为个人和频道提供独立的 Agent computer；CubePlex 围绕团队 Workspace 组织上下文、执行环境与交付物。两种产品回答的是不同的组织问题。
+description: QM 以 Scope 为 Agent computer 划定边界；CubePlex 以 Workspace 复用 Agent 能力，并在聊天入口分别隔离会话、身份和执行。
 image: /img/blog/qm-cubeplex-team-agent-collaboration-cover.webp
 authors: [xfgong]
 tags: [Quartermaster, QM, QM Alternative, YC QM, CubePlex, Agent Harness, Agent Workspace, Team Agent Platform, Team Workspace]
 ---
 
-QM 证明了一件事：公司里的 Agent 不能只是一群共用 Slack bot 的个人助手。YC 在内部部署数十个个人 Agent 后，把 memory、文件、凭据视图、权限、定时任务和持久 sandbox 收进 scope。个人、频道、项目和组织各自拥有边界，需要共享时再 grant。这个设计解决的是如何让大量 Agent computer 同时为一家公司工作。
+QM（Quartermaster）是 YC 开源的自托管多人 Agent harness，它把人、Slack 频道、群组和项目放进 Scope，并把 Scope 用作 Agent 工作环境与权限边界。CubePlex 是面向团队的开源 Agent Workspace：它先定义长期存在的 Workspace Agent，再由 Web、Slack、Discord、Microsoft Teams、飞书/Lark、钉钉与企业微信等入口决定本次运行的会话、身份和执行边界。
 
-CubePlex 的出发点不同。团队通常不缺一个可以执行命令的 Agent，而是缺少一处能持续推进工作的地方：成员替换后，资料、连接器权限、工作文件和中间产物仍然可用；同一项工作可以从聊天入口进入，在 Sandbox 中完成，并留下其他人可继续修改和复用的交付物。CubePlex 因此以 Workspace 而不是个人 Agent computer 作为协作单元。
+这种差别会影响团队每天如何使用 Agent。前一种方式适合把大量独立 Agent computer 纳入公司的权限和运行体系；后一种方式适合让同一个团队 Agent 在不同入口持续工作，又不让私聊、授权和执行环境彼此串用。
 
 <!-- truncate -->
 
-## QM 解决的是 Agent fleet 的边界
+## QM 的 Scope 是工作环境与权限边界
 
-QM 的 scope 是一个严肃而必要的设计。员工的个人 Agent 不应默认看到同事的文件或凭据；频道需要共享上下文，但不应因此获得组织里每个人的环境。QM 的 headless core 负责身份、策略、调度和 agent loop，`execute` 将命令发送到对应 scope 的持久 sandbox。Slack、Web 和管理界面都是这个 core 之上的 surface。
+QM 当前定义了个人、频道、团队、组织和群组五类 Scope。Slack 私聊会进入个人 Scope；频道使用频道 Scope；Slack 的多人私信会进入群组 Scope。项目在实现上也是一个群组 Scope，并可关联一个 Slack 主页频道：频道成员随之成为项目成员，频道也成为计划任务和汇报的默认投递位置。
 
-这让技术团队可以把 Agent 当作一批可定制的工作电脑来运营。组织特有的工具、Skill、sandbox 镜像和基础设施放在 deployment directory；需要深度定制时，还可以维护私有 fork，同时让 core 跟随上游。对已经有平台工程团队、希望把运行环境和组织定制完全留在自己代码库中的公司，这个边界很有吸引力。
+Scope 不只是界面上的分类。QM 用它决定谁能进入环境、哪些文件层可见、凭据如何授权，以及命令发往哪个持久 sandbox。一个频道 Scope 可以让频道成员围绕共同上下文工作；个人 Scope 默认不把另一位成员的文件或凭据带进来。组织、当前 Scope 与个人 Scope 可以共同参与一次解析，但它们的读写边界不同。
 
-它也明确了采用成本。部署 QM 不等于安装一个聊天应用：团队需要决定云账号、身份、模型凭据、网络、镜像、升级和事故处理由谁负责。QM 当前公开 README 也将其定位为面向 startup 的自托管 harness。Kubernetes sandbox 后端仍在公开 PR 中，描述里明确写着真实集群验证尚未完成；同一时期的 PR 与 issue 仍在处理外部内容筛选、凭据传递和审计记录等运行细节。这里没有“谁更先进”的结论，只有一个实际问题：公司是否准备好运营一支 Agent fleet。
+这套模型适合把 Agent 当作一组可配置的工作电脑来运营。团队可以为不同 Scope 准备独立的环境、文件与访问关系，并把 Slack 的人员和频道结构直接纳入 Agent 的边界定义。相应地，频道、项目或群组如果需要不同的工具组合和运行环境，配置也要随 Scope 分别维护。
 
-## 团队工作不会随着个人 Agent 一起结束
+## CubePlex 的 Workspace 定义长期的 Agent
 
-一次竞品研究、发布准备或客户方案，往往会经过多个成员。有人从飞书或 Web 发起任务，有人补充资料，有人让 Agent 在代码库、文档和网页之间查证，最后需要审阅并交付文档、表格、图片或代码。真正需要长期保留的不是某个 Agent 的对话，而是这项工作的上下文和结果。
+CubePlex 中，Workspace 是团队协作单元，也是 Agent 配置复用的边界。一个 Workspace 的 AgentConfig 保存该 Workspace 的 Persona；Skill 通过 Workspace 绑定提供；MCP 连接器状态也附着在 Workspace。成员从 Web 或 IM 入口发起工作时，面对的是同一套角色设定和基础工具，而不是因为进入了另一个 Slack 频道就换了一份 Agent 配置。
 
-CubePlex 把这组资产放进同一个 Workspace：成员和角色定义谁参与；Workspace sandbox 保存文件、包和工作树；个人、Workspace、组织三层 memory 分别保存个人偏好、团队事实和组织知识；MCP connector 按 Workspace 授权；生成的文件、预览、代码和图片以 Artifact 留在对话中。成员离开、入口切换或下一轮任务开始时，团队仍在同一处继续这项工作。
+这对团队的价值很直接。研究助手、发布助手或研发助手可以有稳定的职责、指令和技能；团队不必为每个使用它的频道重新建立一套 Persona、Skills 和 MCP 连接器。Workspace 记忆还可以保存项目事实、流程和决策，让下一次工作从已有的团队上下文继续，而不是从一个新的频道 Scope 重新开始。
 
-这不是把所有数据粗暴地汇总到公司级 Agent。个人 memory 仍保留个人范围，连接器也需要明确授予 Workspace。差别在于，团队共享的默认对象是为一项工作建立的 Workspace，而不是先创建许多个人或房间 scope，再把共享关系逐一拼出来。
+这并不意味着所有状态都在 Workspace 内共享。CubePlex 的 memory 有个人、Workspace 和组织三层：个人记忆只属于某位成员在当前 Workspace 内的偏好和修正；Workspace 记忆保存团队可复用的事实与流程；组织记忆用于组织范围的知识。MCP 连接器可以在 Workspace 内启用，但凭据授权可落在组织、Workspace 或用户范围。因此，同一个 GitHub MCP 可以被团队使用，同时保留每位成员自己的 OAuth 身份。
 
-## Runtime 是执行资源，不是协作的主人
+## 聊天入口决定运行边界
 
-两套系统都把 Sandbox 与模型循环分开。QM 把每个 scope 的 sandbox 作为该 scope 的持久 computer；CubePlex 的 Agent runtime 基于 CubePi，在服务侧负责多模型访问、工具执行、流式输出、中间件和 durable checkpoint，Workspace sandbox 则保存执行所需的工作状态。v0.7.2 的 `RunManager` 在服务侧构建并驱动 agent，再将 sandbox 作为执行依赖传入。
+本文以 Slack 为例，是因为 QM 的 Scope 会直接使用 Slack 的私聊、频道和多人私信信息。CubePlex 的 IM bridge 同时支持 Slack、Discord、Microsoft Teams、飞书/Lark、钉钉与企业微信；这些入口绑定到同一个 Workspace 后，不会为每个 IM 位置重新创建一套 Agent 能力，而是根据入口构造会话边界。
 
-这一层的取舍会直接影响团队日常使用。把 sandbox 绑定到个人或频道，适合希望每个 scope 都拥有独立 computer 的组织；把 sandbox 绑定到 Workspace，适合把代码、资料、Skill 和产物留给一个项目组持续使用的团队。CubePlex 的运行时和 sandbox 可以部署在 Docker Compose 或 Kubernetes 上，但用户不需要为了每个组织维护一份 QM deployment repository，才能获得 Workspace、角色、模型策略、成本跟踪和多入口协作。
+- 私聊始终是一对一会话。即使 Bot 采用共享路由，私聊仍使用该成员自己的 Topic、个人记忆和人工确认身份。
+- 群聊可采用共享或隔离路由。共享路由让同一频道成员进入一段共同对话；隔离路由则为同一频道中的每位成员保留各自的对话上下文。
+- 这项路由设置目前按 Bot 账号统一生效，不是逐个频道配置。不同频道仍由各自的 Slack channel ID 区分。
 
-CubePlex 已提供按计划或 webhook 执行的自动化触发器；当前 trigger pipeline 只运行 `inline` target，`managed_agent` target 尚未实现。这个限制不影响 Workspace 内的交互式协作，但它意味着长期复用、由事件唤醒的 Managed Agent 还不能作为已交付能力承诺。
+执行环境也遵循这个思路。CubePlex 的 Sandbox 记录绑定到组织、Workspace 和一个 scope tuple；这个 tuple 可以指向用户、会话或 Topic。换言之，Workspace 让团队复用 Agent 的定义和资源配置，而实际运行仍可按个人或协作上下文隔离。
 
-## 选择的是运营责任，而不是功能清单
+因此，同一个 Bot 在任何入口都有一致的人设、技能和团队知识，但它不应机械地给出完全相同的回答：私聊的历史、个人偏好和用户授权，与群聊中的共享讨论和可见权限本来就不同。这种稳定的 Agent 身份与可控的上下文差异，正是团队协作需要的组合。
 
-QM 适合把个人 Agent 扩展为组织协作的团队：个人环境先独立，频道和项目按需共享，并由工程团队维护部署层和运行环境。
+## 复用配置，同时保留隔离
 
-CubePlex 适合希望直接把 Agent 纳入团队工作方式的组织：一项工作从入口、成员、权限和模型策略开始，在共享 Sandbox 中执行，并以团队可继续使用的 Artifact 结束。对这类团队，关键不是再增加一台 Agent computer，而是让 Agent 的工作不再随着某个人、某个频道或一次对话而散失。
+QM 的默认思路是先由 Slack 或项目上下文确定 Scope，再在 Scope 中建立相应的资源与访问关系。CubePlex 的默认思路是先建立 Workspace Agent，再把 IM 入口映射为会话和执行边界。
+
+| 团队关心的问题 | QM | CubePlex |
+| --- | --- | --- |
+| Agent 的长期定义 | 随个人、频道、群组或项目 Scope 分别组织 | Persona、Skills、Workspace 连接器和团队记忆在 Workspace 内长期复用 |
+| Slack 私聊 | 路由到个人 Scope | 保持一对一会话、个人记忆和用户身份 |
+| Slack 群聊 | 路由到频道或群组 Scope | 同一 Bot 可按账号选择共享上下文或按成员隔离 |
+| 执行环境 | Scope 对应持久 sandbox | Sandbox 可按用户、会话或 Topic 绑定，仍属于同一 Workspace 的治理范围 |
+| 连接器认证 | 由 Scope 与授权关系决定 | 连接器可为 Workspace 复用，凭据可按组织、Workspace 或用户授权 |
+
+QM 的项目 Scope、Slack 名册联动和 Scope 级环境组织有明确的产品语义。CubePlex 则把团队 Agent 的长期定义集中在 Workspace 内，把入口差异留给会话、身份、权限和执行边界处理。对于希望部署一个稳定的团队 Agent、让它出现在多个协作入口，又不希望重复维护每个频道配置的团队，这种组合更接近日常工作方式。
+
+## 团队交付物留在 Workspace
+
+一项研究、发布准备或客户方案通常不止经历一段对话。成员会补充资料、审阅结果、连接不同系统，并在后续继续修改文档、代码、表格或图片。CubePlex 将这些工作放在同一个 Workspace：成员和角色控制参与范围，Artifact 保留文件、预览和生成结果，Workspace memory 保留可复用的事实，Sandbox 则为具体的用户、会话或 Topic 提供执行状态。
+
+这使团队不必在“共享一个没有边界的 Bot”和“为每个 Slack 位置复制一台 Agent computer”之间二选一。一个 Workspace 可以承载长期的 Agent 能力；不同入口仍保留它们应有的私密性、权限和运行上下文。
 
 ## 来源与版本
 
-- [QM README（提交 `1a6b0e4`）](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/README.md) 与 [SECURITY.md](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/SECURITY.md)
-- QM 公开 PR：[Kubernetes sandbox backend](https://github.com/yc-software/qm/pull/954)、[Auto posture 内容筛选](https://github.com/yc-software/qm/pull/970)；公开 issue：[sandbox 进程列表中的注入凭据](https://github.com/yc-software/qm/issues/917)、[安全筛选记录不持久](https://github.com/yc-software/qm/issues/868)
-- [CubePlex README（提交 `a54442cf`，v0.7.2）](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/README.md)
-- [CubePlex RunManager](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/streams/run_manager.py) 与 [trigger pipeline](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/triggers/pipeline.py)
+- [QM README（提交 `1a6b0e4`）](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/README.md)、[Scope 类型](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/src/types.ts)、[Scope 解析](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/src/resolution/resolution-service.ts) 与 [项目关联 Slack 频道](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/src/api/agent-api-catalog.ts)
+- [CubePlex README（提交 `a54442cf`，v0.7.2）](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/README.md)、[Workspace AgentConfig](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/models/agent_config.py)、[IM 会话边界](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/im/types.py)
+- [CubePlex IM 概览](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/docs/site/docs/guides/im/overview.md)、[企业微信接入](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/docs/site/docs/guides/im/wecom.md)、[IM 会话解析](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/im/conversation_resolver.py)、[Sandbox scope](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/models/user_sandbox.py)、[Memory scope](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/models/memory.py) 与 [MCP 凭据授权](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/models/mcp.py)

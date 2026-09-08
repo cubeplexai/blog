@@ -1,7 +1,7 @@
 ---
 slug: yc-qm-multiplayer-agent-harness
 title: Quartermaster（QM）：YC 开源的 Multiplayer Agent Harness
-description: YC 在管理 50 多个个人 Agent 时遇到了协作与运维问题。开源的 QM 把个人工作、共享空间和组织治理分开处理，并把这些边界落到核心服务与各自的 sandbox 中。
+description: YC 在管理 50 多个个人 Agent 时遇到了协作与运维问题。开源的 QM 将 Slack 的人、频道、群组和项目解析为 Scope，并把环境、访问关系和持久 sandbox 置于相应边界内。
 authors: [xfgong]
 tags: [Quartermaster, QM, Agent Harness, Multiplayer Agents, YC, Open Source]
 image: /img/blog/yc-qm-multiplayer-agent-harness-cover.webp
@@ -9,7 +9,7 @@ image: /img/blog/yc-qm-multiplayer-agent-harness-cover.webp
 
 2026 年 7 月，YC 开源了 QM（Quartermaster）。YC 在[发布说明](https://qm.ycombinator.com/)中回顾，团队先做过一个能访问内部数据的 Ruby agent loop，后来加上 cron 和 webhook；再后来，他们给员工配了 50 多个 Hermes 个人 Agent。Agent 很灵活，但管理这样一队 Agent 已经变得麻烦。
 
-QM 是这段经验之后的产物。它希望保留个人 Agent 的灵活性，同时让组织能够管理模型、权限和运行环境。每位员工和每个项目按需要获得 Agent；协作发生在 Slack 频道、群消息和项目中，而不是把一个人的环境直接交给整个公司。
+QM 是这段经验之后的产物。它希望保留个人 Agent 的灵活性，同时让组织能够管理模型、权限和运行环境。Slack 私聊、频道、多人私信和项目会映射到不同 Scope；协作发生在这些 Scope 内，而不是把一个人的环境直接交给整个公司。
 
 <!-- truncate -->
 
@@ -19,13 +19,15 @@ QM 是这段经验之后的产物。它希望保留个人 Agent 的灵活性，�
 
 YC 想要 Hermes 的灵活性，也想找回早期系统的简单。发布说明还提到，他们希望拥有并自行托管这套系统。QM 因此面向 startup：它先给个人和项目划出工作空间，再为协作和组织治理提供共同的规则。
 
-## 个人工作与共享空间
+## Scope 如何组织个人与共享工作
 
-QM 用 scope 表示工作边界。个人、频道、团队、组织和群组都有各自的 scope；项目使用 group 类 scope。每个个人和每个房间可以分别保存 memory、文件、keychain 视图、权限、cron、web app 和持久 sandbox。
+QM 用 Scope 表示工作边界。个人、频道、团队、组织和群组都有各自的 Scope；项目使用 group 类 Scope。Slack 私聊解析到个人 Scope，普通频道解析到频道 Scope，多人私信解析到群组 Scope。项目还可以关联 Slack 主页频道，频道成员随之成为项目成员，频道成为计划任务和汇报的默认投递位置。
 
-QM 不会默认把所有上下文汇总给全公司。个人可以按自己的方式配置 Agent，在频道和项目里又能使用同一身份与配置。Skill 归某个 scope 所有，需要通过 grant 才能交给另一个 scope 使用；推广到全组织由管理员决定。个人经验、项目协作和组织资产因此有不同的归属和传播路径。
+Scope 决定谁能进入环境、哪些文件层可见、凭据如何授权，以及命令发往哪个持久 sandbox。个人 Scope 默认不会把另一位成员的文件或凭据带入运行；频道和群组 Scope 则为其成员提供共同的协作边界。组织、当前 Scope 与个人 Scope 可以共同参与解析，但它们的读写边界不同。
 
-组织也保留了一层明确的责任。它决定可用的 harness 与模型，选择安全姿态，并管理全组织可见的 Skill。员工不必为每个频道重建自己的工作环境；管理员也不必把个人凭据和私人上下文当作公共资源。
+Skill 归某个 Scope 所有，需要通过 grant 才能交给另一个 Scope 使用；推广到全组织由管理员决定。个人经验、频道协作、项目工作和组织资产因此有不同的归属和传播路径。
+
+组织也保留了一层明确的责任。它决定可用的 harness 与模型，选择安全姿态，并管理全组织可见的 Skill。管理员无需把个人凭据和私人上下文当作公共资源；需要共享的文件、Skill 或访问关系必须在对应 Scope 之间明确授予。
 
 ## 通用核心与组织定制
 
@@ -44,5 +46,6 @@ QM 仍是 early、experimental 软件，并非已经硬化的公有或多租户�
 ## 来源
 
 - [YC 的 QM 发布说明](https://qm.ycombinator.com/)
-- [QM README（提交 `95b5a6a`）](https://github.com/yc-software/qm/blob/95b5a6a9941ce517f478147b1c6fa8365a16afa0/README.md)
-- [SECURITY.md（提交 `95b5a6a`）](https://github.com/yc-software/qm/blob/95b5a6a9941ce517f478147b1c6fa8365a16afa0/SECURITY.md)
+- [QM README（提交 `1a6b0e4`）](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/README.md)
+- [Scope 类型与解析（提交 `1a6b0e4`）](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/src/types.ts) 与 [Scope membership](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/src/resolution/scope-membership.ts)
+- [SECURITY.md（提交 `1a6b0e4`）](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/SECURITY.md)
