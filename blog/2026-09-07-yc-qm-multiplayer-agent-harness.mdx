@@ -1,7 +1,7 @@
 ---
 slug: yc-qm-multiplayer-agent-harness
 title: "Quartermaster (QM): YC's Open-Source Multiplayer Agent Harness"
-description: YC ran into collaboration and operational problems while managing more than 50 personal agents. QM separates personal work, shared spaces, and organizational governance, then carries those boundaries into its core and per-scope sandboxes.
+description: YC ran into collaboration and operational problems while managing more than 50 personal agents. QM resolves Slack people, channels, groups, and projects into scopes, then places environments, access relationships, and durable sandboxes inside those boundaries.
 authors: [xfgong]
 tags: [Quartermaster, QM, Agent Harness, Multiplayer Agents, YC, Open Source]
 image: /img/blog/yc-qm-multiplayer-agent-harness-cover-en.webp
@@ -9,7 +9,7 @@ image: /img/blog/yc-qm-multiplayer-agent-harness-cover-en.webp
 
 YC open-sourced QM (Quartermaster) in July 2026. Its [launch note](https://qm.ycombinator.com/) describes starting with a Ruby agent loop that could reach internal data, adding crons and webhooks, and later giving individual employees more than 50 Hermes personal agents. Those agents were flexible, but managing the fleet became difficult.
 
-QM is the result of that experience. It aims to retain the flexibility of a personal agent while giving an organization a way to manage models, permissions, and the runtime. Employees and projects get agents as needed; collaboration happens in Slack channels, group messages, and projects, rather than by handing one person's environment to the entire company.
+QM is the result of that experience. It aims to retain the flexibility of a personal agent while giving an organization a way to manage models, permissions, and the runtime. Slack direct messages, channels, group DMs, and projects resolve to different scopes; collaboration happens inside those scopes rather than by handing one person's environment to the entire company.
 
 <!-- truncate -->
 
@@ -19,13 +19,15 @@ The first Ruby loop was easy for employees to use, but it could do only so much.
 
 YC wanted Hermes-level flexibility and the simplicity of its original system. The launch note also says it wanted to own and host the system itself. QM is built for startups around that choice: it gives people and projects their own workspaces, then supplies shared rules for collaboration and organizational control.
 
-## Personal work and shared spaces
+## How scopes organize personal and shared work
 
-QM represents work boundaries as scopes. Personal, channel, team, organization, and group work each have a scope; projects use a group-style scope. Each person and each room can hold its own memory, files, keychain view, permissions, crons, web apps, and durable sandbox.
+QM represents work boundaries as scopes. Personal, channel, team, organization, and group work each have a scope; projects use a group-style scope. Slack DMs resolve to personal scopes, ordinary channels to channel scopes, and multi-person DMs to group scopes. A project can also be linked to a Slack home channel: channel members become project members, and the channel becomes the default delivery audience for scheduled work and reports.
 
-QM does not default to a company-wide agent with every piece of context. People can configure an agent as their own while carrying the same identity and configuration into channels and projects. A skill belongs to one scope and moves to another only through a grant; promotion to the whole organization is an administrator decision. Personal experience, project collaboration, and organization-wide assets therefore have different owners and routes for reuse.
+Scope determines who can enter an environment, which file layers are visible, how credentials are granted, and which durable sandbox receives a command. A personal scope does not bring another employee's files or credentials into a run by default; channel and group scopes provide a shared collaboration boundary for their members. Organization, current-scope, and personal-scope layers can all take part in resolution, with different read/write boundaries.
 
-The organization keeps a distinct responsibility as well. It controls which harnesses and models are available, chooses a security posture, and manages skills that are visible across the organization. Employees do not need to rebuild their environment for every channel, while administrators do not have to treat personal credentials and private context as public resources.
+A skill belongs to one scope and moves to another only through a grant; promotion to the whole organization is an administrator decision. Personal experience, channel collaboration, project work, and organization-wide assets therefore have different owners and routes for reuse.
+
+The organization keeps a distinct responsibility as well. It controls which harnesses and models are available, chooses a security posture, and manages skills that are visible across the organization. Administrators do not have to treat personal credentials and private context as public resources; files, skills, and access relationships intended for sharing must be explicitly granted between the relevant scopes.
 
 ## A generic core and organization-specific work
 
@@ -44,5 +46,6 @@ That defines where QM fits. It offers a way to manage personal agents and shared
 ## Sources
 
 - [YC's QM launch note](https://qm.ycombinator.com/)
-- [QM README at `95b5a6a`](https://github.com/yc-software/qm/blob/95b5a6a9941ce517f478147b1c6fa8365a16afa0/README.md)
-- [SECURITY.md at `95b5a6a`](https://github.com/yc-software/qm/blob/95b5a6a9941ce517f478147b1c6fa8365a16afa0/SECURITY.md)
+- [QM README at `1a6b0e4`](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/README.md)
+- [Scope types and resolution at `1a6b0e4`](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/src/types.ts) and [scope membership](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/src/resolution/scope-membership.ts)
+- [SECURITY.md at `1a6b0e4`](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/SECURITY.md)

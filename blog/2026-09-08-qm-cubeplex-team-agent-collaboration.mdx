@@ -1,51 +1,68 @@
 ---
 slug: qm-cubeplex-team-agent-collaboration
 title: "From Agent Computers to Team Delivery: QM and CubePlex"
-description: QM gives people and channels their own agent computers. CubePlex organizes context, execution, and deliverables around a team workspace. They answer different organizational problems.
+description: QM uses scopes to define agent-computer boundaries. CubePlex reuses an agent's long-lived capabilities in a workspace while isolating conversations, identities, and execution at each chat entry point.
 image: /img/blog/qm-cubeplex-team-agent-collaboration-cover-en.webp
 authors: [xfgong]
 tags: [Quartermaster, QM, QM Alternative, YC QM, CubePlex, Agent Harness, Agent Workspace, Team Agent Platform, Team Workspace]
 ---
 
-QM establishes an important point: company agents cannot be personal assistants sharing one Slack bot. After YC had deployed dozens of personal agents internally, QM placed memory, files, credential views, permissions, schedules, and durable sandboxes inside scopes. A person, channel, project, and organization each have a boundary; sharing happens through grants. It answers the problem of operating many agent computers inside one company.
+QM (Quartermaster) is YC's open-source, self-hosted multiplayer agent harness. It places people, Slack channels, groups, and projects in scopes, using each scope as an agent work environment and permission boundary. CubePlex is an open-source Agent Workspace for teams: it first defines a long-lived Workspace Agent, then lets Web, Slack, Discord, Microsoft Teams, Feishu/Lark, DingTalk, WeCom, and other entry points determine the conversation, identity, and execution boundary for a run.
 
-CubePlex starts elsewhere. Teams rarely lack an agent that can run a command. They lack a place where work can keep moving: research, connector access, working files, and intermediate output must remain usable when a member changes, an entry point changes, or the next task begins. CubePlex therefore makes the workspace—not an individual agent computer—the unit of collaboration.
+The distinction changes everyday use. One model is suited to operating many independent agent computers under a company's permission and runtime system. The other is suited to keeping one team agent consistent across entry points without mixing private conversations, credentials, or execution environments.
 
 <!-- truncate -->
 
-## QM defines the boundary of an agent fleet
+## A QM scope is an environment and permission boundary
 
-QM's scope model is serious and necessary. An employee's personal agent should not receive default access to colleagues' files or credentials. A channel needs shared context without acquiring everybody's environment. QM's headless core owns identity, policy, scheduling, and the agent loop; `execute` sends commands into the relevant scope's durable sandbox. Slack, the web interface, and the admin interface are surfaces over that core.
+QM currently defines personal, channel, team, organization, and group scopes. A Slack DM enters a personal scope; a channel uses a channel scope; a Slack multi-person DM enters a group scope. A project is also implemented as a group scope and can be linked to a Slack home channel: channel members become project members, and the channel becomes the default delivery audience for scheduled work and reports.
 
-That lets a technical team operate agents as a fleet of customizable work computers. Organization-specific tools, skills, sandbox images, and infrastructure live in a deployment directory. A team that needs deep customization can maintain a private fork while keeping core aligned with upstream. This is compelling for companies that already have platform engineering and want runtime and organization customization to remain in their own repository.
+Scope is more than a UI category. QM uses it to determine who can enter an environment, which file layers are visible, how credentials are granted, and which durable sandbox receives a command. A channel scope lets channel members work against shared context without bringing another employee's files or credentials into the run. Organization, current-scope, and personal-scope layers can all take part in resolution, with different read/write boundaries.
 
-It also makes the adoption cost explicit. Deploying QM is not installing a chat application: a team has to own the cloud account, identity, model credentials, networking, images, upgrades, and incident response. QM's public README positions it as a self-hosted harness for startups. Its Kubernetes sandbox backend remains an open PR whose description says live-cluster validation is still outstanding. Contemporary PRs and issues are still refining external-content screening, credential delivery, and audit records. This is not a claim that one product is more advanced. It is the practical question: is the company prepared to operate an agent fleet?
+This model suits teams that operate agents as a fleet of configurable work computers. They can prepare distinct environments, files, and access relationships for separate scopes and use Slack's people and channel structure directly in their agent-boundary model. When channels, projects, or groups need different tools and runtimes, their configuration is maintained per scope as well.
 
-## Team work should outlive an individual agent
+## A CubePlex Workspace defines the long-lived agent
 
-Competitive research, launch preparation, and a customer proposal usually pass through several people. One person starts the work from Feishu or the web, another adds source material, an agent checks repositories, documents, and web pages, and someone reviews a document, spreadsheet, image, or code change. What must persist is not one agent's conversation. It is the context and result of the work.
+In CubePlex, a workspace is both a collaboration unit and the boundary for reusable agent configuration. Its AgentConfig stores the workspace persona; skills are attached through workspace bindings; MCP connector state belongs to the workspace. A member working from the web or an IM entry point meets the same role definition and baseline tool set, rather than a new agent configuration because they entered a different Slack channel.
 
-CubePlex holds that set of assets in one workspace. Members and roles determine who participates. The workspace sandbox preserves files, packages, and the working tree. Personal, workspace, and organization memory separate individual preferences, team facts, and organization knowledge. MCP connectors are granted per workspace. Files, previews, code, and images are retained as artifacts in the thread. The team can continue the same work when a member leaves, the entry point changes, or the next task starts.
+That has a direct team benefit. A research, release, or engineering assistant can retain a stable responsibility, instruction set, and skills. The team does not need to recreate its persona, skills, and MCP connector setup in every channel where that assistant appears. Workspace memory can retain project facts, procedures, and decisions so the next piece of work starts with existing team context instead of a new channel scope.
 
-That does not pool all data into a company-wide agent. Personal memory remains personal, and a connector must still be explicitly granted to a workspace. The difference is that a workspace for a piece of team work is the default shared object, rather than a collection of personal or room scopes whose sharing relationships are assembled one at a time.
+It does not put every state item into a shared workspace pool. CubePlex memory has personal, workspace, and organization layers: personal memory holds one member's preferences and corrections within the current workspace; workspace memory holds team-reusable facts and procedures; organization memory holds organization-wide knowledge. An MCP connector can be enabled in a workspace while its credential grant remains organization-, workspace-, or user-scoped. A team can therefore use one GitHub MCP without sharing every member's GitHub identity.
 
-## Runtime is an execution resource, not the owner of collaboration
+## A chat entry point determines the run boundary
 
-Both systems separate sandboxes from the model loop. QM makes each scope's sandbox that scope's durable computer. CubePlex's Agent runtime is built on CubePi and handles multi-model access, tool execution, streaming, middleware, and durable checkpoints in the service; a workspace sandbox retains the execution state. In v0.7.2, `RunManager` constructs and drives the agent in the service, then passes the sandbox as an execution dependency.
+This article uses Slack because QM derives scopes directly from Slack DMs, channels, and multi-person DMs. CubePlex IM bridges also support Slack, Discord, Microsoft Teams, Feishu/Lark, DingTalk, and WeCom. Once an entry point is attached to a workspace, CubePlex does not create a separate set of agent capabilities for every IM location; it constructs a conversation boundary from the entry point instead.
 
-That choice changes daily team work. Binding a sandbox to a person or channel suits an organization that wants every scope to own a separate computer. Binding one to a workspace suits a project group that needs to preserve its code, source material, skills, and outputs. CubePlex can run on Docker Compose or Kubernetes, while providing workspace, role, model-policy, cost-tracking, and multi-surface collaboration without requiring a QM deployment repository for every organization.
+- A DM is always one-to-one. Even a bot configured for shared routing keeps the member's own topic, personal memory, and human-in-the-loop identity in a direct message.
+- Group chats can use shared or isolated routing. Shared routing gives participants in a channel one common conversation; isolated routing keeps a distinct conversation context for each participant in the same channel.
+- This routing setting currently applies uniformly to a bot account, rather than being configured channel by channel. Individual channels remain distinguished by their Slack channel IDs.
 
-CubePlex provides scheduled and webhook automation triggers. Its current trigger pipeline runs only `inline` targets; `managed_agent` targets are not yet implemented. That does not affect interactive workspace collaboration, but it means that long-lived Managed Agents awakened by events are not a shipped capability.
+Execution follows the same principle. A CubePlex Sandbox record is bound to an organization, a workspace, and a scope tuple. That tuple may represent a user, conversation, or topic. The workspace reuses the agent definition and resource configuration, while the actual run can still be isolated by person or collaboration context.
 
-## Choose operational ownership, not a feature checklist
+The same bot therefore has a consistent persona, skill set, and team knowledge at every entry point, but it should not produce mechanically identical answers. Direct-message history, personal preferences, and user authorization differ from a shared group discussion and its visible permissions. A stable agent identity with controlled context differences is the combination team work requires.
 
-QM suits a team extending personal agents into organizational collaboration: personal environments remain distinct, channels and projects share on demand, and engineers maintain the deployment layer and runtime.
+## Reuse configuration while preserving isolation
 
-CubePlex suits an organization that wants agents to become part of its team workflow: work begins with an entry point, members, permissions, and model policy; runs in a shared sandbox; and ends as an artifact the team can continue to use. For those teams, the important outcome is not another agent computer. It is agent work that does not disappear with one person, channel, or conversation.
+QM's default composition begins by identifying a scope from Slack or project context, then establishes the corresponding resources and access relationships. CubePlex begins by establishing a Workspace Agent, then maps IM entry points to conversation and execution boundaries.
+
+| Team concern | QM | CubePlex |
+| --- | --- | --- |
+| Long-lived agent definition | Organized separately by personal, channel, group, or project scope | Persona, skills, workspace connectors, and team memory are reused in one workspace |
+| Slack direct message | Routes to a personal scope | Keeps a one-to-one conversation, personal memory, and user identity |
+| Slack group chat | Routes to a channel or group scope | One bot can use shared context or isolate context by participant |
+| Execution environment | A durable sandbox corresponds to the scope | A sandbox can bind to a user, conversation, or topic within the workspace |
+| Connector authentication | Determined by scopes and grant relationships | Connectors can be reused by a workspace; credentials can be granted to an organization, workspace, or user |
+
+QM gives explicit product meaning to project scopes, Slack-roster linkage, and scope-level environment organization. CubePlex uses a different default composition: it concentrates a team agent's long-lived definition in the workspace, then handles entry-point differences through conversation, identity, permission, and execution boundaries. For teams that want one stable team agent in multiple collaboration surfaces without maintaining a separate agent configuration for every channel, that composition more closely matches their daily work.
+
+## Team deliverables remain in the workspace
+
+Research, release preparation, and customer proposals are rarely one conversation. Members add material, review results, connect systems, and later continue editing documents, code, spreadsheets, or images. CubePlex keeps this work in a workspace: members and roles control participation, artifacts retain files, previews, and generated output, workspace memory retains reusable facts, and sandboxes provide execution state for a particular user, conversation, or topic.
+
+Teams do not have to choose between a shared bot with no boundaries and copying an agent computer into every Slack location. One workspace can hold long-lived agent capabilities while each entry point retains its appropriate privacy, permissions, and run context.
 
 ## Sources and revisions
 
-- [QM README at `1a6b0e4`](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/README.md) and [SECURITY.md](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/SECURITY.md)
-- QM public work: [Kubernetes sandbox backend](https://github.com/yc-software/qm/pull/954), [Auto-posture content screening](https://github.com/yc-software/qm/pull/970), [credentials in sandbox process listings](https://github.com/yc-software/qm/issues/917), and [non-durable security-screen records](https://github.com/yc-software/qm/issues/868)
-- [CubePlex README at `a54442cf` (v0.7.2)](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/README.md)
-- [CubePlex RunManager](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/streams/run_manager.py) and [trigger pipeline](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/triggers/pipeline.py)
+- [QM README at `1a6b0e4`](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/README.md), [scope types](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/src/types.ts), [scope resolution](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/src/resolution/resolution-service.ts), and [project Slack-channel linking](https://github.com/yc-software/qm/blob/1a6b0e443016079b7e79ac874a8cfda0a5f3b306/src/api/agent-api-catalog.ts)
+- [CubePlex README at `a54442cf` (v0.7.2)](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/README.md), [workspace AgentConfig](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/models/agent_config.py), and [IM conversation boundaries](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/im/types.py)
+- [CubePlex IM overview](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/docs/site/docs/guides/im/overview.md), [WeCom setup](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/docs/site/docs/guides/im/wecom.md), [IM conversation resolution](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/im/conversation_resolver.py), [sandbox scopes](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/models/user_sandbox.py), [memory scopes](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/models/memory.py), and [MCP credential grants](https://github.com/cubeplexai/cubeplex/blob/a54442cf62e34906ed1621adf99eaeef074e7ada/backend/cubeplex/models/mcp.py)
