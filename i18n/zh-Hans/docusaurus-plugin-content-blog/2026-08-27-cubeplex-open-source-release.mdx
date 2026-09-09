@@ -1,72 +1,68 @@
 ---
 slug: cubeplex-open-source-release
-title: CubePlex -- 企业级 Agent 平台正式开源
-description: CubePlex 现已以 Apache-2.0 许可证开源。它是一套面向团队工作区的企业级智能体平台，提供 Managed Agent、权限治理、隔离 Sandbox 与 Docker Compose、Kubernetes 部署资产。
+title: CubePlex 开源：让 Agent 的工作留在团队里
+description: CubePlex 以 Apache-2.0 许可证开源。它为团队提供共享工作区，将 Agent 的对话、Skills、Memory、MCP、Sandbox 与交付物保留在可接手、可复用的工作现场。
 authors: [xfgong]
 tags: [CubePlex, 开源, 企业级智能体平台, Managed Agents, Agent 平台, 自托管]
 image: /img/blog/cubeplex-open-source-release-cover.webp
 ---
 
-今天 CubePlex 正式开源。源码已经发布在 [GitHub](https://github.com/cubeplexai/cubeplex)，采用 Apache-2.0 许可证，后端、Web 应用、部署资产和产品文档都可以直接查看和使用。
+CubePlex 现已正式开源。源码发布在 [GitHub](https://github.com/cubeplexai/cubeplex)，采用 Apache-2.0 许可证；后端、Web 应用、部署资产和产品文档都可直接查看和使用。
 
-Agent 从个人工具走向团队使用，有一个很直观的标准：一个人跑通的 AI 工作流可以被其他成员再次运行，不需要凭聊天记录和个人记忆从头重建。现在的 Agent 已经能写代码、查资料、处理文件和调用外部工具，难点逐渐从“能不能完成一次任务”变成“怎样把这次成功留在团队里”。
+Agent 已经能写代码、查资料、处理文件和调用外部工具。团队真正需要解决的是另一件事：一位成员跑通的工作，怎样由其他成员接手、检查并再次运行，而不必靠聊天记录和个人记忆重新恢复现场。
 
-CubePlex 是为 Managed Agents 构建的开源工作区。它把对话、团队成员、Skills、Memory、MCP 工具和隔离执行环境放进同一个协作空间，让 Agent 的工作可以被看到、接手和重复使用。
+CubePlex 是面向团队的开源 Agent 工作区。它把对话、成员、Skills、Memory、MCP 工具、隔离执行环境和交付物放在同一个 Workspace 中，让 Agent 的工作可见、可接手，也能继续复用。
 
 <!-- truncate -->
 
-## 从一次回答到可重复的工作
+## 工作区保留可重复的工作
 
-个人使用 Agent 时，聊天记录、终端目录和浏览器登录状态暂时放在一起，通常已经够用。进入团队以后，同样的做法很快就会失效：prompt 留在某个人的对话里，项目知识散落在不同线程中，文件放在临时目录，工具连接也只有最初的使用者知道怎样配置。
+个人使用 Agent 时，聊天记录、终端目录和浏览器登录状态暂时放在一起，通常已经够用。进入团队后，同样的做法很快会失效：prompt 留在某个人的对话里，项目知识散落在不同线程中，文件放在临时目录，工具连接也只有最初的使用者知道怎样配置。
 
-一周后另一位成员接手时，往往要重新说明背景、重新连接工具，再把上一轮结果搬到新的环境。第一次执行节省下来的时间，又花在了恢复现场上。
+另一位成员接手时，往往需要重新说明背景、重新连接工具，再把上一轮结果搬进新的环境。第一次执行节省下来的时间，又花在了恢复现场上。
 
-CubePlex 用工作区保存这些连续的工作关系。团队成员、会话、模型、工具和项目知识都属于明确的工作区；成员离开聊天窗口以后，工作仍然留在原来的位置。下一次任务可以沿用相同的 Skills、Memory 和工具连接，团队得到的是可以再次执行的流程，而不是一段只能参考的聊天记录。
+CubePlex 用 Workspace 保存这些连续的工作关系。团队成员、会话、模型、工具和项目知识都属于明确的工作区；成员离开聊天窗口后，工作仍留在原来的位置。下一次任务可以沿用相同的 Skills、Memory 和工具连接，团队得到的是可再次执行的流程，而不只是一段供人参考的聊天记录。
 
-## 工作区保存工作现场
+## Sandbox 与 Agent runtime
 
-一项任务通常从一句请求开始，随后变成一组实际操作：读取资料、修改代码、安装依赖、运行命令、查看网页，最后交付文件或预览。CubePlex 为工作区提供独立 Sandbox，Agent 在里面使用文件、浏览器、终端和本地进程。工作目录、安装的包和工作树在重启后继续保留，下一轮任务可以直接接着上次的结果往下做。
+一项任务通常从一句请求开始，随后变成一组实际操作：读取资料、修改代码、安装依赖、运行命令、查看网页，最后交付文件或预览。CubePlex 为工作区提供隔离 Sandbox，Agent 可以在其中使用文件、浏览器、终端和本地进程。工作目录、安装的包和工作树在重启后继续保留，下一轮任务能够从上次的结果继续。
 
-Sandbox 负责命令、文件、浏览器和本地进程。Agent runtime 运行在平台侧，处理模型调用、工具执行、流式响应和会话状态。底层 runtime 基于开源框架 [CubePi](https://github.com/cubeplexai/cubepi) 构建，可以接入不同模型提供方，并通过 middleware 和 checkpoint 支撑持续运行的 Agent 工作。
+Sandbox 负责命令、文件、浏览器和本地进程；Agent runtime 运行在平台侧，处理模型调用、工具执行、流式响应和会话状态。底层 runtime 基于开源框架 [CubePi](https://github.com/cubeplexai/cubepi) 构建，可接入不同模型提供方，并通过 middleware 与 checkpoint 支撑持续运行的 Agent 工作。
 
-Agent 交付的文件、代码、图片和预览会作为版本化产物留在会话中。它可以是一份工作簿、一份报告，也可以是一个可以直接打开的 Web 应用。团队看到的是实际交付物，可以检查、下载、继续修改，也可以再次运行产生它的工作流程。
+Agent 交付的文件、代码、图片和预览会作为版本化产物保留在会话中。它可以是一份工作簿、一份报告，也可以是一个可直接打开的 Web 应用。团队看到的是实际交付物，能够检查、下载、继续修改，也能再次运行产生它的工作流程。
 
-## 同一个会话里的团队协作
+## 团队成员在同一会话中协作
 
-CubePlex 支持把工作区成员邀请到同一个会话中。大家看到同一份消息历史，使用同一个会话 Sandbox，也能打开 Agent 生成的文件和产物。接手工作不需要复制 prompt 或转发一组附件，新的成员进入原会话就能看到已经完成的步骤和当前结果。
+CubePlex 支持邀请工作区成员进入同一会话。成员看到同一份消息历史，使用同一个会话 Sandbox，也能打开 Agent 生成的文件和产物。接手工作不需要复制 prompt 或转发一组附件；新成员进入原会话即可看到已完成的步骤和当前结果。
 
-团队也不必为了使用 Agent 改变已有沟通习惯。CubePlex 可以连接 Slack、飞书、钉钉、Teams 和 Discord。成员在频道或私聊中提及 Agent，仍然使用对应工作区里的 Skills、Memory 和 MCP 工具。Agent 由此成为团队工作流程的一部分，而不是另一个只有少数人知道怎样使用的聊天机器人。
+团队也不必为了使用 Agent 改变已有的沟通入口。CubePlex 可以连接 Slack、飞书、钉钉、Teams 和 Discord。成员在频道或私聊中提及 Agent，仍使用对应 Workspace 中的 Skills、Memory 和 MCP 工具。Agent 因此可以进入团队已有的工作流程，而不是成为另一个只有少数人会配置的聊天机器人。
 
 ## Skills、MCP 与 Memory
 
-一个能完成实际工作的 Agent，需要知道团队怎样做事，也需要连接团队正在使用的系统。CubePlex 同时支持 Skills 与 MCP：Skills 保存流程、知识和操作方法，MCP 把 Agent 接到代码仓库、文档、数据和业务服务。团队可以使用内置 Skill，上传自己的 Skill，或者从远程注册表安装 (目前支持 skills.sh 和 clawhub.ai，如果企业内部用自己的 skills 平台，也可以对接支持）；MCP 工具则通过静态凭据或 OAuth 连接，再授权给相应工作区。
+能完成实际工作的 Agent，既要知道团队怎样做事，也要能连接团队正在使用的系统。Skills 保存流程、知识和操作方法；MCP 将 Agent 接到代码仓库、文档、数据和业务服务。团队可以使用内置 Skill、上传自己的 Skill，或从远程注册表安装；MCP 工具通过凭据或 OAuth 连接，并授权给相应 Workspace。
 
-Memory 分为个人、工作区和组织三个范围。个人偏好不必变成全公司的默认规则，项目知识可以留在工作区，组织级约定则能被多个团队复用。Agent 获得的是与当前工作相关的上下文，而不是每次都从一段越来越长的系统提示重新开始。
+Memory 分为个人、工作区和组织三个范围。个人偏好不必变成全公司的默认规则，项目知识可以留在 Workspace，组织级约定则能被多个团队复用。Agent 获得的是与当前工作相关的上下文，而不是每次都从一段不断加长的系统提示重新开始。
 
-工作也可以在没有人守着聊天窗口时继续。CubePlex 支持定时、间隔和一次性任务，也能由 webhook 触发。组织、工作区、成员角色、模型访问策略和成本记录由同一套平台管理。
+工作也可以在没有人守着聊天窗口时继续。CubePlex 支持定时、间隔和一次性任务，也可由 Webhook 触发；组织、Workspace、成员角色、模型访问策略和成本记录由同一套平台管理。
 
 ## 执行与权限控制
 
 Agent 执行的代码和文件留在隔离 Sandbox 中，不需要占用某位成员的电脑。管理员可以配置出站网络策略，默认拒绝外部连接，只允许任务需要访问的网络。
 
-在 Kubernetes 部署中，长期凭据不会直接写入 Sandbox。Agent 使用占位符发起请求，出口代理只在访问获准主机时替换真实值。对于敏感命令，策略可以要求进行人工确认，Agent loop 会暂停并展示即将使用的工具和数据，由团队成员决定是否继续。
-
+在 Kubernetes 部署中，长期凭据不会直接写入 Sandbox。Agent 使用占位符发起请求，出口代理只在访问获准主机时替换真实值。对于敏感命令，策略可以要求人工确认；Agent loop 会暂停并展示即将使用的工具和数据，由团队成员决定是否继续。
 
 ## 完整应用开源
 
-Agent 平台仍在快速变化。模型、工具协议和执行环境不断更新，企业里的身份、权限和部署方式也各不相同。只提供一套封闭产品，很难覆盖这些差异。团队需要看到系统怎样调用模型、怎样运行工具、怎样保存状态，也需要按自己的基础设施和工作流程进行修改。
+模型、工具协议和执行环境仍在快速变化，企业的身份、权限和部署方式也各不相同。团队需要能够查看系统怎样调用模型、运行工具和保存状态，也需要按自己的基础设施和工作流程修改系统。
 
-因此，我们把完整的 CubePlex 应用开源出来。仓库包含 Agent runtime、团队使用的 Web 界面、组织与工作区管理、Sandbox 集成、Docker Compose、Helm chart、测试和文档。CubePlex 已经可以作为一套完整系统部署和使用，可以先在一台机器上使用 docker compose 快速运行，然后决定怎样接入现有模型、工具和内部系统，生产部署推荐部署在 Kubernetes 上。
+因此，CubePlex 开源了完整应用：仓库包含 Agent runtime、团队使用的 Web 界面、组织与 Workspace 管理、Sandbox 集成、Docker Compose、Helm chart、测试和文档。团队可以先在一台机器上用 Docker Compose 运行，再接入现有的模型、工具和内部服务；生产部署可使用 Kubernetes。
 
 ## 从源码开始
-
-可以从 [CubePlex GitHub 仓库](https://github.com/cubeplexai/cubeplex) 开始，按照贡献说明配置本地开发环境。项目使用 Python、TypeScript、pnpm 和 Docker，提交前的检查覆盖后端、前端和端到端流程。
-
-欢迎正在为团队部署 Agent 的开发者和平台工程师试用 CubePlex，也欢迎通过 Issue 和 Pull Request 参与项目。
-
-## 源码与文档
 
 - [CubePlex GitHub 仓库](https://github.com/cubeplexai/cubeplex)
 - [Apache-2.0 许可证](https://github.com/cubeplexai/cubeplex/blob/main/LICENSE)
 - [CubePlex 文档](https://docs.cubeplex.ai)
+- [CubePi](https://github.com/cubeplexai/cubepi)
 - [贡献指南](https://github.com/cubeplexai/cubeplex/blob/main/CONTRIBUTING.md)
+
+欢迎正在为团队部署 Agent 的开发者和平台工程师试用 CubePlex，也欢迎通过 Issue 和 Pull Request 参与项目。
