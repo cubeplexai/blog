@@ -20,14 +20,14 @@
   "blog.productCallout.cubeplexDescription": {
     "message": "面向团队的自托管 AI Agent 工作空间，用来处理文档、数据和跨系统任务，并统一管理权限与执行记录。"
   },
-  "blog.productCallout.cubepiDescription": {
+  "blog.productCallout.cubeloopDescription": {
     "message": "高性能、可追踪、生产级持久化的 Python 原生异步 Agent 框架。"
   },
   "blog.productCallout.cubeplexCta": {
     "message": "查看 CubePlex 源码"
   },
-  "blog.productCallout.cubepiCta": {
-    "message": "查看 CubePi 源码"
+  "blog.productCallout.cubeloopCta": {
+    "message": "访问 CubeLoop 官网"
   },
   "theme.ErrorPageContent.title": {
     "message": "页面已崩溃。",

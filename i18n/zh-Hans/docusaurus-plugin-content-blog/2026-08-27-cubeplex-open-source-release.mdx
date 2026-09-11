@@ -27,7 +27,7 @@ CubePlex 用 Workspace 保存这些连续的工作关系。团队成员、会话
 
 一项任务通常从一句请求开始，随后变成一组实际操作：读取资料、修改代码、安装依赖、运行命令、查看网页，最后交付文件或预览。CubePlex 为工作区提供隔离 Sandbox，Agent 可以在其中使用文件、浏览器、终端和本地进程。工作目录、安装的包和工作树在重启后继续保留，下一轮任务能够从上次的结果继续。
 
-Sandbox 负责命令、文件、浏览器和本地进程；Agent runtime 运行在平台侧，处理模型调用、工具执行、流式响应和会话状态。底层 runtime 基于开源框架 [CubePi](https://github.com/cubeplexai/cubepi) 构建，可接入不同模型提供方，并通过 middleware 与 checkpoint 支撑持续运行的 Agent 工作。
+Sandbox 负责命令、文件、浏览器和本地进程；Agent runtime 运行在平台侧，处理模型调用、工具执行、流式响应和会话状态。底层 runtime 基于开源框架 [CubeLoop](https://cubeloop.dev) 构建，可接入不同模型提供方，并通过 middleware 与 checkpoint 支撑持续运行的 Agent 工作。
 
 Agent 交付的文件、代码、图片和预览会作为版本化产物保留在会话中。它可以是一份工作簿、一份报告，也可以是一个可直接打开的 Web 应用。团队看到的是实际交付物，能够检查、下载、继续修改，也能再次运行产生它的工作流程。
 
@@ -62,7 +62,7 @@ Agent 执行的代码和文件留在隔离 Sandbox 中，不需要占用某位�
 - [CubePlex GitHub 仓库](https://github.com/cubeplexai/cubeplex)
 - [Apache-2.0 许可证](https://github.com/cubeplexai/cubeplex/blob/main/LICENSE)
 - [CubePlex 文档](https://docs.cubeplex.ai)
-- [CubePi](https://github.com/cubeplexai/cubepi)
+- [CubeLoop](https://cubeloop.dev)
 - [贡献指南](https://github.com/cubeplexai/cubeplex/blob/main/CONTRIBUTING.md)
 
 欢迎正在为团队部署 Agent 的开发者和平台工程师试用 CubePlex，也欢迎通过 Issue 和 Pull Request 参与项目。

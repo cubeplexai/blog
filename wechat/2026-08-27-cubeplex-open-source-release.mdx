@@ -57,19 +57,19 @@ Cloud Harness 持有 Agent loop 和会话上下文，处理模型请求、工具
 
 这套结构让 Workspace 成为团队使用 Agent 的组织单位，Cloud Harness 负责持续运行，Sandbox 则承担具体执行。
 
-## CubePi 取代 LangGraph
+## CubeLoop 取代 LangGraph
 
 CubePlex 最初使用 LangGraph 构建 Agent runtime。随着系统变复杂，我们花在图节点、状态通道和序列化上的精力越来越多。
 
 今天的通用 Agent 通常不会提前画好一张固定流程图。模型会根据上下文选择工具，读取结果，再决定继续执行还是结束。代码仍然要控制权限、持久化和异常处理，任务路径则由模型在 Agent loop 中动态形成。对这类运行方式，图运行时增加了不少没有直接服务于任务的结构。
 
-因此我们实现了 [CubePi](https://github.com/cubeplexai/cubepi)，并用它替换 CubePlex 中原来的 LangGraph runtime。CubePi 的核心是一段可以直接读懂的异步 while loop。工具是普通函数，模型输出和工具结果通过统一的事件流返回。开发者可以顺着一次运行读下去，不需要在节点、边和回调之间来回跳转。
+因此我们实现了 [CubeLoop](https://cubeloop.dev)，并用它替换 CubePlex 中原来的 LangGraph runtime。CubeLoop 的核心是一段可以直接读懂的异步 while loop。工具是普通函数，模型输出和工具结果通过统一的事件流返回。开发者可以顺着一次运行读下去，不需要在节点、边和回调之间来回跳转。
 
-架构变简单以后，生产环境需要的机制仍然保留。CubePi 提供类型明确的 Middleware，可以在模型调用和工具执行前后加入权限、审批与观测逻辑。CubePlex 原先的 LangGraph Checkpoint 会随对话增长写入完整消息状态，I/O 为 O(n)。CubePi 改用 append-only，每一步只写入新增消息，Checkpoint I/O 相对于会话长度保持 O(1)。
+架构变简单以后，生产环境需要的机制仍然保留。CubeLoop 提供类型明确的 Middleware，可以在模型调用和工具执行前后加入权限、审批与观测逻辑。CubePlex 原先的 LangGraph Checkpoint 会随对话增长写入完整消息状态，I/O 为 O(n)。CubeLoop 改用 append-only，每一步只写入新增消息，Checkpoint I/O 相对于会话长度保持 O(1)。
 
-工具数量增加时，CubePi 可以先向模型提供一份紧凑目录，需要时再加载对应的 MCP 工具。工具数组和系统 Prompt 在运行中保持稳定，不会因为动态加载工具反复破坏 Prompt Cache。长会话和大量工具因此更容易利用模型提供方的缓存机制，减少重复输入带来的成本。
+工具数量增加时，CubeLoop 可以先向模型提供一份紧凑目录，需要时再加载对应的 MCP 工具。工具数组和系统 Prompt 在运行中保持稳定，不会因为动态加载工具反复破坏 Prompt Cache。长会话和大量工具因此更容易利用模型提供方的缓存机制，减少重复输入带来的成本。
 
-CubePi 目前已经独立开源。它既是 CubePlex 的 Harness Core，也可以作为 Python Agent 框架单独使用。
+CubeLoop 目前已经独立开源。它既是 CubePlex 的 Harness Core，也可以作为 Python Agent 框架单独使用。
 
 ## 一个可以交给团队使用的 Agent 平台
 
@@ -101,7 +101,7 @@ CubePlex 的源码、部署说明和贡献指南已经公开。
 
 - [CubePlex GitHub 仓库](https://github.com/cubeplexai/cubeplex)
 - [CubePlex 文档](https://docs.cubeplex.ai)
-- [CubePi](https://github.com/cubeplexai/cubepi)
+- [CubeLoop](https://cubeloop.dev)
 - [贡献指南](https://github.com/cubeplexai/cubeplex/blob/main/CONTRIBUTING.md)
 
 欢迎部署 CubePlex，也欢迎通过 Issue 和 Pull Request 参与项目。

@@ -223,9 +223,9 @@ def render_post(
         f'<p style="margin: 42px 0 18px 0 !important; padding: 18px 0 0 0 !important; {about_border} '
         f'color: {TOKENS["quiet"]} !important; font-size: 13px !important; font-weight: 600 !important; '
         'line-height: 1.5 !important; letter-spacing: 1px !important; text-align: left !important; text-indent: 0 !important;">关于</p>',
-        f'<p style="margin: 0 0 6px 0 !important; padding: 0 !important; {about_heading}">CubePi</p>',
+        f'<p style="margin: 0 0 6px 0 !important; padding: 0 !important; {about_heading}">CubeLoop</p>',
         f'<p style="margin: 0 0 6px 0 !important; padding: 0 !important; {about_body}">原生支持异步的 Python Agent Harness 框架，专为高性能、高可读性及生产级持久化能力而设计。</p>',
-        f'<p style="margin: 0 0 20px 0 !important; padding: 0 !important; {about_body}">https://github.com/cubeplexai/cubepi</p>',
+        f'<p style="margin: 0 0 20px 0 !important; padding: 0 !important; {about_body}">https://cubeloop.dev</p>',
         f'<p style="margin: 0 0 6px 0 !important; padding: 0 !important; {about_heading}">CubePlex</p>',
         f'<p style="margin: 0 0 6px 0 !important; padding: 0 !important; {about_body}">CubePlex 是为团队构建的企业级智能体平台。Agent 的 Skills、Memory、工具、自动化任务和整个工作现场都在 Workspace 里持久保存，任务可以交接，经验可以复用，交付物以版本化产物留存。</p>',
         f'<p style="margin: 0 !important; padding: 0 !important; {about_body}">https://github.com/cubeplexai/cubeplex</p>',

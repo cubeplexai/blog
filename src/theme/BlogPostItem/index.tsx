@@ -35,15 +35,15 @@ function ProductCallout(): ReactNode {
           </a>
         </section>
         <section className="blog-product-callout__product">
-          <h3>CubePi</h3>
+          <h3>CubeLoop</h3>
           <p>
-            <Translate id="blog.productCallout.cubepiDescription">
+            <Translate id="blog.productCallout.cubeloopDescription">
               A high-performance, traceable, async-native Python agent framework with
               production-grade persistence.
             </Translate>
           </p>
-          <a className="blog-product-callout__link" href="https://github.com/cubeplexai/cubepi">
-            <Translate id="blog.productCallout.cubepiCta">View CubePi source</Translate>
+          <a className="blog-product-callout__link" href="https://cubeloop.dev">
+            <Translate id="blog.productCallout.cubeloopCta">Visit CubeLoop</Translate>
           </a>
         </section>
       </div>

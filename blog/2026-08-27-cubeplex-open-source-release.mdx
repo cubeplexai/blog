@@ -27,7 +27,7 @@ CubePlex uses workspaces to preserve those working relationships. Team members, 
 
 A task usually starts with one request and grows into a series of operations: reading source material, editing code, installing dependencies, running commands, opening web pages, and producing a file or preview. CubePlex provides an independent sandbox for the workspace, where the agent can use files, a browser, a terminal, and local processes. Working directories, installed packages, and working trees persist across restarts, so the next task can continue from the previous result.
 
-The sandbox handles commands, files, browsers, and local processes. The agent runtime runs on the platform side and manages model calls, tool execution, streaming responses, and conversation state. It is built on the open-source [CubePi](https://github.com/cubeplexai/cubepi) framework, with multi-provider model access, middleware, and checkpoints for long-running agent work.
+The sandbox handles commands, files, browsers, and local processes. The agent runtime runs on the platform side and manages model calls, tool execution, streaming responses, and conversation state. It is built on the open-source [CubeLoop](https://cubeloop.dev) framework, with multi-provider model access, middleware, and checkpoints for long-running agent work.
 
 Files, code, images, and previews produced by an agent remain in the conversation as versioned artifacts. The result might be a workbook, a report, or a working web application. Team members can inspect, download, and revise the actual deliverable, then rerun the workflow that produced it.
 

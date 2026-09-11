@@ -77,7 +77,7 @@ alongside it for platform-specific distribution. Existing 2:1 posts use
 - Managed Agents 文章的主要判断是：Sandbox 内 Harness 更适合有明确开始和结束的单次自动化任务；长期运行、等待事件或服务多个用户的 Managed Agent 更适合由控制面持有 Harness，Sandbox 作为可租用、可替换、可并行的执行资源。
 - 不把未来架构写成已交付能力。当前文章不再包含 Managed Agent definition、一对多 Sandbox 编排等产品状态声明；CubePlex 的产品选择只在文章结尾讨论。
 - 公众号稿源文件位于 `wechat/` 目录（提交 GitHub 存档，不属于 Docusaurus 站点，不发布到博客）。公众号稿从 `wechat/` 下当前 MDX 重新生成，不从旧的 `/tmp` HTML 手工摘录；文章内容有变化时，先改 MDX，再运行 formatter。目录约定见 `wechat/README.md`。
-- 公众号稿已按要求移除参考资料、博客原文链接和普通 HTML 外链；文末沿用“关于 / CubePi / CubePlex”介绍，GitHub 地址作为普通文本。
+- 公众号稿已按要求移除参考资料、博客原文链接和普通 HTML 外链；文末沿用“关于 / CubeLoop / CubePlex”介绍，官网地址作为普通文本。
 
 ## 图表与视觉
 
