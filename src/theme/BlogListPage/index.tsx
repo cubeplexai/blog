@@ -10,9 +10,10 @@ import type { ReactNode } from 'react';
 import type { Props } from '@theme/BlogListPage';
 
 function BlogListPageContent({ metadata, items, sidebar }: Props): ReactNode {
+  const isFirstPage = metadata.page === 1;
   return (
     <Layout
-      title={metadata.permalink === '/' ? undefined : metadata.blogTitle}
+      title={isFirstPage ? undefined : metadata.blogTitle}
       description={metadata.blogDescription}
     >
       <main>
@@ -21,6 +22,12 @@ function BlogListPageContent({ metadata, items, sidebar }: Props): ReactNode {
             <AllPosts sidebar={sidebar} />
           </aside>
           <div className="blog-feed">
+            {isFirstPage ? (
+              <header className="blog-feed__intro">
+                <h1>{metadata.blogTitle}</h1>
+                <p>{metadata.blogDescription}</p>
+              </header>
+            ) : null}
             <BlogPostItems items={items} />
             <BlogListPaginator metadata={metadata} />
           </div>
