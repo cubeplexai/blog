@@ -1,0 +1,49 @@
+---
+slug: cubeplex-vs-deerflow-workspace-and-harness
+title: "CubePlex vs DeerFlow: Team Agent Workspace vs Super Agent Harness"
+description: DeerFlow 2.0 runs long-horizon work through Gateway, skills, sub-agents, and sandboxes. CubePlex runs a team Workspace with governance and IM.
+authors: [xfgong]
+tags: [CubePlex, DeerFlow, Agent Workspace, Agent Harness, Self-hosting, Team Agents]
+image: /img/blog/cubeplex-vs-deerflow-workspace-and-harness-cover-en.webp
+---
+
+DeerFlow 2.0 is an open-source super agent harness: a lead agent on LangGraph / LangChain calls skills, tools, and sub-agents, with memory and sandboxes, for tasks that may run minutes to hours ([bytedance/deer-flow](https://github.com/bytedance/deer-flow), [deerflow.tech](https://deerflow.tech)). CubePlex is a self-hosted team agent Workspace: Persona, skills, MCP, and layered memory sit on the Workspace; people enter from the web or IM under shared roles and approvals ([cubeplex.ai](https://cubeplex.ai/)).
+
+DeerFlow 2.0 shares no code with the 1.x Deep Research line. This piece covers **2.0** only.
+
+![Harness thread vs Workspace boundary](/img/blog/cubeplex-vs-deerflow-workspace-and-harness/harness-and-workspace-en.svg)
+
+<!-- truncate -->
+
+## What DeerFlow 2.0 ships
+
+It includes a Gateway, configurable sandboxes (Local, Docker, Kubernetes provisioner, and others), a skills tree, and sub-agent delegation — you do not assemble that runtime from an empty graph. Configuration centers on `config.yaml`. Telegram, Slack, Feishu, DingTalk, WeCom, and similar channels can feed the harness; `/agent` and `/memory` manage sessions ([README IM Channels](https://github.com/bytedance/deer-flow)). Pluggable authorization is advanced config, not a required default.
+
+The README warns about unsafe deployment. Re-read it before you publish.
+
+## CubePlex team boundaries
+
+Organizations and Workspaces set roles, model policy, and shared agent config. The control plane runs the agent loop; each Workspace sandbox keeps files, packages, and the working tree. IM bridges bind to the Workspace: a new channel does not invent a Persona, only a session. Personal, Workspace, and organization memory stay separate.
+
+## Threads and Workspaces
+
+DeerFlow work lives on a thread and a run. The lead agent loads skills as needed and delegates with `task`. That fits finishing a long job inside a strong harness.
+
+CubePlex work lives on a Workspace. Several people share one agent config and one governance model. That fits daily collaboration more than spinning a new runtime per task.
+
+## Sandboxes
+
+DeerFlow sandboxes serve the current harness job; backends vary. CubePlex sandboxes are the Workspace execution environment across restarts. Both isolate command execution. Threat models differ — read each project security note.
+
+## Where each fits
+
+Self-managed long research, coding, and multi-step work with skills and sub-agents: DeerFlow 2.0.
+
+Platform teams that want a self-hosted Workspace agent, durable sandbox, and IM together: CubePlex.
+
+Heavy jobs can go to DeerFlow while daily entry and permissions stay on CubePlex.
+
+## Sources and revision
+
+- DeerFlow 2.0: [github.com/bytedance/deer-flow](https://github.com/bytedance/deer-flow) (MIT), [deerflow.tech](https://deerflow.tech) — public main README checked 2026-09-14; pin commit SHA before publish.
+- CubePlex: [cubeplex.ai](https://cubeplex.ai/), [github.com/cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex).
