@@ -1,0 +1,55 @@
+---
+slug: cubeplex-vs-dify-team-agent-workspace
+title: CubePlex 与 Dify：团队 Agent Workspace 与 App/Workflow 构建器
+description: Dify 用 Studio 编排 Workflow、RAG 与 New Agent，并发布为 App 或 API；CubePlex 用 Workspace 承载团队 Agent、持久 Sandbox 与 IM 入口。
+authors: [xfgong]
+tags: [CubePlex, Dify, Agent Workspace, Workflow, 自托管, 团队 Agent]
+image: /img/blog/cubeplex-vs-dify-team-agent-workspace-cover.webp
+---
+
+Dify 在 Studio 里编排 Workflow、Chatflow、知识库和 Agent，再把结果发布成 Web App、API 或嵌入页（[dify.ai](https://dify.ai/)）。CubePlex 给团队一个自托管 Workspace：Persona、Skills、MCP、分层 memory 挂在 Workspace 上，成员从 Web 或 IM 进来，仍用同一套角色与审批（[cubeplex.ai](https://cubeplex.ai/)，[cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex)）。两边都能自托管。Dify 默认保存的是可发布的 App；CubePlex 默认保存的是团队继续用的 Workspace Agent。
+
+![Sandbox 挂在谁的边界上](/img/blog/cubeplex-vs-dify-team-agent-workspace/sandbox-boundary.svg)
+
+<!-- truncate -->
+
+## Dify 编排并发布 App
+
+Studio 用节点拼出模型调用、检索、工具、分支和人工确认，Workflow 跑完一次任务，Chatflow 在同一套节点上加会话（[Workflow & Chatflow](https://docs.dify.ai/en/self-host/use-dify/build/workflow-chatflow)）。Knowledge 与 Marketplace 插件接到这些 App 上。图上的执行路径看得见，方便把流程交给别人维护。
+
+长期留下的对象是 App 与其中的 Agent 配置。要交付一个对外或对内可调用的应用时，这条路径更直接。
+
+## CubePlex 的 Workspace Agent
+
+对话、文件、工具、memory 和产物留在 Workspace 里。另一位成员可以打开同一 Workspace 继续跑，不必从某个人的私聊记录里拼现场。
+
+组织与 Workspace 角色、AgentConfig、Skills，以及个人 / Workspace / 组织 memory，规定这个团队 Agent 是谁。Slack 频道换了，不会自动换一套 Persona；入口只划分会话，不重新发明 Agent。
+
+## New Agent sandbox 与 Workspace Sandbox
+
+Dify **New Agent**（beta）有自己的 Linux sandbox：跑 shell、装 CLI、读写文件；已配置的 Tools 之外，还能在当前会话临时装一次性 CLI（[New Agent overview](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/overview)、[Build an Agent](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/build)；[Introducing New Agent](https://dify.ai/blog/introducing-new-dify-agent)）。Compose 默认打开，runtime 含 `agent_backend`、`local_sandbox`。同一个 Agent 可单独发成 chat App，也可丢进 Workflow 当节点。
+
+Configure 里的 prompt、skills、tools、环境变量随版本发布。已发布运行里装进 sandbox 的东西是临时的。Build 模式标成 Persistent 的文件按官方文档会随版本恢复，那仍是该 Agent 的设置，不是团队 Workspace 跨重启的工作树。Compose 里的 `sandbox` / `local_sandbox` 属于 New Agent runtime，和经典 Code 节点里跑 Python/JS 的 sandbox 不是一回事。Community 写明 Agent runtime 不是互不信任用户之间的 hardened 边界；Enterprise 宣传的独立容器与网络权限单独标注。
+
+CubePlex 每个 Workspace 有一份跨重启保留文件与安装包的 Sandbox，挂在组织角色、审批和 IM 入口下，Agent loop 在控制面。
+
+两边都能在隔离环境执行命令。差别在归属：Dify New Agent 的 sandbox 跟着这个 Studio Agent 的任务和会话；CubePlex 的 sandbox 跟着团队 Workspace。
+
+## 协作与权限
+
+Dify Cloud 托管；Community 可 Docker 自托管；官网 Enterprise 条目写 SSO/SAML、RBAC、audit（[dify.ai](https://dify.ai/)），不要当成 Community 默认。Community 许可证官网写作 Apache-2.0-derivative，发稿前再对仓库 LICENSE。
+
+CubePlex 开源包自带组织与 Workspace 角色、模型策略、审批和用量。Web 与 IM bridge（Slack 等）进同一 Workspace Agent。
+
+## 适用场景
+
+产品或运营要可视化搭 workflow、RAG、Agent，并很快发出 App 或 API，用 Dify（Community 或云）更省事。
+
+工程或平台团队要自托管团队 Agent、持久 Sandbox、IM 与权限绑在一起，用 CubePlex。
+
+同一组织里也可以一个发应用、一个做日常工作台。
+
+## 源码与版本
+
+- Dify：[dify.ai](https://dify.ai/)、[docs.dify.ai](https://docs.dify.ai/)、[github.com/langgenius/dify](https://github.com/langgenius/dify) — 2026-09-14 核对公开 New Agent 文档与博客；发稿前钉 git SHA 与 LICENSE。
+- CubePlex：[cubeplex.ai](https://cubeplex.ai/)、[github.com/cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex)。
