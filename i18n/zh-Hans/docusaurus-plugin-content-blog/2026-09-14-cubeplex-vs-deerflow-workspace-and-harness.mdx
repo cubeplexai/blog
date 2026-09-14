@@ -1,0 +1,49 @@
+---
+slug: cubeplex-vs-deerflow-workspace-and-harness
+title: CubePlex 与 DeerFlow：团队 Agent Workspace 与 Super Agent Harness
+description: DeerFlow 2.0 用 Gateway、skills、sub-agent 与 sandbox 跑长程任务；CubePlex 用 Workspace 承载团队 Agent、治理与 IM。
+authors: [xfgong]
+tags: [CubePlex, DeerFlow, Agent Workspace, Agent Harness, 自托管, 团队 Agent]
+image: /img/blog/cubeplex-vs-deerflow-workspace-and-harness-cover.webp
+---
+
+DeerFlow 2.0 是开源 super agent harness：Lead Agent 在 LangGraph / LangChain 上调用 skills、工具和 sub-agent，配合 memory 与 sandbox，跑可能持续数分钟到数小时的任务（[bytedance/deer-flow](https://github.com/bytedance/deer-flow)，[deerflow.tech](https://deerflow.tech)）。CubePlex 是自托管团队 Agent Workspace：Workspace 固定 Persona、Skills、MCP 与分层 memory，成员从 Web 或 IM 进入同一套角色与审批（[cubeplex.ai](https://cubeplex.ai/)）。
+
+DeerFlow 2.0 与 1.x Deep Research 不共享代码。下文只写 **2.0**。
+
+![Harness 线程 vs Workspace 边界](/img/blog/cubeplex-vs-deerflow-workspace-and-harness/harness-and-workspace.svg)
+
+<!-- truncate -->
+
+## DeerFlow 2.0 提供什么
+
+它自带 Gateway、可配置的 sandbox（Local / Docker / Kubernetes provisioner 等）、skills 目录和 sub-agent 委派，而不是让你从空白图里把 runtime 拼起来。配置中心是 `config.yaml`。Telegram、Slack、飞书、钉钉、企微等频道可以把消息送进 harness；`/agent`、`/memory` 管会话与 Agent 选择（README IM Channels）。可插拔授权写在高级配置里，不是默认必开能力。
+
+README 提醒不当部署有安全风险；发稿前重读原文。
+
+## CubePlex 的团队边界
+
+组织与 Workspace 规定角色、模型策略和共享 Agent 配置。控制面跑 Agent loop；每个 Workspace 的 Sandbox 保留文件、安装包和工作树。IM bridge 绑到 Workspace：换频道不会自动换 Persona，只换会话边界。个人 / Workspace / 组织 memory 分层存放。
+
+## 线程与 Workspace
+
+DeerFlow 的工作落在 thread 与一次 run 上，Lead Agent 按需加载 skills，用 `task` 派 sub-agent。适合把一条长任务在强 harness 里跑完。
+
+CubePlex 的工作落在 Workspace 上。多人共用同一份 Agent 配置和治理；适合日常协作，而不是每次任务单独搭一套 runtime。
+
+## Sandbox
+
+DeerFlow 的 sandbox 服务于当前 harness 任务，后端可选多种。CubePlex 的 sandbox 是 Workspace 的持久执行环境。两边都隔离命令执行；威胁模型与部署方式不同，各自读官方安全说明。
+
+## 适用场景
+
+要自管长程研究、编码、多步任务，并依赖 skills 与 sub-agent，用 DeerFlow 2.0。
+
+要平台团队自托管、多人共用 Workspace Agent、持久 Sandbox 与 IM 一体，用 CubePlex。
+
+也可以分头使用：重任务走 DeerFlow，日常入口与权限走 CubePlex。
+
+## 源码与版本
+
+- DeerFlow 2.0：[github.com/bytedance/deer-flow](https://github.com/bytedance/deer-flow)（MIT）、[deerflow.tech](https://deerflow.tech) — 2026-09-14 核对公开 main README；发稿前钉 commit SHA。
+- CubePlex：[cubeplex.ai](https://cubeplex.ai/)、[github.com/cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex)。

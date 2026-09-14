@@ -1,0 +1,55 @@
+---
+slug: cubeplex-vs-dify-team-agent-workspace
+title: "CubePlex vs Dify: Team Agent Workspace vs App/Workflow Builder"
+description: Dify Studio composes workflows, RAG, and New Agent, then publishes apps or APIs. CubePlex runs a self-hosted team Workspace with persistent sandboxes and IM entry.
+authors: [xfgong]
+tags: [CubePlex, Dify, Agent Workspace, Workflow, Self-hosting, Team Agents]
+image: /img/blog/cubeplex-vs-dify-team-agent-workspace-cover-en.webp
+---
+
+Dify composes Workflows, Chatflows, knowledge bases, and agents in Studio, then publishes them as a web app, API, or embed ([dify.ai](https://dify.ai/)). CubePlex gives a team a self-hosted Workspace: Persona, skills, MCP, and layered memory sit on the Workspace; people come in from the web or IM under the same roles and approvals ([cubeplex.ai](https://cubeplex.ai/), [cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex)). Both can self-host. Dify keeps a publishable App. CubePlex keeps a Workspace agent the team keeps using.
+
+![Whose boundary owns the sandbox](/img/blog/cubeplex-vs-dify-team-agent-workspace/sandbox-boundary-en.svg)
+
+<!-- truncate -->
+
+## Dify builds and ships apps
+
+Studio wires model calls, retrieval, tools, branches, and human confirmation. A Workflow runs once end to end; a Chatflow adds a conversation layer on the same nodes ([Workflow & Chatflow](https://docs.dify.ai/en/self-host/use-dify/build/workflow-chatflow)). Knowledge and Marketplace plugins attach to those apps. The graph stays visible, so someone else can maintain the flow.
+
+What lasts is the App and the agent configuration inside it. That path fits shipping a callable application.
+
+## CubePlex Workspace agents
+
+Conversations, files, tools, memory, and artifacts stay on the Workspace. Another member can open the same Workspace and continue without rebuilding from one person private chat.
+
+Organization and Workspace roles, AgentConfig, skills, and personal / Workspace / organization memory define the team agent. Switching a Slack channel does not invent a new Persona; the entry only scopes the session.
+
+## New Agent sandbox and Workspace sandbox
+
+Dify **New Agent** (beta) has its own Linux sandbox: shell, CLI installs, file I/O; beyond configured Tools it can temporarily install one-off CLIs in the current session ([New Agent overview](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/overview), [Build an Agent](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/build); [Introducing New Agent](https://dify.ai/blog/introducing-new-dify-agent)). Compose turns it on by default (`agent_backend`, `local_sandbox`). The same agent can ship as a chat app or sit as a Workflow node.
+
+Configure holds the versioned prompt, skills, tools, and env. Installs during a published run are temporary. Persistent files from Build mode restore with a version per the Build docs; that is still agent setup, not a team Workspace tree across restarts. Compose `sandbox` / `local_sandbox` belong to the New Agent runtime, not the classic Code-node Python/JS sandbox. Community docs say the Agent runtime is not a hardened boundary between mutually untrusted users; Enterprise container and network claims stay labeled Enterprise.
+
+CubePlex gives each Workspace a sandbox that keeps files and packages across restarts, under org roles, approvals, and IM, with the agent loop on the control plane.
+
+Both run commands in isolation. Ownership differs: Dify New Agent sandbox follows that Studio agent task and session; CubePlex sandbox follows the team Workspace.
+
+## Collaboration and access
+
+Dify Cloud is managed; Community self-hosts with Docker; the site lists SSO/SAML, RBAC, and audit under Enterprise ([dify.ai](https://dify.ai/)) — not Community defaults. The Community license is described as Apache-2.0-derivative; re-check LICENSE before publish.
+
+CubePlex ships org and Workspace roles, model policy, approvals, and usage in the open-source app. Web and IM bridges (Slack and others) hit the same Workspace agent.
+
+## Where each fits
+
+Visual workflow, RAG, and agent apps that need to ship quickly: Dify (Community or cloud).
+
+Self-hosted team agents with a durable sandbox and IM under one permission model: CubePlex.
+
+One org can use both — apps on Dify, daily workbench on CubePlex.
+
+## Sources and revision
+
+- Dify: [dify.ai](https://dify.ai/), [docs.dify.ai](https://docs.dify.ai/), [github.com/langgenius/dify](https://github.com/langgenius/dify) — New Agent docs/blog checked 2026-09-14; pin git SHA and LICENSE before publish.
+- CubePlex: [cubeplex.ai](https://cubeplex.ai/), [github.com/cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex).
