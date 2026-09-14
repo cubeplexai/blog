@@ -6,6 +6,9 @@ const classicOptions: ClassicOptions = {
   docs: false,
   blog: {
     routeBasePath: '/',
+    blogTitle: 'CubePlex Blog',
+    blogDescription:
+      'Product, engineering, and governance notes from CubePlex.',
     showReadingTime: true,
     blogSidebarCount: 'ALL',
     blogSidebarTitle: 'All articles',
@@ -114,6 +117,7 @@ const config: Config = {
           items: [
             { label: 'Product', href: 'https://cubeplex.ai' },
             { label: 'Documentation', href: 'https://cubeplex.ai/docs' },
+            { label: 'CubeLoop', href: 'https://cubeloop.dev' },
             { label: 'GitHub', href: 'https://github.com/cubeplexai/cubeplex' },
           ],
         },
