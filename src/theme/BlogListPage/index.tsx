@@ -5,6 +5,7 @@ import BlogPostItems from '@theme/BlogPostItems';
 import Layout from '@theme/Layout';
 import SearchMetadata from '@theme/SearchMetadata';
 import AllPosts from '@site/src/components/AllPosts';
+import '@site/src/css/blog-feed-intro.css';
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
 import type { Props } from '@theme/BlogListPage';
