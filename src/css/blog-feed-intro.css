@@ -1,0 +1,19 @@
+.blog-feed__intro {
+  margin: 0 0 40px;
+}
+
+.blog-feed__intro h1 {
+  margin: 0;
+  font-size: clamp(36px, 4vw, 48px);
+  font-weight: 650;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.blog-feed__intro p {
+  max-width: 38rem;
+  margin: 12px 0 0;
+  color: var(--ink-9);
+  font-size: 17px;
+  line-height: 1.55;
+}
