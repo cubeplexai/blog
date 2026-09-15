@@ -9,9 +9,9 @@ image: /img/blog/cubeplex-vs-dify-team-agent-workspace-cover-en.webp
 
 Agent products are taking two different approaches to how people get work done.
 
-Dify starts with a defined scenario. A team identifies a problem such as customer support, knowledge Q&A, contract review, or report generation, then configures the model, Workflow, Knowledge, and tools for that problem. The result is published as a web app, API, embed, or MCP service. Users choose an App and work within the capabilities it was built to provide.
+[Dify](https://www.dify.ai/) starts with a defined scenario. A team identifies a problem such as customer support, knowledge Q&A, contract review, or report generation, then configures the model, Workflow, Knowledge, and tools for that problem. The result is published as a web app, API, embed, or MCP service. Users choose an App and work within the capabilities it was built to provide. Dify's source code and usage guides are available on [GitHub](https://github.com/langgenius/dify) and in its [documentation](https://docs.dify.ai/).
 
-CubePlex starts with a long-lived Agent. A person or team keeps using the same Agent in a Workspace and gives it different kinds of work over time. The Agent retains its role, memory, Skills, and MCP connections, and can operate a durable computer environment when a task requires one. Instead of switching among Apps for different scenarios, users return to an Agent that becomes familiar with how the team works.
+[CubePlex](https://cubeplex.ai/) starts with a long-lived Agent. A person or team keeps using the same Agent in a Workspace and gives it different kinds of work over time. The Agent retains its role, memory, Skills, and MCP connections, and can operate a durable computer environment when a task requires one. Instead of switching among Apps for different scenarios, users return to an Agent that becomes familiar with how the team works. CubePlex also provides its [source code](https://github.com/cubeplexai/cubeplex) and [product documentation](https://cubeplex.ai/docs).
 
 That difference shapes how the two products organize capabilities, state, and collaboration.
 
@@ -21,13 +21,13 @@ That difference shapes how the two products organize capabilities, state, and co
 
 ## Dify: define a scenario, then publish an App
 
-The primary deliverable in Dify Studio is an App. Builders use a Workflow or Chatflow to connect model calls, knowledge retrieval, tools, branches, and human input, then publish a tested version for end users. Workflows fit automation with defined inputs, steps, and outputs. Chatflows add conversation state to the same orchestration model ([Workflow and Chatflow](https://docs.dify.ai/en/self-host/use-dify/build/workflow-chatflow)).
+The primary deliverable in Dify Studio is an App. Builders use a Workflow or Chatflow to connect model calls, knowledge retrieval, tools, branches, and human input, then publish a tested version for end users. Workflows fit automation with defined inputs, steps, and outputs. Chatflows add conversation state to the same orchestration model.
 
 This structure asks the team to define the problem before building the application. A customer-support assistant and a contract-review tool would normally be separate Apps, each with its own prompt, flow, knowledge, and published entry point. Builders change and publish the capability; users submit inputs and consume the result without editing the application itself.
 
-Dify's New Agent brings more open-ended Agent behavior into this App model. A builder configures its model, prompt, Skills, Files, Tools, and environment variables, then publishes it as a standalone chat App or places it in a Workflow as an Agent node. Capability defines what the Agent can do; Task defines what one run asks it to accomplish ([New Agent](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/overview)).
+Dify's New Agent brings more open-ended Agent behavior into this App model. A builder configures its model, prompt, Skills, Files, Tools, and environment variables, then publishes it as a standalone chat App or places it in a Workflow as an Agent node. Capability defines what the Agent can do; Task defines what one run asks it to accomplish.
 
-A New Agent can run commands, install programs, and work with files during Build. Files and installations marked Persistent in Build become part of later versions of that Agent. Files and installations created during a published run remain temporary and do not change the Agent itself. Its prompt, Skills, and Tools can likewise be changed only in Configure or Build; an end user cannot permanently reconfigure the published Agent through a conversation ([Build an Agent](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/build)).
+A New Agent can run commands, install programs, and work with files during Build. Files and installations marked Persistent in Build become part of later versions of that Agent. Files and installations created during a published run remain temporary and do not change the Agent itself. Its prompt, Skills, and Tools can likewise be changed only in Configure or Build; an end user cannot permanently reconfigure the published Agent through a conversation.
 
 New Agent therefore broadens the work one Dify App can perform, but the product relationship remains the same: a team builds and publishes the Agent first, and users invoke it through a web app, API, or Workflow node.
 
@@ -39,7 +39,7 @@ The Workspace stores the Agent's Persona and binds its available Skills and MCP 
 
 This does not mean every task belongs in one endlessly growing chat history. CubePlex still uses separate conversations and Topics to bound task context. What persists across them is the Agent's role, capabilities, memory, and governance rules. Tasks remain separate without requiring the Agent to be configured again each time.
 
-The Agent can use a Sandbox to work with files, run commands, and install tools. The current implementation binds a Sandbox to a user, group conversation, or Topic according to the collaboration mode; it does not expose one Workspace-wide filesystem to every member by default. The environment persists within its scope, while group conversations and Topics can share or isolate a Sandbox along their collaboration boundary ([UserSandbox scopes](https://github.com/cubeplexai/cubeplex/blob/7813a0da15f0e17522a4cb8eb30df16609c889c5/backend/cubeplex/models/user_sandbox.py), [runtime selection](https://github.com/cubeplexai/cubeplex/blob/7813a0da15f0e17522a4cb8eb30df16609c889c5/backend/cubeplex/streams/run_manager.py#L3677-L3710)).
+The Agent can use a Sandbox to work with files, run commands, and install tools. The current implementation binds a Sandbox to a user, group conversation, or Topic according to the collaboration mode; it does not expose one Workspace-wide filesystem to every member by default. The environment persists within its scope, while group conversations and Topics can share or isolate a Sandbox along their collaboration boundary.
 
 CubePlex therefore keeps long-term state at two levels. The Workspace carries the Agent configuration, memory, and permissions shared by the team. A user-, conversation-, or Topic-scoped Sandbox carries the files and tool environment for the corresponding work. Members use the same Workspace Agent while user identity, conversation context, and execution environments retain explicit boundaries.
 
@@ -68,8 +68,3 @@ CubePlex fits work whose content keeps changing while its participants, tools, a
 The two designs can also work together inside one organization. A team can use a CubePlex Workspace Agent for research, development, and daily collaboration, then turn a stable method into a Dify App for a broader audience. One organizes ongoing work; the other delivers a defined scenario.
 
 For teams evaluating a Dify alternative, the useful question is not whether both products have the same nodes and tools. It is whether they need to deliver scenario-specific applications or establish a long-lived Agent environment.
-
-## Revision
-
-- Dify behavior was checked against `main` commit [`07dc8ebdbb4f44404266013496e69a67727c26c0`](https://github.com/langgenius/dify/commit/07dc8ebdbb4f44404266013496e69a67727c26c0) and official documentation available on September 14, 2026. New Agent was still labeled beta at that time.
-- CubePlex behavior was checked against `main` commit [`7813a0da15f0e17522a4cb8eb30df16609c889c5`](https://github.com/cubeplexai/cubeplex/commit/7813a0da15f0e17522a4cb8eb30df16609c889c5).
