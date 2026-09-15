@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 920" role="img" aria-labelledby="title desc">
+  <title id="title">What Do Persistent Files Follow?</title>
+  <desc id="desc">Compute can be temporary in both products. DeerFlow binds files to a personal Thread; CubePlex binds them to personal or shared work inside a Workspace.</desc>
+  <defs>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M36 0H0V36" fill="none" stroke="#E6EBF2" stroke-width="1"/></pattern>
+    <marker id="arrow-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5 0 7Z" fill="#1463E9"/></marker>
+    <style>
+      text { font-family: Inter, 'PingFang SC', 'Noto Sans SC', sans-serif; }
+      .title { fill:#17191C; font-size:31px; font-weight:760; letter-spacing:-.7px; }
+      .subtitle { fill:#536171; font-size:15px; }
+      .panel { fill:#FFFFFF; stroke:#17191C; stroke-width:2; }
+      .panel-title { fill:#17191C; font-size:21px; font-weight:750; }
+      .panel-sub { fill:#536171; font-size:14px; }
+      .conversation { fill:#FFFFFF; stroke:#9CBDEA; stroke-width:1.8; }
+      .conversation-active { fill:#1463E9; stroke:#17191C; stroke-width:2; }
+      .conversation-text { fill:#394554; font-size:13px; font-weight:700; }
+      .conversation-text-active { fill:#FFFFFF; }
+      .sandbox { fill:#F8FBFF; stroke:#1463E9; stroke-width:2; stroke-dasharray:8 6; }
+      .storage { fill:#E8F7F6; stroke:#17191C; stroke-width:2; }
+      .box-title { fill:#17191C; font-size:13px; font-weight:720; }
+      .box-sub { fill:#536171; font-size:11.5px; }
+      .line { fill:none; stroke:#1463E9; stroke-width:2.2; marker-end:url(#arrow-blue); stroke-linecap:round; stroke-linejoin:round; }
+      .workspace { fill:#EAF2FE; stroke:#1463E9; stroke-width:2.5; }
+      .workspace-title { fill:#1463E9; font-size:14px; font-weight:750; }
+      .claim { fill:#17191C; font-size:14px; font-weight:730; }
+      .legend { fill:#FFFFFF; stroke:#CDD7E3; stroke-width:1.2; }
+      .legend-text { fill:#536171; font-size:12px; }
+      .footer { fill:#FFFFFF; stroke:#17191C; stroke-width:1.5; }
+      .footer-copy { fill:#394554; font-size:13.5px; }
+    </style>
+  </defs>
+  <rect width="1600" height="920" fill="#FCFCFA"/><rect width="1600" height="920" fill="url(#grid)"/>
+  <path d="M52 92C230 28 400 34 500 96" fill="none" stroke="#EAF2FE" stroke-width="30" stroke-linecap="round"/>
+  <text x="48" y="52" class="title">What Do Persistent Files Follow?</text>
+  <text x="48" y="79" class="subtitle">Both can rebuild containers and remount files. The durable directory belongs to a Thread or to a working context inside a Workspace.</text>
+
+  <rect x="40" y="112" width="730" height="664" rx="24" class="panel"/>
+  <text x="68" y="151" class="panel-title">DeerFlow 2.0</text>
+  <text x="68" y="177" class="panel-sub">Each Thread carries a separate set of files</text>
+  <g>
+    <path d="M94 250H238Q254 250 254 266V298Q254 314 238 314H124L106 330L109 314H94Q78 314 78 298V266Q78 250 94 250Z" class="conversation-active"/>
+    <circle cx="102" cy="281" r="7" fill="#FFE24A"/>
+    <text x="174" y="287" text-anchor="middle" class="conversation-text conversation-text-active">Thread A</text>
+  </g>
+  <g>
+    <rect x="290" y="236" width="220" height="112" rx="18" class="sandbox"/>
+    <path d="M320 270l12 9-12 9M339 288h18" fill="none" stroke="#1463E9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="418" y="278" text-anchor="middle" class="box-title">Sandbox A</text>
+    <text x="400" y="308" text-anchor="middle" class="box-sub">compute can be reclaimed</text>
+    <path d="M314 330q28-13 56 0t56 0t56 0" fill="none" stroke="#9CBDEA" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g>
+    <path d="M574 260Q574 240 594 240H632L650 258H702Q720 258 720 276V308Q720 326 702 326H592Q574 326 574 308Z" class="storage"/>
+    <path d="M596 283h102M596 298h84" stroke="#5CAFB3" stroke-width="3" stroke-linecap="round"/>
+    <text x="647" y="351" text-anchor="middle" class="box-title">Thread A files</text>
+    <text x="647" y="372" text-anchor="middle" class="box-sub">persistent storage</text>
+  </g>
+  <path d="M254 287H284M510 292H566" class="line"/>
+  <g>
+    <path d="M94 482H238Q254 482 254 498V530Q254 546 238 546H124L106 562L109 546H94Q78 546 78 530V498Q78 482 94 482Z" class="conversation"/>
+    <circle cx="102" cy="513" r="7" fill="#9CBDEA"/>
+    <text x="174" y="519" text-anchor="middle" class="conversation-text">New Thread B</text>
+  </g>
+  <g>
+    <rect x="290" y="468" width="220" height="112" rx="18" class="sandbox"/>
+    <path d="M320 502l12 9-12 9M339 520h18" fill="none" stroke="#1463E9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="418" y="510" text-anchor="middle" class="box-title">Sandbox B</text>
+    <text x="400" y="540" text-anchor="middle" class="box-sub">compute can be reclaimed</text>
+    <path d="M314 562q28-13 56 0t56 0t56 0" fill="none" stroke="#9CBDEA" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g>
+    <path d="M574 492Q574 472 594 472H632L650 490H702Q720 490 720 508V540Q720 558 702 558H592Q574 558 574 540Z" class="storage"/>
+    <path d="M596 515h102M596 530h84" stroke="#5CAFB3" stroke-width="3" stroke-linecap="round"/>
+    <text x="647" y="583" text-anchor="middle" class="box-title">Thread B files</text>
+    <text x="647" y="604" text-anchor="middle" class="box-sub">persistent storage</text>
+  </g>
+  <path d="M254 519H284M510 524H566" class="line"/>
+  <path d="M100 674H708" stroke="#FFE24A" stroke-width="24" stroke-linecap="round" opacity=".72"/>
+  <text x="404" y="680" text-anchor="middle" class="claim">Return to the original Thread to continue its files</text>
+
+  <rect x="830" y="112" width="730" height="664" rx="24" class="panel"/>
+  <text x="858" y="151" class="panel-title">CubePlex</text>
+  <text x="858" y="177" class="panel-sub">Change the conversation and keep the working directory</text>
+  <rect x="856" y="208" width="678" height="424" rx="20" class="workspace"/>
+  <text x="880" y="238" class="workspace-title">Workspace A (one of many in the Organization)</text>
+  <g>
+    <path d="M898 276H1054Q1070 276 1070 292V324Q1070 340 1054 340H928L910 356L913 340H898Q882 340 882 324V292Q882 276 898 276Z" class="conversation-active"/>
+    <circle cx="906" cy="307" r="7" fill="#FFE24A"/>
+    <text x="984" y="313" text-anchor="middle" class="conversation-text conversation-text-active">Conversation A</text>
+  </g>
+  <g>
+    <path d="M898 382H1054Q1070 382 1070 398V430Q1070 446 1054 446H928L910 462L913 446H898Q882 446 882 430V398Q882 382 898 382Z" class="conversation"/>
+    <circle cx="906" cy="413" r="7" fill="#9CBDEA"/>
+    <text x="984" y="419" text-anchor="middle" class="conversation-text">New Conversation B</text>
+  </g>
+  <g>
+    <rect x="1110" y="306" width="238" height="132" rx="18" class="sandbox"/>
+    <path d="M1140 340l12 9-12 9M1159 358h18" fill="none" stroke="#1463E9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1247" y="348" text-anchor="middle" class="box-title">Member's Workspace Sandbox</text>
+    <text x="1229" y="378" text-anchor="middle" class="box-sub">compute can be reclaimed</text>
+    <path d="M1134 420q28-13 56 0t56 0t56 0" fill="none" stroke="#9CBDEA" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g>
+    <path d="M1382 336Q1382 316 1402 316H1440L1458 334H1492Q1510 334 1510 352V380Q1510 398 1492 398H1400Q1382 398 1382 380Z" class="storage"/>
+    <path d="M1404 359h84M1404 374h66" stroke="#5CAFB3" stroke-width="3" stroke-linecap="round"/>
+    <text x="1446" y="423" text-anchor="middle" class="box-title">Personal working directory</text>
+    <text x="1446" y="444" text-anchor="middle" class="box-sub">persistent storage</text>
+  </g>
+  <path d="M1070 313C1088 313 1090 339 1104 348M1070 419C1088 419 1090 401 1104 394M1348 372H1374" class="line"/>
+  <g>
+    <path d="M898 514H1054Q1070 514 1070 530V562Q1070 578 1054 578H928L910 594L913 578H898Q882 578 882 562V530Q882 514 898 514Z" class="conversation"/>
+    <circle cx="906" cy="545" r="7" fill="#9CBDEA"/>
+    <text x="984" y="551" text-anchor="middle" class="conversation-text">Group / Topic</text>
+  </g>
+  <g>
+    <rect x="1110" y="500" width="238" height="102" rx="18" class="sandbox"/>
+    <path d="M1140 534l12 9-12 9M1159 552h18" fill="none" stroke="#1463E9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1247" y="542" text-anchor="middle" class="box-title">Shared Sandbox</text>
+    <text x="1229" y="572" text-anchor="middle" class="box-sub">compute can be reclaimed</text>
+    <path d="M1134 584q28-13 56 0t56 0t56 0" fill="none" stroke="#9CBDEA" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g>
+    <path d="M1382 528Q1382 508 1402 508H1440L1458 526H1492Q1510 526 1510 544V560Q1510 578 1492 578H1400Q1382 578 1382 560Z" class="storage"/>
+    <path d="M1404 551h84M1404 566h66" stroke="#5CAFB3" stroke-width="3" stroke-linecap="round"/>
+    <text x="1446" y="603" text-anchor="middle" class="box-title">Team working directory</text>
+    <text x="1446" y="624" text-anchor="middle" class="box-sub">persistent storage</text>
+  </g>
+  <path d="M1070 551H1104M1348 551H1374" class="line"/>
+  <path d="M896 674H1496" stroke="#FFE24A" stroke-width="24" stroke-linecap="round" opacity=".72"/>
+  <text x="1196" y="680" text-anchor="middle" class="claim">A new chat can continue existing files; teammates can take over shared work</text>
+
+  <rect x="40" y="800" width="1520" height="82" rx="16" class="footer"/>
+  <rect x="68" y="820" width="26" height="20" rx="6" class="sandbox"/>
+  <text x="105" y="836" class="legend-text">replaceable compute container</text>
+  <path d="M330 820h28l8 8h30v20h-66Z" class="storage"/>
+  <text x="410" y="836" class="legend-text">durable file directory</text>
+  <text x="68" y="864" class="footer-copy">Compute can be temporary in both products. DeerFlow binds files to a personal Thread; CubePlex binds them to personal or shared work inside a Workspace.</text>
+</svg>

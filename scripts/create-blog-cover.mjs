@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { extname, resolve } from 'node:path';
 import sharp from 'sharp';
 
 const input = process.argv[2];
@@ -87,10 +87,20 @@ const overlay = Buffer.from(`
   </svg>
 `);
 
-await sharp(resolve(input))
+const rendered = await sharp(resolve(input))
   .resize({ width: cover.width, height: cover.height, fit: 'cover', position: 'attention' })
   .composite([{ input: overlay }])
-  .webp({ quality: 84, effort: 6 })
-  .toFile(resolve(output));
+  .png()
+  .toBuffer();
+
+const outputPath = resolve(output);
+const outputs = [sharp(rendered).webp({ quality: 84, effort: 6 }).toFile(outputPath)];
+let jpgPath;
+if (extname(outputPath).toLowerCase() === '.webp') {
+  jpgPath = outputPath.replace(/\.webp$/i, '.jpg');
+  outputs.push(sharp(rendered).jpeg({ quality: 88, mozjpeg: true }).toFile(jpgPath));
+}
+await Promise.all(outputs);
 
 console.log(`Created ${output}`);
+if (jpgPath) console.log(`Created ${jpgPath}`);
