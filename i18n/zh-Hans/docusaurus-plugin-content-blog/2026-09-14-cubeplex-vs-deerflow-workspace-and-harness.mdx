@@ -7,7 +7,7 @@ tags: [CubePlex, DeerFlow, DeerFlow Alternative, Agent Workspace, 自托管, 团
 image: /img/blog/cubeplex-vs-deerflow-workspace-and-harness-cover.webp
 ---
 
-DeerFlow 2.0 和 CubePlex 都是通用 Agent 环境。它们都支持长期记忆、Skills、MCP、Sandbox、Sub-agent 和即时通讯入口，也都允许用户在一个对话窗口里完成研究、写作、编程和文件处理，而不是先为每个场景制作一款独立 App。
+[DeerFlow 2.0](https://deerflow.tech/) 和 [CubePlex](https://cubeplex.ai/) 都是通用 Agent 环境。它们都支持长期记忆、Skills、MCP、Sandbox、Sub-agent 和即时通讯入口，也都允许用户在一个对话窗口里完成研究、写作、编程和文件处理，而不是先为每个场景制作一款独立 App。两者的开源代码分别位于 [bytedance/deer-flow](https://github.com/bytedance/deer-flow) 和 [cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex)，使用与部署说明可查看 [DeerFlow Documentation](https://deerflow.tech/en/docs) 和 [CubePlex Documentation](https://cubeplex.ai/docs)。
 
 两者的区别从 Agent 的归属开始。DeerFlow 为每个用户提供一套个人 Agent 环境：登录自己的账号后，用户看到自己的 Agents、Projects、对话、记忆、Skills 和文件。CubePlex 把 Agent 放在 Workspace 中：组织创建 Workspace、添加成员、配置 Agent，并决定团队可以使用哪些 Skills、MCP 和凭据。
 
@@ -170,8 +170,3 @@ CubePlex 更适合把 Agent 作为团队工作环境长期运行：成员共同�
 Workspace 并不要求必须加入多位成员。创建者可以独自使用一个 Workspace，把它当作自己的长期 Agent 环境，这已经覆盖了 DeerFlow 最常见的个人使用方式。区别在需要协作时才会出现：Workspace 主人可以直接邀请其他成员，让他们使用同一个 Agent、团队记忆、Skills、MCP 和工作现场，不需要先把个人 Agent 迁移成另一套团队系统。
 
 因此，CubePlex 可以从一个人的 Agent 开始，并沿用同一个 Workspace 扩展到整个团队。Agent 不必在“个人工具”和“团队基础设施”之间重新选择归属。
-
-## 源码与版本
-
-- DeerFlow 2.0 基于 `main` 提交 [`14c9d44440780e63563e935046db8708e121a5b1`](https://github.com/bytedance/deer-flow/commit/14c9d44440780e63563e935046db8708e121a5b1)，核对范围包括 [README 中的产品定位](https://github.com/bytedance/deer-flow/blob/14c9d44440780e63563e935046db8708e121a5b1/README.md#from-deep-research-to-super-agent-harness)、[Projects](https://github.com/bytedance/deer-flow/blob/14c9d44440780e63563e935046db8708e121a5b1/backend/packages/harness/deerflow/persistence/projects/sql.py)、[用户级 Skill Storage](https://github.com/bytedance/deer-flow/blob/14c9d44440780e63563e935046db8708e121a5b1/backend/packages/harness/deerflow/skills/storage/user_scoped_skill_storage.py)、[Sandbox 生命周期](https://github.com/bytedance/deer-flow/blob/14c9d44440780e63563e935046db8708e121a5b1/backend/packages/harness/deerflow/sandbox/middleware.py)、[Sandbox 网络策略](https://github.com/bytedance/deer-flow/blob/14c9d44440780e63563e935046db8708e121a5b1/backend/docs/CONFIGURATION.md#sandbox-network-policy)、[请求级密钥](https://github.com/bytedance/deer-flow/blob/14c9d44440780e63563e935046db8708e121a5b1/backend/packages/harness/deerflow/sandbox/env_policy.py) 与 [MCP 配置](https://github.com/bytedance/deer-flow/blob/14c9d44440780e63563e935046db8708e121a5b1/backend/packages/harness/deerflow/config/extensions_config.py)。DeerFlow 2.0 与 1.x Deep Research 不共享代码，本文只讨论 2.0。
-- CubePlex 基于提交 `d5b0f03ac04e62762b1918f4c4ee3ee4df2e315c` 核对 Organization / Workspace 成员关系、AgentConfig、[CubeLoop Runtime 接入](https://github.com/cubeplexai/cubeplex/blob/d5b0f03ac04e62762b1918f4c4ee3ee4df2e315c/backend/cubeplex/streams/run_manager.py)、[Skill 安装与绑定](https://github.com/cubeplexai/cubeplex/blob/d5b0f03ac04e62762b1918f4c4ee3ee4df2e315c/backend/cubeplex/models/skill.py)、[MCP 四层数据模型](https://github.com/cubeplexai/cubeplex/blob/d5b0f03ac04e62762b1918f4c4ee3ee4df2e315c/backend/cubeplex/models/mcp.py)、[Sandbox 分层环境变量](https://github.com/cubeplexai/cubeplex/blob/d5b0f03ac04e62762b1918f4c4ee3ee4df2e315c/backend/cubeplex/models/sandbox_env.py)、[出口密钥替换](https://github.com/cubeplexai/cubeplex/blob/d5b0f03ac04e62762b1918f4c4ee3ee4df2e315c/backend/cubeplex/services/egress_exchange.py)、分层 Memory、Sandbox Scope 和命令审批策略。CubePlex 当前使用 CubeLoop `v0.14.1`。

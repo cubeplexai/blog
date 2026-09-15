@@ -9,9 +9,9 @@ image: /img/blog/cubeplex-vs-dify-team-agent-workspace-cover.webp
 
 Agent 产品正在形成两种不同的使用方式。
 
-Dify 从具体场景出发。团队先定义客服、知识问答、合同审核或报告生成等问题，再为每个问题配置模型、Workflow、Knowledge 和工具，最后发布成 Web App、API、嵌入页或 MCP 服务。用户选择一个 App，然后在它规定的能力范围内完成任务。
+[Dify](https://www.dify.ai/) 从具体场景出发。团队先定义客服、知识问答、合同审核或报告生成等问题，再为每个问题配置模型、Workflow、Knowledge 和工具，最后发布成 Web App、API、嵌入页或 MCP 服务。用户选择一个 App，然后在它规定的能力范围内完成任务。Dify 的开源代码和使用说明可在 [GitHub](https://github.com/langgenius/dify) 与[官方文档](https://docs.dify.ai/)中查看。
 
-CubePlex 从长期工作的 Agent 出发。个人或团队在一个 Workspace 中持续使用同一个 Agent，把不同类型的工作交给它。这个 Agent 长期保留角色设定、记忆、Skills 和 MCP 连接，并在需要时操作可持续使用的电脑环境。用户面对的不是一组按场景切换的 App，而是一个逐渐熟悉团队工作方式的 Agent。
+[CubePlex](https://cubeplex.ai/) 从长期工作的 Agent 出发。个人或团队在一个 Workspace 中持续使用同一个 Agent，把不同类型的工作交给它。这个 Agent 长期保留角色设定、记忆、Skills 和 MCP 连接，并在需要时操作可持续使用的电脑环境。用户面对的不是一组按场景切换的 App，而是一个逐渐熟悉团队工作方式的 Agent。CubePlex 同样提供[开源代码](https://github.com/cubeplexai/cubeplex)和[产品文档](https://cubeplex.ai/docs)。
 
 这一区别决定了两款产品如何组织能力、状态和协作。
 
@@ -21,13 +21,13 @@ CubePlex 从长期工作的 Agent 出发。个人或团队在一个 Workspace �
 
 ## Dify：先定义场景，再发布 App
 
-Dify Studio 的主要交付对象是 App。开发者使用 Workflow 或 Chatflow 编排模型调用、知识检索、工具、条件分支和人工确认，再把确认过的版本发布给终端用户。Workflow 适合有明确输入、步骤和输出的自动化流程；Chatflow 在同一套编排能力上增加对话状态（[Workflow 与 Chatflow](https://docs.dify.ai/en/self-host/use-dify/build/workflow-chatflow)）。
+Dify Studio 的主要交付对象是 App。开发者使用 Workflow 或 Chatflow 编排模型调用、知识检索、工具、条件分支和人工确认，再把确认过的版本发布给终端用户。Workflow 适合有明确输入、步骤和输出的自动化流程；Chatflow 在同一套编排能力上增加对话状态。
 
 这种结构要求团队先明确应用解决什么问题。客服助手和合同审核工具通常是两个 App，各自拥有独立的 Prompt、流程、知识和发布入口。应用的建设者负责调整能力并发布版本，使用者负责提交输入、查看结果，不需要参与应用本身的配置。
 
-Dify 的 New Agent 把更开放的 Agent 能力加入了这套 App 模型。开发者可以为 Agent 配置模型、Prompt、Skills、Files、Tools 和环境变量，再把它发布成独立 Chat App，或作为 Agent 节点放进 Workflow。Capability 定义 Agent 能做什么，Task 定义一次运行要完成什么（[New Agent](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/overview)）。
+Dify 的 New Agent 把更开放的 Agent 能力加入了这套 App 模型。开发者可以为 Agent 配置模型、Prompt、Skills、Files、Tools 和环境变量，再把它发布成独立 Chat App，或作为 Agent 节点放进 Workflow。Capability 定义 Agent 能做什么，Task 定义一次运行要完成什么。
 
-New Agent 可以在 Build 阶段运行命令、安装程序和读写文件。Build 中标记为 Persistent 的文件和安装内容会进入 Agent 的后续版本；已发布运行中新产生的文件和安装内容则是临时的，不会反过来改变 Agent 本身。Prompt、Skills 和 Tools 也只能在 Configure 或 Build 中修改，终端用户不能通过一次对话永久改变已发布 Agent 的能力（[Build an Agent](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/build)）。
+New Agent 可以在 Build 阶段运行命令、安装程序和读写文件。Build 中标记为 Persistent 的文件和安装内容会进入 Agent 的后续版本；已发布运行中新产生的文件和安装内容则是临时的，不会反过来改变 Agent 本身。Prompt、Skills 和 Tools 也只能在 Configure 或 Build 中修改，终端用户不能通过一次对话永久改变已发布 Agent 的能力。
 
 因此，New Agent 扩大了单个 Dify App 可以处理的任务范围，但产品关系没有改变：团队仍然先建设和发布 Agent，用户再通过 Web App、API 或 Workflow 节点调用它。
 
@@ -39,7 +39,7 @@ Workspace 保存 Agent 的 Persona，并绑定可用的 Skills 和 MCP 连接。
 
 这并不意味着所有工作都必须塞进一个无限延长的聊天记录。CubePlex 仍然使用不同的对话和 Topic 划分任务上下文；长期复用的是 Agent 的角色、能力、记忆和治理规则。任务可以分开，Agent 不必每次重新配置。
 
-Agent 在执行任务时可以使用 Sandbox 操作文件、运行命令和安装工具。当前实现会根据协作方式把 Sandbox 绑定到用户、群聊会话或 Topic，而不是让整个 Workspace 的所有成员无条件共用同一个文件系统。对应作用域中的工作环境可以跨运行继续使用，群聊和 Topic 也可以按照协作边界共享或隔离 Sandbox（[UserSandbox 作用域](https://github.com/cubeplexai/cubeplex/blob/7813a0da15f0e17522a4cb8eb30df16609c889c5/backend/cubeplex/models/user_sandbox.py)，[运行时选择](https://github.com/cubeplexai/cubeplex/blob/7813a0da15f0e17522a4cb8eb30df16609c889c5/backend/cubeplex/streams/run_manager.py#L3677-L3710)）。
+Agent 在执行任务时可以使用 Sandbox 操作文件、运行命令和安装工具。当前实现会根据协作方式把 Sandbox 绑定到用户、群聊会话或 Topic，而不是让整个 Workspace 的所有成员无条件共用同一个文件系统。对应作用域中的工作环境可以跨运行继续使用，群聊和 Topic 也可以按照协作边界共享或隔离 Sandbox。
 
 因此，CubePlex 的长期状态分成两个层次：Workspace 负责团队共用的 Agent 配置、记忆和权限；用户、会话或 Topic 范围的 Sandbox 保存对应工作的文件与工具环境。成员面对的是同一个 Workspace Agent，但用户身份、对话上下文和执行环境仍有明确边界。
 
@@ -68,8 +68,3 @@ CubePlex 适合工作内容不断变化，但参与者、工具和组织规则�
 两种设计可以在同一组织内配合使用。团队可以用 CubePlex Workspace Agent 完成研究、开发和日常协作，再把已经稳定的方法做成 Dify App，提供给更大范围的用户。前者组织持续工作，后者交付确定场景。
 
 对正在评估 Dify alternative 的团队，判断重点不应是两边是否拥有相同的节点和工具，而应是需要交付按场景使用的应用，还是建立一个长期工作的 Agent 环境。
-
-## 版本说明
-
-- Dify 行为按 `main` 提交 [`07dc8ebdbb4f44404266013496e69a67727c26c0`](https://github.com/langgenius/dify/commit/07dc8ebdbb4f44404266013496e69a67727c26c0) 及 2026 年 9 月 14 日可访问的官方文档核对。New Agent 当时仍标记为 beta。
-- CubePlex 行为按 `main` 提交 [`7813a0da15f0e17522a4cb8eb30df16609c889c5`](https://github.com/cubeplexai/cubeplex/commit/7813a0da15f0e17522a4cb8eb30df16609c889c5) 核对。
