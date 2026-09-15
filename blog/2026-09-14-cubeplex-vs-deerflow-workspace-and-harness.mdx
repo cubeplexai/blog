@@ -1,49 +1,143 @@
 ---
 slug: cubeplex-vs-deerflow-workspace-and-harness
-title: "CubePlex vs DeerFlow: Team Agent Workspace vs Super Agent Harness"
-description: DeerFlow 2.0 runs long-horizon work through Gateway, skills, sub-agents, and sandboxes. CubePlex runs a team Workspace with governance and IM.
+title: "CubePlex vs DeerFlow: Shared Workspace State vs Thread / Run Harness"
+description: DeerFlow 2.0 runs long-horizon work on Thread, Run, Lead Agent, skills, and sandboxes. CubePlex keeps team Agent state, roles, layered memory, and a durable Workspace sandbox.
 authors: [xfgong]
 tags: [CubePlex, DeerFlow, Agent Workspace, Agent Harness, Self-hosting, Team Agents]
 image: /img/blog/cubeplex-vs-deerflow-workspace-and-harness-cover-en.webp
 ---
 
-DeerFlow 2.0 is an open-source super agent harness: a lead agent on LangGraph / LangChain calls skills, tools, and sub-agents, with memory and sandboxes, for tasks that may run minutes to hours ([bytedance/deer-flow](https://github.com/bytedance/deer-flow), [deerflow.tech](https://deerflow.tech)). CubePlex is a self-hosted team agent Workspace: Persona, skills, MCP, and layered memory sit on the Workspace; people enter from the web or IM under shared roles and approvals ([cubeplex.ai](https://cubeplex.ai/)).
+DeerFlow 2.0 is an open-source long-horizon Super Agent harness: a Lead Agent on the Gateway-embedded LangGraph-compatible runtime calls skills, tools, and sub-agents, with memory and configurable sandboxes, for work that may run minutes to hours ([bytedance/deer-flow](https://github.com/bytedance/deer-flow), [deerflow.tech](https://deerflow.tech)). The unit of work is a **Thread** and a **Run** on that thread; files, checkpoints, and IM bindings default to the **current user**. CubePlex is a self-hosted team agent Workspace: Org / Workspace roles, Persona, Skills, MCP, and layered memory sit on the Workspace; each Workspace keeps a Sandbox whose files, packages, and worktree survive process restarts; the control plane runs the agent loop; Web and IM bridges enter the same Workspace identity ([cubeplex.ai](https://cubeplex.ai/), [cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex)). Both products talk about sandboxes, memory, and IM. The durable object differs: a reproducible long-horizon harness, or shared Workspace state a team keeps using.
 
-DeerFlow 2.0 shares no code with the 1.x Deep Research line. This piece covers **2.0** only.
+DeerFlow 2.0 is a ground-up rewrite and **shares no code** with 1.x Deep Research (README). This piece covers **2.0** only.
 
 ![Harness thread vs Workspace boundary](/img/blog/cubeplex-vs-deerflow-workspace-and-harness/harness-and-workspace-en.svg)
 
 <!-- truncate -->
 
-## What DeerFlow 2.0 ships
+## Thread, Run, Lead Agent, and sub-agents
 
-It includes a Gateway, configurable sandboxes (Local, Docker, Kubernetes provisioner, and others), a skills tree, and sub-agent delegation — you do not assemble that runtime from an empty graph. Configuration centers on `config.yaml`. Telegram, Slack, Feishu, DingTalk, WeCom, and similar channels can feed the harness; `/agent` and `/memory` manage sessions ([README IM Channels](https://github.com/bytedance/deer-flow)). Pluggable authorization is advanced config, not a required default.
+A Thread is a checkpointed conversation container. Common state fields include `messages`, `sandbox`, `thread_data` (uploads / workspace / outputs paths), `title`, `artifacts`, `todos` (plan mode), and `viewed_images` (`backend/docs/ARCHITECTURE.md`, Mintlify agent-system). Metadata carries `threads_meta.user_id`; list, read, write, and delete only touch the current user’s threads (`backend/docs/API.md`). On disk the API documents `{base_dir}/users/{user_id}/threads/{thread_id}/user-data/{uploads,workspace,outputs}`, mapped inside the sandbox to `/mnt/user-data/*`. Enabled skills project to `/mnt/skills`. Archive only flips `metadata.deerflow_archived`; it does **not** cancel runs, pause schedules, or change retention. `DELETE` on a thread recursively removes that thread directory.
 
-The README warns about unsafe deployment. Re-read it before you publish.
+A Run is one agent execution on a thread: `POST .../threads/{id}/runs` (plus `/stream`, `/wait`). An optional `Idempotency-Key` reuses an existing run for the same user + thread + key; mismatched input / assistant / refs return 409. Stateless `/api/langgraph/runs/*` can auto-create a temporary thread and return ids via `Content-Location`. The Gateway holds active run tasks **in-process**; production often sets `GATEWAY_WORKERS` to **1**. Multi-worker needs Postgres, a Redis stream bridge, run-ownership heartbeat, and DB `run_events` (README). Every HTTP response carries `X-Trace-Id` / `deerflow_trace_id` across the run, sub-agents, and background memory threads. For plan- and sub-agent-heavy runs, Gateway `config.recursion_limit` often defaults near **100**.
 
-## CubePlex team boundaries
+The Lead Agent (`make_lead_agent` / `lead_agent`) is the single entry for user turns. Middleware wires thread dirs, uploads, sandbox, summarization, todos, title, memory queue, sub-agent limits, and clarification; each request can set `thinking_enabled`, `model_name`, `is_plan_mode`, `subagent_enabled`, and similar knobs.
 
-Organizations and Workspaces set roles, model policy, and shared agent config. The control plane runs the agent loop; each Workspace sandbox keeps files, packages, and the working tree. IM bridges bind to the Workspace: a new channel does not invent a Persona, only a session. Personal, Workspace, and organization memory stay separate.
+Sub-agents spawn via **`task()`** when the lead judges a net benefit from parallel latency, specialization, or context isolation — an optimization, not the default for every hard question (README). Types include `general-purpose` and `bash`. Default `context_mode="isolated"`; optional `snapshot` copies the parent’s retained conversation (including a compaction summary) at dispatch. The child keeps its own role / model / tools / skills; parent and child chat histories diverge, while the **same thread sandbox / filesystem stays shared**. Concurrency is commonly capped near **3** by `SubagentLimitMiddleware`; docs often cite about a **15-minute** timeout, and config also has `subagents.max_total_per_run`. Internal child model/tool traffic stays in the delegated graph / run-event diagnostics — **not** in the parent chat transcript; the parent sees a structured `task` result or subtask card. Failures report as failed tasks, optionally with verification receipts.
 
-## Threads and Workspaces
+What persists across runs, threads, users, and Gateway restarts is asymmetric:
 
-DeerFlow work lives on a thread and a run. The lead agent loads skills as needed and delegates with `task`. That fits finishing a long job inside a strong harness.
+| Artifact | Same thread, later runs | Other threads (same user) | Other users | After Gateway restart |
+| --- | --- | --- | --- | --- |
+| Thread checkpoint / messages | Yes | No by default (unless `read_conversation` refs **own** threads) | No (owner filter) | Yes (checkpoint store) |
+| Thread FS (`/mnt/user-data`) | Yes (host / PVC) | No | No | Disk yes; **sandbox container / pod** may release on idle / eviction |
+| Lead ↔ sub-agent shared FS | Same thread sandbox | — | — | FS may remain; live session may not |
+| Memory (DeerMem default) | Injected into later sessions | **Yes, per user** | No | Yes (user memory store) |
+| Active run / SSE process state | In-process | — | — | Lost without a multi-worker durable stack |
 
-CubePlex work lives on a Workspace. Several people share one agent config and one governance model. That fits daily collaboration more than spinning a new runtime per task.
+## Workspace agent state and the control-plane loop
 
-## Sandboxes
+In CubePlex the durable object is the Agent on a Workspace, not a per-user Thread directory. AgentConfig holds Persona; Skills and MCP connectors hang on the Workspace; personal / Workspace / organization memory stay layered. People enter from the web or IM under the same role settings and approvals. Sessions can split by ingress (1:1 DM, shared or isolated group routing, and so on), but switching a Slack / Feishu channel does **not** invent a new Persona, Skills set, or MCP binding.
 
-DeerFlow sandboxes serve the current harness job; backends vary. CubePlex sandboxes are the Workspace execution environment across restarts. Both isolate command execution. Threat models differ — read each project security note.
+Each Workspace owns a Sandbox: files, packages, and the worktree **survive process restarts**. The agent loop runs on the control plane; the Sandbox is an execution environment under Org / Workspace roles and approvals. Another member opening the same Workspace does not reconstruct state from someone else’s private thread tree, and does not first have to bind an IM account to a DeerFlow user bucket to inherit the same agent config.
 
-## Where each fits
+## Skills, plan mode, and long-horizon harness strength
 
-Self-managed long research, coding, and multi-step work with skills and sub-agents: DeerFlow 2.0.
+DeerFlow 2.0’s strength is finishing a long job inside the harness:
 
-Platform teams that want a self-hosted Workspace agent, durable sandbox, and IM together: CubePlex.
+1. **Skills (`SKILL.md`)**: progressive load; slash `/skill-name`; `allowed-tools` after activation; public / custom / managed packs; disable removes them from the sandbox FS view. Docs state `allowed-tools` is **best-effort behavioral scoping, not a hard security boundary** (README).
+2. **Sub-agents + plan mode**: fan out research / code / create; TodoList; lead synthesizes.
+3. **Sandbox “computer”**: bash, files, browser (AIO); mountable persistent user-data; long processes with timeouts.
+4. **Gateway + LangGraph-compatible API**: models, MCP, skills, memory, uploads, artifacts, threads / runs / SSE; Nginx unified entry often **:2026** (`AGENTS.md`). Mintlify may still draw a separate LangGraph Server (:2024); current repo docs describe the Gateway **embedding** the runtime, with Nginx rewriting `/api/langgraph/*` to the Gateway — trust the repo topology.
+5. **Context engineering**: summarization middleware; intermediates offloaded to FS; isolated child contexts.
+6. **Memory (DeerMem default)**: cross-session profile / facts; optional OpenViking, mem0, honcho, and others; fact repos under the user bucket. This is **personal** memory, not a team knowledge-base product.
+7. **MCP and background MCP tasks**: durable remote work with leases / backoff (SQL required).
+8. **Extensibility**: custom agents (SOUL / config), pluggable middleware, optional authorization provider (**off by default**), E2B / BoxLite sandbox providers (`config.example.yaml`).
 
-Heavy jobs can go to DeerFlow while daily entry and permissions stay on CubePlex.
+That stack explains why individuals or small teams self-host Gateway + sandbox for research → report / slides / web / video jobs on a minutes-to-hours scale. It does **not** automatically become multi-seat Workspace governance.
+
+## Multi-seat governance: what exists, what is missing
+
+DeerFlow 2.0 **does** ship identity and isolation:
+
+- First admin via `/setup` / `initialize`; `register` creates a regular `user`; session cookies + CSRF; optional narrow-scope PATs (`API.md`, README).
+- Threads, files, memory, and custom agents are **per-user isolated**.
+- Optional `authorization.enabled` RBAC can limit tools / routes / models / skills / sandbox per role — **disabled by default**.
+- MCP stdio and channel-worker runtime mutation skew admin-only; README Security states **Gateway admin ≡ host code execution**.
+- Preferences, archive, and search stay scoped to the authenticated user. `read_conversation` can reference **own** threads only; foreign / unowned threads are unavailable.
+
+Relative to a shared team Workspace, gaps remain:
+
+- No first-class **org / workspace / project** tenancy, shared thread ACLs, or multi-user co-editing of one agent Workspace.
+- Primary docs do not productize seat billing, SSO, or SCIM as out-of-box capabilities.
+- Threads are **single-owner**; a shared deployment still shares Gateway, MCP config surfaces, skills enablement semantics, and admin blast radius.
+- Pluggable auth is advanced; the default story is a single-principal harness, not enterprise org RBAC.
+
+CubePlex ships Org / Workspace roles, model policy, approvals, and usage in the open-source package. Collaboration defaults to several people on one Workspace Agent; permissions sit on Org / Workspace. Web and IM bridges enter the same Workspace identity.
+
+## Sandbox backends: Local, Docker AIO, Kubernetes
+
+DeerFlow sandboxes serve the **current harness job**; backends differ in isolation and session lifetime:
+
+| Mode | Provider (config) | What it isolates | Session vs durable data |
+| --- | --- | --- | --- |
+| **Local** | `deerflow.sandbox.local:LocalSandboxProvider` | **Almost nothing** — host execution; `allow_host_bash` defaults to **false**, still not a production security boundary | Thread dirs persist on the host; with bash / mounts allowed, the agent can touch the host |
+| **Docker / AIO** | `deerflow.community.aio_sandbox:AioSandboxProvider` | Container (Browser, Shell, File, MCP, VSCode Server, per product site). Outbound network can be `open \| isolated \| allowlist` (newer Docker Engine; Apple Container / provisioner paths differ) | Per-thread (or replica-pooled) containers; `replicas` often default ~3 with LRU eviction; `idle_timeout` often **600s** in docs; **user-data on host mounts can outlive container release** |
+| **K8s provisioner** | Same AIO provider + `provisioner_url` (e.g. `http://provisioner:8002`) | Dedicated Pod per `sandbox_id`; resource limits; ClusterIP / NodePort; prefer PVC over hostPath in prod | Pod lifecycle separate from Gateway; PVC / hostPath user-data can be durable; hostPath is node-local risk (`docker/provisioner/README.md`) |
+| **Also in tree** | E2B, BoxLite (`config.example.yaml`) | Remote VM / micro-VM | Warm pools, Redis ownership for multi-worker E2B, etc.; maturity vs AIO Docker / K8s main path is on you to assess |
+
+Lead and sub-agents **share** the sandbox filesystem within a thread. Paths under `users/{user_id}/threads/{thread_id}/` are not shared across threads or users. Pinning AIO to `:latest` is called out as potentially stale; configs recommend a concrete tag (e.g. **1.11.0**) and note older images missing APIs / known pre-auth issues.
+
+CubePlex’s Sandbox **belongs to the Workspace** and keeps the worktree under policy and roles across restarts. It answers whether the team worktree is still there, not whether this run’s session computer survived idle eviction. Both isolate command execution; threat models follow deployment. DeerFlow’s README targets a **127.0.0.1**-trusted default: LAN / public cloud without hardening risks unauthorized command and file ops; Docker binds `127.0.0.1` by default — set `BIND_HOST=0.0.0.0` only after hardening and completing `/setup`.
+
+## IM: channels into the harness vs bridges into the Workspace
+
+DeerFlow channel workers (often in-process with Gateway under Compose) call the LangGraph-compatible Gateway API with internal auth + CSRF (README). They map a provider conversation to a DeerFlow **`thread_id`**; commands include `/new`, `/status`, `/memory`, `/agent use …`. **User-owned bindings** (`channel_connections`): browser Connect code → `/connect <code>`; inbound runs under the **connected DeerFlow user’s** bucket (memory, uploads, custom agents) (`backend/docs/IM_CHANNEL_CONNECTIONS.md`). Capacity knobs include `inbound_queue_maxsize` and `max_concurrency`; overload yields drops / 503 / replay-cursor behavior per provider.
+
+Citeable identity and governance gaps:
+
+- Sample config **`allowed_users: []` = allow all** (Slack / Telegram / etc., README).
+- **`allowed_users` is not bind-time defense** — anyone with a valid connect code can bind; the code is OTP-like (~128-bit, 10 minutes, single-use) (`IM_CHANNEL_CONNECTIONS.md`).
+- **Platform trust**: DeerFlow trusts the IM platform / Internal Auth token; Internal Auth does **not** verify that the owner id is a real end user (`API.md`).
+- **Single-active-owner transfer**: the latest bind of `(provider, external account, workspace)` **revokes** the prior owner — a leaked code can “steal bind” (`IM_CHANNEL_CONNECTIONS.md`).
+- Bot tokens are deployment secrets; mutating channel-worker APIs skew admin-only; credentials encrypt at rest with fail-closed decrypt.
+- No first-class **org / team shared IM identity** — still a per-user owner bucket.
+
+CubePlex IM bridges bind to the Workspace: ingress only splits session boundaries and does not reinvent the Agent. A channel change does not change Persona; approvals and roles stay on Org / Workspace.
+
+## Win conditions for DeerFlow 2.0
+
+Prefer DeerFlow 2.0 (self-managed Gateway + sandbox) when these hold:
+
+- A single principal (or a few operators) needs a **long-horizon** harness: multi-step research → report / slides / web / video, on skills + a sandbox computer.
+- Parallel investigation via **sub-agents**, then lead synthesis.
+- Need **MIT** self-hosting, a LangGraph-compatible API, and a rich MCP / skill ecosystem.
+- Accept **IM → the same user’s harness bucket** (Feishu / Slack / Telegram / …) rather than building a shared org Workspace first.
+- Task scale is minutes to hours; you want checkpointed threads, uploads / artifacts, optional plan mode.
+- You operate an **agent runtime** (Gateway, sandbox, YAML config), not a multi-tenant collaboration product.
+
+## Failure modes when treating DeerFlow as a shared team Workspace
+
+These follow product boundaries and docs — not invented bugs:
+
+1. **Owner-only threads** — no shared Workspace ACL; collaborators cannot safely co-own one thread’s FS / memory.
+2. **IM bind transfer / empty allowlists** — the wrong person binds the bot, or allowlists stay open, and runs execute as that DeerFlow user (memory + files included).
+3. **Admin / MCP stdio** — one admin compromise ≈ Gateway host RCE (README Security).
+4. **Local or mis-bound sandbox** — host exposure; shared mounts leak host paths.
+5. **Per-user memory mistaken for a team knowledge base** — DeerMem is a personal bucket; org-shared memory needs an external design the product does not default to.
+6. **Single-worker Gateway default** — shared load needs Redis / Postgres ownership; misconfig drops runs / SSE.
+7. **Sandbox idle eviction** — the “session computer” is gone after long idle while files may remain; teams confuse session vs durable outputs.
+8. **Skill policy ≠ sandbox policy** — `allowed-tools` is not a hard boundary; treating behavioral scoping as isolation mis-sizes blast radius.
+9. **Setup race on a public bind** — instance reachable before `/setup` creates accounts.
+10. **No org governance UX** — RBAC off by default; seats / roles / projects are not productized like a team Workspace.
+
+CubePlex fits a narrower, harder set: a platform or engineering team self-hosts; several people share one Workspace Agent for a long time; files and packages must stay in the worktree across restarts; IM and Web must enter the same identity and approvals, and a channel change must not change Persona. Owner-only threads, per-user memory, and “IM binds to a user bucket” block that path.
+
+If one org needs both a long-horizon harness and a team workbench, split by **durable object** — deployments and permissions — instead of assuming feature lists stack into one system. DeerFlow remains a Thread / Run harness; CubePlex remains shared Workspace state. Do not treat a DeerFlow thread FS as a Workspace worktree, or a CubePlex Workspace as a single-user DeerFlow thread.
 
 ## Sources and revision
 
-- DeerFlow 2.0: [github.com/bytedance/deer-flow](https://github.com/bytedance/deer-flow) (MIT), [deerflow.tech](https://deerflow.tech) — public main README checked 2026-09-14; pin commit SHA before publish.
-- CubePlex: [cubeplex.ai](https://cubeplex.ai/), [github.com/cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex).
+- DeerFlow 2.0 pinned to `main` commit [`14c9d44440780e63563e935046db8708e121a5b1`](https://github.com/bytedance/deer-flow/commit/14c9d44440780e63563e935046db8708e121a5b1) (subject: persist tool-progress phase transitions; author date Tue 15 Sep 2026 08:45:08 +0800 ≈ Mon 14 Sep 2026 ~18:45 PT). License **MIT** (repo `LICENSE`: Copyright (c) 2025 Bytedance Ltd. and/or its affiliates; Copyright (c) 2025-2026 DeerFlow Authors; GitHub API `license.key: mit`). Product site: [deerflow.tech](https://deerflow.tech). Snapshot stars via GitHub API ~82k.
+- Primary sources: repo [README](https://github.com/bytedance/deer-flow/blob/main/README.md), [`AGENTS.md`](https://github.com/bytedance/deer-flow/blob/main/AGENTS.md), [`backend/AGENTS.md`](https://github.com/bytedance/deer-flow/blob/main/backend/AGENTS.md), [`backend/docs/ARCHITECTURE.md`](https://github.com/bytedance/deer-flow/blob/main/backend/docs/ARCHITECTURE.md), [`backend/docs/API.md`](https://github.com/bytedance/deer-flow/blob/main/backend/docs/API.md), [`backend/docs/IM_CHANNEL_CONNECTIONS.md`](https://github.com/bytedance/deer-flow/blob/main/backend/docs/IM_CHANNEL_CONNECTIONS.md), [`docker/provisioner/README.md`](https://github.com/bytedance/deer-flow/blob/main/docker/provisioner/README.md), [`config.example.yaml`](https://github.com/bytedance/deer-flow/blob/main/config.example.yaml). Mintlify ([bytedance-deer-flow.mintlify.app](https://bytedance-deer-flow.mintlify.app)) is secondary; some diagrams still show a separate LangGraph Server — prefer repo docs for topology.
+- No local clone of `bytedance/deer-flow` in this workspace, so `SubagentLimitMiddleware` was not line-checked for hard concurrency / timeout numbers; Mintlify commonly says ~3 concurrent / 15 minutes, and config also has `max_total_per_run`. The **default** sandbox mode from `make docker-start` / wizard (templates often lean Local; prose recommends Docker) was not re-verified from a generated `config.yaml`. Whether `ARCHITECTURE.md` path tables always include `users/{user_id}/` can disagree with the API — multi-user layout follows the API. E2B / BoxLite maturity vs AIO Docker / K8s main path is not expanded. Org-feature RFCs beyond fetched primary docs are out of scope.
+- CubePlex: [cubeplex.ai](https://cubeplex.ai/), [github.com/cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex). Org / Workspace roles, Persona / Skills / MCP, layered memory, durable Sandbox across restarts, control-plane agent loop, and IM bridges into the same Workspace identity are stated from public product description; no separate CubePlex commit SHA is pinned.

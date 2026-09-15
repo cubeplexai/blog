@@ -1,49 +1,143 @@
 ---
 slug: cubeplex-vs-deerflow-workspace-and-harness
-title: CubePlex 与 DeerFlow：团队 Agent Workspace 与 Super Agent Harness
-description: DeerFlow 2.0 用 Gateway、skills、sub-agent 与 sandbox 跑长程任务；CubePlex 用 Workspace 承载团队 Agent、治理与 IM。
+title: CubePlex 与 DeerFlow：Workspace 共享状态与 Thread / Run Harness
+description: DeerFlow 2.0 用 Thread、Run、Lead Agent、skills 与 sandbox 跑长程任务；CubePlex 用 Workspace 承载团队 Agent、角色、分层 memory 与跨重启 Sandbox。
 authors: [xfgong]
 tags: [CubePlex, DeerFlow, Agent Workspace, Agent Harness, 自托管, 团队 Agent]
 image: /img/blog/cubeplex-vs-deerflow-workspace-and-harness-cover.webp
 ---
 
-DeerFlow 2.0 是开源 super agent harness：Lead Agent 在 LangGraph / LangChain 上调用 skills、工具和 sub-agent，配合 memory 与 sandbox，跑可能持续数分钟到数小时的任务（[bytedance/deer-flow](https://github.com/bytedance/deer-flow)，[deerflow.tech](https://deerflow.tech)）。CubePlex 是自托管团队 Agent Workspace：Workspace 固定 Persona、Skills、MCP 与分层 memory，成员从 Web 或 IM 进入同一套角色与审批（[cubeplex.ai](https://cubeplex.ai/)）。
+DeerFlow 2.0 是开源 long-horizon Super Agent harness：Lead Agent 在 Gateway 内嵌的 LangGraph 兼容 runtime 上调用 skills、工具与 sub-agent，配合 memory 与可配置 sandbox，跑可能持续数分钟到数小时的任务（[bytedance/deer-flow](https://github.com/bytedance/deer-flow)，[deerflow.tech](https://deerflow.tech)）。工作单位是 **Thread** 与其上的一次 **Run**；文件、checkpoint 与 IM 绑定默认落在**当前用户**名下。CubePlex 是自托管团队 Agent Workspace：Org / Workspace 角色、Persona、Skills、MCP 与分层 memory 挂在 Workspace 上；每个 Workspace 带跨重启保留文件、安装包与 worktree 的 Sandbox；控制面跑 Agent loop；Web 与 IM bridge 进入同一 Workspace 身份（[cubeplex.ai](https://cubeplex.ai/)，[cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex)）。两边都谈 sandbox、memory 与 IM，但持久化对象不同：一条可复现的长任务 harness，还是多人继续共用的 Workspace 状态。
 
-DeerFlow 2.0 与 1.x Deep Research 不共享代码。下文只写 **2.0**。
+DeerFlow 2.0 是地面重写，与 1.x Deep Research **不共享代码**（README）。下文只写 **2.0**。
 
 ![Harness 线程 vs Workspace 边界](/img/blog/cubeplex-vs-deerflow-workspace-and-harness/harness-and-workspace.svg)
 
 <!-- truncate -->
 
-## DeerFlow 2.0 提供什么
+## Thread、Run、Lead Agent 与 Sub-agent
 
-它自带 Gateway、可配置的 sandbox（Local / Docker / Kubernetes provisioner 等）、skills 目录和 sub-agent 委派，而不是让你从空白图里把 runtime 拼起来。配置中心是 `config.yaml`。Telegram、Slack、飞书、钉钉、企微等频道可以把消息送进 harness；`/agent`、`/memory` 管会话与 Agent 选择（README IM Channels）。可插拔授权写在高级配置里，不是默认必开能力。
+Thread 是带 checkpoint 的会话容器。状态里常见字段包括 `messages`、`sandbox`、`thread_data`（uploads / workspace / outputs 路径）、`title`、`artifacts`、`todos`（plan mode）、`viewed_images`（`backend/docs/ARCHITECTURE.md`，Mintlify agent-system）。元数据带 `threads_meta.user_id`；列表、读写、删除都只作用于当前用户的 thread（`backend/docs/API.md`）。磁盘布局在 API 文档里写作 `{base_dir}/users/{user_id}/threads/{thread_id}/user-data/{uploads,workspace,outputs}`，在 sandbox 内映射为 `/mnt/user-data/*`。启用的 skills 投影到 `/mnt/skills`。归档只改 `metadata.deerflow_archived`，**不会**取消 run、暂停 schedule 或改保留策略。`DELETE` thread 会递归清掉该 thread 目录。
 
-README 提醒不当部署有安全风险；发稿前重读原文。
+Run 是 thread 上的一次 Agent 执行：`POST .../threads/{id}/runs`（含 `/stream`、`/wait`）。可选 `Idempotency-Key`：同一用户 + thread + key 复用已有 run；input / assistant / refs 不一致则 409。无 thread 的 `/api/langgraph/runs/*` 可自动建临时 thread，并用 `Content-Location` 回传 id。Gateway **进程内**持有活跃 run；生产默认常把 `GATEWAY_WORKERS` 设为 **1**。多 worker 需要 Postgres、Redis stream bridge、run ownership heartbeat 与 DB `run_events`（README）。每次 HTTP 响应带 `X-Trace-Id` / `deerflow_trace_id`，覆盖 run、sub-agent 与后台 memory 线程。Plan / sub-agent 较重时，`config.recursion_limit` 在 Gateway 侧常见默认约 **100**。
 
-## CubePlex 的团队边界
+Lead Agent（`make_lead_agent` / `lead_agent`）是用户回合的唯一入口。中间件链负责 thread 目录、uploads、sandbox、摘要、todos、标题、memory 队列、sub-agent 限额与澄清等；单次请求可带 `thinking_enabled`、`model_name`、`is_plan_mode`、`subagent_enabled` 等旋钮。
 
-组织与 Workspace 规定角色、模型策略和共享 Agent 配置。控制面跑 Agent loop；每个 Workspace 的 Sandbox 保留文件、安装包和工作树。IM bridge 绑到 Workspace：换频道不会自动换 Persona，只换会话边界。个人 / Workspace / 组织 memory 分层存放。
+Sub-agent 通过 **`task()`** 拉起：Lead 判断并行延迟、专家分工或上下文隔离有净收益时才用——是优化手段，不是每个复杂问题的默认路径（README）。类型包括 `general-purpose` 与 `bash` 等。默认 `context_mode="isolated"`；可选 `snapshot` 在派发时拷贝父会话保留对话（含 compaction 摘要）。子 agent 自有角色 / 模型 / 工具 / skills；父、子聊天历史分叉，**同一 thread 的 sandbox / 文件系统仍共享**。并发常由 `SubagentLimitMiddleware` 压到约 **3**；文档常见超时约 **15 分钟**，配置里还有 `subagents.max_total_per_run`。子 agent 内部模型与工具流量留在委派图 / run-event 诊断里，**不进**父聊天记录；父侧看到结构化 `task` 结果或子任务卡片。失败按失败任务上报，可带 verification receipt。
 
-## 线程与 Workspace
+跨 run / 跨 thread / 跨用户 / 跨 Gateway 重启，持久化并不对称：
 
-DeerFlow 的工作落在 thread 与一次 run 上，Lead Agent 按需加载 skills，用 `task` 派 sub-agent。适合把一条长任务在强 harness 里跑完。
+| 对象 | 同 thread 多次 run | 同用户其他 thread | 其他用户 | Gateway 重启后 |
+| --- | --- | --- | --- | --- |
+| Thread checkpoint / messages | 保留 | 默认不共享（除非 `read_conversation` 引用**自己的** thread） | 否（owner 过滤） | 是（checkpoint store） |
+| Thread FS（`/mnt/user-data`） | 保留（host / PVC） | 否 | 否 | 磁盘保留；**sandbox 容器 / Pod** 可能因 idle / 驱逐释放 |
+| Lead ↔ sub-agent 共享 FS | 同一 thread sandbox | — | — | FS 可在；活会话未必在 |
+| Memory（DeerMem 默认） | 注入后续会话 | **按用户跨 thread** | 否 | 是（用户 memory store） |
+| 活跃 run / SSE 进程态 | 进程内 | — | — | 无多 worker 持久栈则丢失 |
 
-CubePlex 的工作落在 Workspace 上。多人共用同一份 Agent 配置和治理；适合日常协作，而不是每次任务单独搭一套 runtime。
+## Workspace 上的 Agent 状态与控制面 loop
 
-## Sandbox
+CubePlex 里长期存在的是 Workspace 上的 Agent，而不是某次用户私有的 Thread 目录。AgentConfig 保存 Persona；Skills 与 MCP 连接器挂在 Workspace；个人 / Workspace / 组织 memory 分层存放。成员从 Web 或 IM 进来，面对同一套角色设定与审批。会话可以按入口切开（私聊一对一、群聊共享或隔离路由等），但换 Slack / 飞书频道**不会**自动换 Persona、Skills 或 MCP 绑定。
 
-DeerFlow 的 sandbox 服务于当前 harness 任务，后端可选多种。CubePlex 的 sandbox 是 Workspace 的持久执行环境。两边都隔离命令执行；威胁模型与部署方式不同，各自读官方安全说明。
+每个 Workspace 有一份 Sandbox：文件、安装包与 worktree **跨进程重启保留**。Agent loop 跑在控制面；Sandbox 是落在组织与 Workspace 角色与审批之下的执行环境。另一位成员打开同一 Workspace 时，不必从某个人的私有 thread 目录里拼现场，也不必先完成一次「把我的 IM 账号 bind 到某个 DeerFlow user」才能继承同一份 Agent 配置。
 
-## 适用场景
+## Skills、Plan 与长程 harness
 
-要自管长程研究、编码、多步任务，并依赖 skills 与 sub-agent，用 DeerFlow 2.0。
+DeerFlow 2.0 的强项集中在「把一条长任务在 harness 里跑完」：
 
-要平台团队自托管、多人共用 Workspace Agent、持久 Sandbox 与 IM 一体，用 CubePlex。
+1. **Skills（`SKILL.md`）**：渐进加载；斜杠 `/skill-name`；激活后有 `allowed-tools`；公开 / 自定义 / managed 集成包；禁用后从 sandbox FS 视图移除。文档写明 `allowed-tools` 是 **best-effort 行为约束，不是硬安全边界**（README）。
+2. **Sub-agent + plan mode**：扇出调研 / 编码 / 创作；TodoList；Lead 合成结果。
+3. **Sandbox「计算机」**：bash、文件、浏览器（AIO）；可挂载持久 user-data；长进程带超时。
+4. **Gateway + LangGraph 兼容 API**：模型、MCP、skills、memory、uploads、artifacts、threads / runs / SSE；Nginx 统一入口常为 **:2026**（`AGENTS.md`）。Mintlify 仍可能画出独立 LangGraph Server（:2024）；当前仓库文档描述 Gateway **内嵌** runtime，Nginx 把 `/api/langgraph/*` 转到 Gateway——拓扑以仓库文档为准。
+5. **上下文工程**：摘要中间件；中间结果落到 FS；隔离的子 agent 上下文。
+6. **Memory（DeerMem 默认）**：跨会话 profile / facts；可选 OpenViking、mem0、honcho 等；按用户桶分事实库。这是**个人**记忆，不是团队共享知识库产品。
+7. **MCP 与后台 MCP 任务**：远程长任务可用 lease / backoff（需 SQL）。
+8. **可扩展面**：自定义 agent（SOUL / config）、可插拔中间件、可选 authorization provider（**默认关闭**）、E2B / BoxLite 等 sandbox 提供方（`config.example.yaml`）。
 
-也可以分头使用：重任务走 DeerFlow，日常入口与权限走 CubePlex。
+这些能力解释了为什么个人或小团队愿意自管 Gateway + sandbox，用它做研究 → 报告 / 幻灯 / 网页 / 视频一类分钟到小时级任务。它们**不**自动变成多席位 Workspace 治理。
+
+## 多席位治理：默认有什么、缺什么
+
+DeerFlow 2.0 **有**的身份与隔离：
+
+- 首次 `/setup` / `initialize` 建 admin；`register` 出普通 `user`；session cookie + CSRF；可选窄 scope 的 PAT（`API.md`，README）。
+- Thread、文件、memory、自定义 agent **按用户隔离**。
+- 可选 `authorization.enabled` RBAC：按角色限工具 / 路由 / 模型 / skills / sandbox——**默认关闭**。
+- MCP stdio、频道 worker 运行时变更等偏 admin；README Security 写明 **Gateway admin ≡ 宿主机代码执行**。
+- 账号偏好、归档、搜索都落在已认证用户范围内。`read_conversation` 只能引用**自己的** thread；外用户 / 无主 thread 不可用。
+
+相对「团队共享 Workspace」仍缺或很弱的部分：
+
+- 没有一等 **org / workspace / project** 租户、共享 thread ACL，或多用户共编同一 Agent Workspace。
+- 主文档未把 seat 计费、SSO、SCIM 写成开箱能力。
+- Thread **单 owner**；共享部署仍共享 Gateway、MCP 配置面、skills 启用语义与 admin 爆炸半径。
+- 可插拔授权是进阶选项，默认叙事仍是单主体 harness，不是企业 org RBAC。
+
+CubePlex 开源包自带组织与 Workspace 角色、模型策略、审批与用量。协作默认是多人共用同一 Workspace Agent；权限落在组织 / Workspace。Web 与 IM bridge 进入同一 Workspace 身份。
+
+## Sandbox 后端：Local / Docker AIO / Kubernetes
+
+DeerFlow 的 sandbox 服务**当前 harness 任务**；后端可选，隔离强度与会话寿命差很多：
+
+| 模式 | Provider（配置） | 隔离什么 | 会话 vs 持久数据 |
+| --- | --- | --- | --- |
+| **Local** | `deerflow.sandbox.local:LocalSandboxProvider` | **几乎不隔离**——宿主机执行；`allow_host_bash` 默认 **false**，仍不是生产安全边界 | Thread 目录在宿主机上保留；一旦放开 bash / 挂载，agent 可触达宿主机 |
+| **Docker / AIO** | `deerflow.community.aio_sandbox:AioSandboxProvider` | 容器（Browser、Shell、File、MCP、VSCode Server 等，见产品站）。出站网络可配 `open \| isolated \| allowlist`（依赖较新 Docker Engine；Apple Container / provisioner 路径另说） | 每 thread（或 replica 池）容器；`replicas` 默认约 3，LRU 驱逐；`idle_timeout` 文档常见 **600s**；**user-data 在 host mount 上可在容器释放后仍在** |
+| **K8s provisioner** | 同一 AIO provider + `provisioner_url`（如 `http://provisioner:8002`） | 每 `sandbox_id` 独立 Pod；资源限制；ClusterIP / NodePort；生产更倾向 PVC 而非 hostPath | Pod 生命周期与 Gateway 分开；PVC / hostPath 上的 user-data 可持久；hostPath 带来节点本地风险（`docker/provisioner/README.md`） |
+| **树内另有** | E2B、BoxLite（`config.example.yaml`） | 远程 VM / micro-VM | Warm pool、多 worker 时 Redis ownership（E2B）等；成熟度相对 AIO Docker / K8s 主路径需自行评估 |
+
+同一 thread 内 Lead 与 sub-agent **共享** sandbox 文件系统。跨 thread / 跨用户不共享——路径落在 `users/{user_id}/threads/{thread_id}/`。AIO 镜像若钉 `:latest`，配置示例提示可能过旧；建议钉具体版本（例如 **1.11.0**），并注意旧镜像缺 API / 已知前置认证类问题的注释。
+
+CubePlex 的 Sandbox **归属 Workspace**，在策略与角色之下跨重启保留工作树。它回答「团队工作树还在不在」，而不是「这次 run 的会话计算机 idle 后是否还活着」。两边都隔离命令执行；威胁模型取决于部署：DeerFlow README 明确默认面向 **127.0.0.1** 可信环境，LAN / 公网未加固时存在未授权调用命令与文件操作的风险；Docker 默认只绑 `127.0.0.1`，设 `BIND_HOST=0.0.0.0` 前要先完成加固与 `/setup`。
+
+## IM：频道进 harness，与 bridge 进 Workspace
+
+DeerFlow 频道 worker（Compose 场景常跑在 Gateway 进程内）用内部 auth + CSRF 对调用 LangGraph 兼容 Gateway API（README）。把 provider 会话映射到 DeerFlow **`thread_id`**；命令包括 `/new`、`/status`、`/memory`、`/agent use …`。**用户级绑定**（`channel_connections`）：浏览器 Connect code → `/connect <code>`；入站 run 落在**已连接 DeerFlow 用户**的桶里（memory、uploads、自定义 agent）（`backend/docs/IM_CHANNEL_CONNECTIONS.md`）。容量由 `inbound_queue_maxsize`、`max_concurrency` 等约束；过载时按 provider 丢消息 / 503 / replay-cursor。
+
+可核对的身份与治理缝隙：
+
+- 配置样例里 **`allowed_users: []` = 允许所有人**（Slack / Telegram 等，README）。
+- **`allowed_users` 不是 bind 时防御**——持有有效 connect code 即可绑定；code 类似 OTP（约 128-bit、10 分钟、一次性）（`IM_CHANNEL_CONNECTIONS.md`）。
+- **平台信任**：DeerFlow 信任 IM 平台 / Internal Auth token；Internal Auth **不**验证 owner id 是否为真实终端用户（`API.md`）。
+- **单活跃 owner 转移**：同一 `(provider, external account, workspace)` 的最新 bind **撤销**先前 owner——code 泄露时可能「偷绑」（`IM_CHANNEL_CONNECTIONS.md`）。
+- Bot token 是部署级密钥；变更频道 worker 的 API 偏 admin-only；凭据加密存储，解密失败 fail-closed。
+- 没有一等 **org / 团队共享 IM 身份**——模型仍是 per-user owner 桶。
+
+CubePlex 的 IM bridge 绑到 Workspace：入口只划分会话边界，不重新发明 Agent。换频道不换 Persona；审批与角色仍在组织 / Workspace 上。
+
+## DeerFlow 2.0 的胜场
+
+下列条件成立时，选 DeerFlow 2.0（自管 Gateway + sandbox）比硬套团队 Workspace 产品更直接：
+
+- 单主体（或少数操作者）要跑**长程** harness：多步研究 → 报告 / 幻灯 / 网页 / 视频，依赖 skills + sandbox 计算机。
+- 需要 **sub-agent** 并行调研 / 编码 / 创作，再由 Lead 合成。
+- 需要 **MIT** 自托管、LangGraph 兼容 API，以及较完整的 MCP / skill 生态。
+- 接受 **IM → 同一用户桶下的 harness**（飞书 / Slack / Telegram 等），而不是先建组织共享 Workspace。
+- 任务尺度在分钟到小时；需要 checkpointed thread、uploads / artifacts、可选 plan mode。
+- 运维对象是 **Agent runtime**（Gateway、sandbox、配置 YAML），不是多租户协作产品。
+
+## 把 DeerFlow 当团队共享 Workspace 时会失败的点
+
+这些是产品边界与文档声明推出的失败模式，不是臆造 bug：
+
+1. **Owner-only thread**：没有共享 Workspace ACL；协作者不能安全共有同一 thread 的 FS / memory。
+2. **IM bind 转移 / 空 allowlist**：错误的人 bind 了 bot，或 allowlist 放空，run 以该 DeerFlow 用户身份执行（含其 memory 与文件）。
+3. **Admin / MCP stdio**：一个 admin 失陷 ≈ Gateway 宿主机 RCE（README Security）。
+4. **Local 或错误暴露的 sandbox**：宿主机暴露；共享挂载泄漏路径。
+5. **按用户 memory 被当成团队知识库**：DeerMem 是个人桶；要做组织共享记忆需外置设计，产品默认不提供。
+6. **单 worker Gateway 默认**：共享负载要上 Redis / Postgres ownership 栈；配错会丢 run / SSE。
+7. **Sandbox idle 驱逐**：长空闲后「会话计算机」没了，文件可能还在；团队容易把会话与持久输出搞混。
+8. **Skill 策略 ≠ sandbox 策略**：`allowed-tools` 不构成硬边界；把行为约束当成隔离会误判爆炸半径。
+9. **公网 bind 后的 setup 竞态**：实例可达但尚未完成 `/setup` 时无账户保护。
+10. **无 org 治理 UX**：RBAC 默认关；座位 / 角色 / 项目未按团队 Workspace 产品化。
+
+CubePlex 更合适的条件更窄、也更硬：平台或工程团队要自托管；多人长期共用同一 Workspace Agent；文件与包必须跨重启留在工作树里；IM 与 Web 必须进同一身份与审批，且换频道不得换 Persona。此时 owner-only thread、per-user memory 与「IM 绑到用户桶」会直接挡路。
+
+若同一组织既要长程 harness 又要团队工作台，应按**持久化对象**切开部署与权限，而不是假设两边「功能互补就能叠成一套」。DeerFlow 仍是 Thread / Run harness；CubePlex 仍是 Workspace 共享状态。混用时不要把 DeerFlow thread FS 当成 Workspace worktree，也不要把 CubePlex Workspace 当成单用户 DeerFlow thread。
 
 ## 源码与版本
 
-- DeerFlow 2.0：[github.com/bytedance/deer-flow](https://github.com/bytedance/deer-flow)（MIT）、[deerflow.tech](https://deerflow.tech) — 2026-09-14 核对公开 main README；发稿前钉 commit SHA。
-- CubePlex：[cubeplex.ai](https://cubeplex.ai/)、[github.com/cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex)。
+- DeerFlow 2.0 源码钉在 `main` 提交 [`14c9d44440780e63563e935046db8708e121a5b1`](https://github.com/bytedance/deer-flow/commit/14c9d44440780e63563e935046db8708e121a5b1)（commit subject: persist tool-progress phase transitions；作者日期 Tue 15 Sep 2026 08:45:08 +0800 ≈ Mon 14 Sep 2026 ~18:45 PT）。许可证 **MIT**（仓库 `LICENSE`：Copyright (c) 2025 Bytedance Ltd. and/or its affiliates；Copyright (c) 2025-2026 DeerFlow Authors；GitHub API `license.key: mit`）。产品站：[deerflow.tech](https://deerflow.tech)。核对时 GitHub API stars 约 82k。
+- 主源：仓库 [README](https://github.com/bytedance/deer-flow/blob/main/README.md)、[`AGENTS.md`](https://github.com/bytedance/deer-flow/blob/main/AGENTS.md)、[`backend/AGENTS.md`](https://github.com/bytedance/deer-flow/blob/main/backend/AGENTS.md)、[`backend/docs/ARCHITECTURE.md`](https://github.com/bytedance/deer-flow/blob/main/backend/docs/ARCHITECTURE.md)、[`backend/docs/API.md`](https://github.com/bytedance/deer-flow/blob/main/backend/docs/API.md)、[`backend/docs/IM_CHANNEL_CONNECTIONS.md`](https://github.com/bytedance/deer-flow/blob/main/backend/docs/IM_CHANNEL_CONNECTIONS.md)、[`docker/provisioner/README.md`](https://github.com/bytedance/deer-flow/blob/main/docker/provisioner/README.md)、[`config.example.yaml`](https://github.com/bytedance/deer-flow/blob/main/config.example.yaml)。Mintlify（[bytedance-deer-flow.mintlify.app](https://bytedance-deer-flow.mintlify.app)）作次要参考；部分图仍画独立 LangGraph Server，拓扑以仓库文档为准。
+- 未在本文工作区克隆 `bytedance/deer-flow`，故未对 `SubagentLimitMiddleware` 源码逐行核对「硬」并发 / 超时；Mintlify 常见写法为约 3 并发 / 15 分钟，配置另有 `max_total_per_run`。`make docker-start` / 向导生成的**默认** sandbox 模式（模板常偏 Local，正文推荐 Docker）未从生成后的 `config.yaml` 再证一次。`ARCHITECTURE.md` 路径表是否始终含 `users/{user_id}/` 与 API 文档不完全一致——多用户布局以 API 为准。E2B / BoxLite 相对 AIO Docker / K8s 主路径的成熟度未展开。超出已抓主文档的 org 功能 RFC 未纳入。
+- CubePlex：[cubeplex.ai](https://cubeplex.ai/)、[github.com/cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex)。上文 Org / Workspace 角色、Persona / Skills / MCP、分层 memory、跨重启 Sandbox、控制面 Agent loop 与 IM bridge 进入同一 Workspace 身份，均按产品公开描述陈述；未单独钉 CubePlex commit SHA。
