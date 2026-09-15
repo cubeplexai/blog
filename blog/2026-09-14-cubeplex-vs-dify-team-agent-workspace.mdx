@@ -1,113 +1,75 @@
 ---
 slug: cubeplex-vs-dify-team-agent-workspace
-title: "CubePlex vs Dify: Workspace Agent vs App / Workflow Version Objects"
-description: Dify persists Apps, Workflow versions, and New Agent capabilities as web apps or APIs. CubePlex persists Workspace Agents, layered memory, and a durable sandbox worktree across restarts.
+title: "CubePlex vs Dify: Long-Lived Agents vs Scenario-Specific Apps"
+description: Dify builds and publishes Apps around defined scenarios. CubePlex lets a person or team keep using one Workspace Agent across tasks and entry points, reusing its role, memory, Skills, MCP connections, and work environment.
 authors: [xfgong]
-tags: [CubePlex, Dify, Agent Workspace, Workflow, Self-hosting, Team Agents]
+tags: [CubePlex, Dify, Dify Alternative, Agent Workspace, Workflow, Self-hosting, Team Agents]
 image: /img/blog/cubeplex-vs-dify-team-agent-workspace-cover-en.webp
 ---
 
-Dify composes Workflows, Chatflows, Knowledge, and New Agents in Studio, then publishes a web app, API, embed, or MCP entry ([dify.ai](https://dify.ai/), [Publish](https://docs.dify.ai/en/self-host/use-dify/publish/README)). What lasts is App config, Chatflow/Workflow draft→publish versions, and a reusable New Agent capability object. CubePlex is a self-hosted team Agent Workspace: Persona, Skills, MCP, and layered memory sit on the Workspace; each Workspace keeps a sandbox whose files, packages, and worktree survive restarts; web and IM bridges enter the same Workspace identity ([cubeplex.ai](https://cubeplex.ai/), [cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex)). Both can self-host. Choose by which object you need to persist: a publishable App / Agent capability, or a Workspace Agent plus worktree the team keeps using.
+Agent products are taking two different approaches to how people get work done.
 
-![Whose boundary owns the sandbox](/img/blog/cubeplex-vs-dify-team-agent-workspace/sandbox-boundary-en.svg)
+Dify starts with a defined scenario. A team identifies a problem such as customer support, knowledge Q&A, contract review, or report generation, then configures the model, Workflow, Knowledge, and tools for that problem. The result is published as a web app, API, embed, or MCP service. Users choose an App and work within the capabilities it was built to provide.
+
+CubePlex starts with a long-lived Agent. A person or team keeps using the same Agent in a Workspace and gives it different kinds of work over time. The Agent retains its role, memory, Skills, and MCP connections, and can operate a durable computer environment when a task requires one. Instead of switching among Apps for different scenarios, users return to an Agent that becomes familiar with how the team works.
+
+That difference shapes how the two products organize capabilities, state, and collaboration.
+
+![How long-lived Agents and scenario-specific Apps start work](/img/blog/cubeplex-vs-dify-team-agent-workspace/sandbox-boundary-en.svg)
 
 <!-- truncate -->
 
-## App, Workflow versions, and New Agent
+## Dify: define a scenario, then publish an App
 
-Studio wires model calls, retrieval, tools, branches, and human confirmation. A Workflow runs from trigger to finish; a Chatflow adds a conversation layer on the same nodes; Triggers attach only to Workflow ([Workflow & Chatflow](https://docs.dify.ai/en/self-host/use-dify/build/workflow-chatflow)). Knowledge is a first-class RAG object: Owner/Admin/Editor create it; visibility is set on the knowledge base ([Knowledge](https://docs.dify.ai/en/self-host/use-dify/knowledge/readme)).
+The primary deliverable in Dify Studio is an App. Builders use a Workflow or Chatflow to connect model calls, knowledge retrieval, tools, branches, and human input, then publish a tested version for end users. Workflows fit automation with defined inputs, steps, and outputs. Chatflows add conversation state to the same orchestration model ([Workflow and Chatflow](https://docs.dify.ai/en/self-host/use-dify/build/workflow-chatflow)).
 
-Version control today covers Chatflow and Workflow only: Current Draft stays off live traffic; Publish Update promotes the draft to Latest Version; earlier publishes remain as Previous Versions; Restore loads an old version into draft and requires another Publish to go live ([Version control](https://docs.dify.ai/en/self-host/use-dify/build/version-control)).
+This structure asks the team to define the problem before building the application. A customer-support assistant and a contract-review tool would normally be separate Apps, each with its own prompt, flow, knowledge, and published entry point. Builders change and publish the capability; users submit inputs and consume the result without editing the application itself.
 
-**New Agent** (beta) is a first-class product object with its own config and lifecycle: ship it as a standalone chat app, or drop it into a Workflow as an Agent node. Capability (model, prompt, skills, files, tools, env vars) is separate from task (user message or node instruction). Edits autosave as draft; Publish makes a version live; version history can restore, and restoring also restores Build-time persistent sandbox files. DSL export reattaches library skills by name; embedded skills and files are not included ([New Agent overview](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/overview), [Build](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/build), [Introducing New Agent](https://dify.ai/blog/introducing-new-dify-agent)). Creating or managing agents requires Editor or above.
+Dify's New Agent brings more open-ended Agent behavior into this App model. A builder configures its model, prompt, Skills, Files, Tools, and environment variables, then publishes it as a standalone chat App or places it in a Workflow as an Agent node. Capability defines what the Agent can do; Task defines what one run asks it to accomplish ([New Agent](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/overview)).
 
-The Agent node exists in Workflow apps only, not Chatflow. Two nodes that invite the same published agent still get separate sandboxes; files and tool installs from one node run do not carry to the other — pass data through declared outputs. Task variables passed as text truncate at 2,000 characters; longer content must go as a file ([Agent node](https://docs.dify.ai/en/self-host/use-dify/nodes/agent)).
+A New Agent can run commands, install programs, and work with files during Build. Files and installations marked Persistent in Build become part of later versions of that Agent. Files and installations created during a published run remain temporary and do not change the Agent itself. Its prompt, Skills, and Tools can likewise be changed only in Configure or Build; an end user cannot permanently reconfigure the published Agent through a conversation ([Build an Agent](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/build)).
 
-## Workspace Agent, layered memory, and durable worktree
+New Agent therefore broadens the work one Dify App can perform, but the product relationship remains the same: a team builds and publishes the Agent first, and users invoke it through a web app, API, or Workflow node.
 
-In CubePlex, what lasts is the Agent on a Workspace: AgentConfig holds Persona; Skills and MCP connectors attach to the Workspace; personal / Workspace / organization memory are layered. Members coming from web or IM meet the same role setup and approvals — switching a Slack channel does not invent a new Persona. The IM entry only scopes the session (one-to-one DM, shared or isolated group routing, and so on); it does not redefine the Agent.
+## CubePlex: one Agent takes on changing work
 
-Each Workspace has a sandbox: files, packages, and worktree survive process restarts. The agent loop runs on the control plane; the sandbox is a rentable execution environment still under org and Workspace roles and approvals. Another member can open the same Workspace without rebuilding state from someone’s private chat.
+The primary object in a CubePlex Workspace is not an App waiting to be published. It is the Agent that a person or team is already using.
 
-CubePlex does not treat “publish as an external App” as the default delivery shape. Default delivery is Workspace state the team can keep editing and running.
+The Workspace stores the Agent's Persona and binds its available Skills and MCP connections. Personal memory is visible only to the current user in that Workspace, Workspace memory is shared with members, and organization memory carries organization-wide information. A new conversation or a task arriving through the web, Slack, Feishu, or another IM channel continues to use that Workspace's Agent configuration. The team does not need separate Apps for research, writing, operations, and development.
 
-## Code-node sandbox, New Agent sandbox, Workspace sandbox
+This does not mean every task belongs in one endlessly growing chat history. CubePlex still uses separate conversations and Topics to bound task context. What persists across them is the Agent's role, capabilities, memory, and governance rules. Tasks remain separate without requiring the Agent to be configured again each time.
 
-Do not collapse these into “Dify has a sandbox.”
+The Agent can use a Sandbox to work with files, run commands, and install tools. The current implementation binds a Sandbox to a user, group conversation, or Topic according to the collaboration mode; it does not expose one Workspace-wide filesystem to every member by default. The environment persists within its scope, while group conversations and Topics can share or isolate a Sandbox along their collaboration boundary ([UserSandbox scopes](https://github.com/cubeplexai/cubeplex/blob/7813a0da15f0e17522a4cb8eb30df16609c889c5/backend/cubeplex/models/user_sandbox.py), [runtime selection](https://github.com/cubeplexai/cubeplex/blob/7813a0da15f0e17522a4cb8eb30df16609c889c5/backend/cubeplex/streams/run_manager.py#L3677-L3710)).
 
-The **Code node** runs deterministic Python/JS transforms. Docs: code executes in a strict sandbox that prevents filesystem access, network requests, and system commands; outbound traffic goes through an SSRF proxy, and network can be disabled ([Code](https://docs.dify.ai/en/self-host/use-dify/nodes/code)). The Compose service is `sandbox`, in the lineage of the earlier DifySandbox OSS component. It serves a pipeline step, not a daily CLI workbench.
+CubePlex therefore keeps long-term state at two levels. The Workspace carries the Agent configuration, memory, and permissions shared by the team. A user-, conversation-, or Topic-scoped Sandbox carries the files and tool environment for the corresponding work. Members use the same Workspace Agent while user identity, conversation context, and execution environments retain explicit boundaries.
 
-The **New Agent sandbox** deliberately opens the other door: run commands, install programs, read and write files, on a model-driven ReAct + Bash path ([overview](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/overview), [why we redesigned](https://dify.ai/blog/why-we-redesigned-dify-agent)). Compose uses a different service set: `agent_backend`, `local_sandbox`, `agent_ssrf_proxy`, gated by flags such as `NEXT_PUBLIC_ENABLE_AGENT_V2`. Missing services or a compose file older than the images shows up as a missing Agents page or immediate run failures ([Docker Compose](https://docs.dify.ai/en/self-host/deploy/quick-start/docker-compose), Build troubleshooting).
+## The two products start work from different places
 
-Persistence splits on Build vs published runs ([Build](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/build)):
+| | Dify App | CubePlex Workspace Agent |
+| --- | --- | --- |
+| How users start | Choose an App published for a specific scenario | Enter a Workspace and give different work to the same Agent |
+| How capabilities are organized | Each App configures its own prompt, Workflow, Knowledge, and tools | Persona, Skills, MCP, and memory are organized around a long-lived Workspace Agent |
+| Who changes the capability | Editors build and publish; end users consume the published version | Workspace members keep using and maintaining the Agent under roles and approvals |
+| What changes after a run | A published New Agent run does not modify the Agent itself | Agent configuration and memory persist; Sandbox state remains within its scope |
+| Best fit | Defined problems that can be productized and delivered repeatedly | Changing work that needs long-term context and computer access for a person or team |
 
-| Context | Files and CLI installs |
-| --- | --- |
-| Build mode | Persistent by default — part of agent setup for later chats and workflow runs; mark Temporary to clear when the build chat ends |
-| Published run | Always temporary — “nothing that happens in a run changes the agent itself” |
-| Tools list | Tools installed in Build can remain after publishing; installs during a published run stay temporary |
+This produces a visible difference in the user experience.
 
-Capability (prompt, skills, tools) changes only in Configure / Build; end users cannot change a published agent’s prompt/skills/tools even if they ask in natural language. Discarding Build drops config changes and persistent files from that build chat.
+In Dify, a team commonly provides a different entry point for each business problem. A user opens a Q&A App for knowledge retrieval, invokes a report Workflow to generate a report, and enters a support Chat App for customer service. Each entry point represents a capability that has been built and published.
 
-Published runs and every access point share hard caps: default 1-hour run timeout (`APP_MAX_EXECUTION_TIME`, `WORKFLOW_MAX_EXECUTION_TIME`, `DIFY_AGENT_RUN_TIMEOUT_SECONDS`); at most 500 model requests per run; reply files default to 50 MB; the sandbox proxy blocks private-network addresses — intranet material must be added to Files first.
+In CubePlex, a user normally enters a Workspace and tells the Agent what needs to be done. The Agent selects from the Skills, MCP connections, and file tools already available to it. It might inspect code today, prepare meeting material tomorrow, and return to a deployment problem later. Those jobs can live in separate conversations while reusing the same Agent's long-term setup and memory.
 
-**Community isolation** (repeated on overview, build, and Agent node): Community Edition uses **file-access controls** to limit cross-conversation filesystem access when the same agent is exposed to multiple end users. Those controls reduce risk; the Agent runtime is **not intended** to provide a hardened security boundary between mutually untrusted users or workloads. For strong isolation, docs point to separately hardened infrastructure or Cloud / Enterprise.
+## Scenario Apps and long-lived Agents serve different work
 
-**Enterprise** has a separate deployment path. Marketing copy says every session runs in a dedicated sandbox container with process, filesystem, and network isolation, non-root, and custom network policies ([why we redesigned](https://dify.ai/blog/why-we-redesigned-dify-agent)). Enterprise 3.12 docs describe the default as one dedicated Pod per Agent session (warm pool; reclaim on end or idle). With `sandboxGateway.enabled: false`, sessions fall back to a shared long-running runtime; docs state isolation is weaker and treat that mode as fallback only ([Agent Sandbox Deployment](https://enterprise-docs.dify.ai/en/3.12.x/deploy/advanced-configuration/agent-sandbox)). Whether Community `local_sandbox` is “one shared container for all sessions” is not stated in public docs; quantify only the service names and the file-access notice above.
+Dify fits methods that are ready to become applications. The App model is direct when a process needs visual orchestration, stable inputs and outputs, a publish step before broad use, or delivery through web, API, embed, and MCP surfaces. Knowledge, Workflow, version publishing, and run logs are organized around that goal.
 
-**CubePlex Workspace sandbox** belongs to the Workspace, not to a Studio publish version. Files, packages, and worktree persist across restarts for the team to keep editing; the control plane holds the agent loop. The question it answers is whether the team worktree is still there — not whether this App run’s temporary FS survived. Isolation and multi-tenant threat models depend on how the deployer places nodes and network; the product emphasizes org / Workspace roles and approvals rather than importing Community’s file-access notice wholesale.
+CubePlex fits work whose content keeps changing while its participants, tools, and organizational rules remain relatively stable. Engineering, operations, research, and content teams do not need to package every category of work as an App in advance. They need an Agent that stays available, operates a computer, understands team rules, and accumulates working context over time.
 
-## Studio’s four roles vs org / Workspace roles
+The two designs can also work together inside one organization. A team can use a CubePlex Workspace Agent for research, development, and daily collaboration, then turn a stable method into a Dify App for a broader audience. One organizes ongoing work; the other delivers a defined scenario.
 
-Community ships four built-in roles ([Team members](https://docs.dify.ai/en/self-host/use-dify/workspace/team-members-management)):
+For teams evaluating a Dify alternative, the useful question is not whether both products have the same nodes and tools. It is whether they need to deliver scenario-specific applications or establish a long-lived Agent environment.
 
-| Role | Access |
-| --- | --- |
-| Owner | Full control; one per workspace |
-| Admin | Members and model providers, plus everything Editor can do |
-| Editor | Create / edit / delete apps and knowledge bases; **required to manage Agents** |
-| Normal | **Use published apps only** |
+## Revision
 
-Custom roles and fine-grained app / knowledge access are documented under Enterprise. Community collaboration is workspace-scoped “Editors build and publish, Normals consume” — there is no separate Community “publisher” role. Pricing marks Community freemium as Single Workspace; Multiple Workspaces, SSO, fine-grained RBAC, and unlimited App logs sit in Enterprise packaging ([pricing](https://dify.ai/pricing/dify-enterprise), [dify-enterprise](https://dify.ai/dify-enterprise)). Community App Logs History is 30 days; the official New Agent blog states log archives are not available in Community Edition.
-
-CubePlex’s open-source package ships organization and Workspace roles, model policy, approvals, and usage. Default collaboration is multiple people on one Workspace Agent; permission sits on org / Workspace, not on “who published which App.” Web and IM bridges (Slack and others) enter the same Workspace identity: a channel change only scopes the session; it does not change Persona / Skills / MCP bindings.
-
-## Where Dify Community fails as a team daily Workspace
-
-These conditions come from docs and packaging, not invented product bugs:
-
-1. **Untrusted multi-user isolation.** Community Agent runtime is explicitly not a hardened boundary. Using one New Agent as a shared “daily desktop” for hostile or strongly isolated tenants contradicts the stated threat model.
-2. **Published runs cannot accumulate environment.** CLI installs and work files in live sessions are temporary by default. “Leave the environment better than you found it” requires someone to return to Build, Apply, and Publish again.
-3. **Shared-agent blast radius.** When one published Agent is invited into many Workflow nodes, capability updates hit every consumer. Access Points help surface impact; Community has no resource-scoped RBAC for “use Agent X but not Y.”
-4. **Coarse roles.** Only Editor+ can manage Agents; Normal cannot co-edit. Per-resource grants need Enterprise.
-5. **No New Agent node in Chatflow.** Conversational daily entry is a standalone Agent app, or a Chatflow without a New Agent node.
-6. **Hard caps.** 1-hour kill, 500 model calls, 50 MB reply files, 2k-character task text. Long collaboration needs env retune or task splitting.
-7. **Network posture.** Agent sandbox cannot fetch intranet by default; Code node forbids shell / FS by design. Needing both “safe code transforms” and “full CLI + private nets” fights the product split.
-8. **Observability ceiling.** 30-day App logs; no log archives; audit / SIEM live in the Enterprise story.
-9. **Single Workspace packaging.** Multi-BU isolation and tenant quotas are the Enterprise multi-Workspace story.
-10. **Beta and DSL gaps.** New Agent is labeled beta; embedded skills/files stay out of DSL — team handoff needs a side channel.
-
-## Where Dify wins as an App Studio
-
-The same docs show where Dify is strong:
-
-- **Visual agentic workflows.** Models, tools, logic, checkpoints, and fallbacks on one canvas; Workflow vs Chatflow roles are clear.
-- **Publish once, many surfaces.** The same published config feeds web app, API, embed, and MCP.
-- **First-class Knowledge / RAG.** Retrieval node, vector / full-text / hybrid, rerank, metadata filters.
-- **Code node for controlled transforms.** Sandboxed Python/JS with retries and error handling — good pipeline hygiene, not a daily CLI Workspace.
-- **New Agent as reusable capability + Workflow step.** Single source of truth for Capability; per-node Agent Task; declarative outputs; Logs with access-point attribution.
-- **Build mode.** Non-prompt engineers can shape agents by chatting; skills package methods; tools are governed workspace integrations.
-- **Upgrade ladder when isolation matters.** Dedicated sandbox Pods, SSO, fine-grained RBAC, audit — paid / Enterprise path, not Community defaults.
-
-When those conditions hold, pick Dify (Community or cloud) instead of forcing CubePlex. You need a publishable App, versionable Workflows, and Agent capability hung on Studio objects.
-
-CubePlex fits a narrower, harder set: platform or engineering teams that must self-host; multiple people sharing one Workspace Agent over time; files and packages that must survive restarts in a worktree; IM and web under one identity and approval model, where a channel switch must not switch Persona. Studio draft/publish and “published runs are always temporary” block that path directly.
-
-One organization can split traffic: callable apps on Dify; the daily team workbench on CubePlex. The persistent objects differ — even when both are in use, cut on object boundaries and do not treat a New Agent sandbox as a Workspace worktree.
-
-## Sources and revision
-
-- Dify source pinned to `main` commit [`07dc8ebdbb4f44404266013496e69a67727c26c0`](https://github.com/langgenius/dify/commit/07dc8ebdbb4f44404266013496e69a67727c26c0) (checked evening 2026-09-14 PT; message: `feat(trace-aliyun): capture HTTP request snapshots and task node types`). GitHub’s `license` API field is `NOASSERTION`; the repo root [LICENSE](https://raw.githubusercontent.com/langgenius/dify/main/LICENSE) is **Modified Apache License 2.0**: commercial use largely follows Apache-2.0, plus (a) no operating a multi-tenant service from the source without written authorization (tenant = one workspace), and (b) no removing or modifying LOGO / copyright in frontend `web/` (or the Docker `web` image). © 2025 LangGenius, Inc.
-- Docs and product pages: [New Agent overview](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/overview), [Build](https://docs.dify.ai/en/self-host/use-dify/build/new-agent/build), [Agent node](https://docs.dify.ai/en/self-host/use-dify/nodes/agent), [Code](https://docs.dify.ai/en/self-host/use-dify/nodes/code), [Version control](https://docs.dify.ai/en/self-host/use-dify/build/version-control), [Team members](https://docs.dify.ai/en/self-host/use-dify/workspace/team-members-management), [Docker Compose](https://docs.dify.ai/en/self-host/deploy/quick-start/docker-compose), [Enterprise Agent Sandbox](https://enterprise-docs.dify.ai/en/3.12.x/deploy/advanced-configuration/agent-sandbox), [Introducing New Agent](https://dify.ai/blog/introducing-new-dify-agent), [why we redesigned](https://dify.ai/blog/why-we-redesigned-dify-agent), [pricing](https://dify.ai/pricing/dify-enterprise).
-- No local `langgenius/dify` clone was used, so `local_sandbox` image internals and FS ACL detail were not verified; Community New Agent isolation beyond “file-access controls” (seccomp / uid / path ACL, etc.) is unspecified in public docs; the pricing-table “App Version Control / Coming Soon” row coexists with live draft/publish docs and is treated as marketing-table ambiguity. Classic Agent Strategies and Skill Management maturity were not expanded.
-- CubePlex: [cubeplex.ai](https://cubeplex.ai/), [github.com/cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex). Workspace, roles, Persona/Skills/MCP, layered memory, durable sandbox, control-plane loop, and IM session boundaries above follow public product description; no CubePlex commit SHA was pinned separately.
+- Dify behavior was checked against `main` commit [`07dc8ebdbb4f44404266013496e69a67727c26c0`](https://github.com/langgenius/dify/commit/07dc8ebdbb4f44404266013496e69a67727c26c0) and official documentation available on September 14, 2026. New Agent was still labeled beta at that time.
+- CubePlex behavior was checked against `main` commit [`7813a0da15f0e17522a4cb8eb30df16609c889c5`](https://github.com/cubeplexai/cubeplex/commit/7813a0da15f0e17522a4cb8eb30df16609c889c5).

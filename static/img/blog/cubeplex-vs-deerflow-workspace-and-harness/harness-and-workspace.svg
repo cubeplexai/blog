@@ -1,100 +1,186 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 920" role="img" aria-labelledby="title desc">
-  <title id="title">Harness 线程 vs Workspace 边界</title>
-  <desc id="desc">要一条可编排的长程 harness 线程，看 DeerFlow 2.0。要团队共用、可治理的长期工作现场，看 CubePlex Workspace。</desc>
+  <title id="title">Agent 和工作状态归谁所有？</title>
+  <desc id="desc">DeerFlow 把 Agent 状态留给个人账号；CubePlex 把 Agent 状态留在 Workspace，成员更替后团队仍可继续。</desc>
   <defs>
-    <pattern id="grid" width="38" height="38" patternUnits="userSpaceOnUse"><path d="M38 0H0V38" fill="none" stroke="#E6EBF2" stroke-width="1"/></pattern>
-    <marker id="arrow-blue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4 0 8Z" fill="#1463E9"/></marker>
-    <marker id="arrow-ink" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4 0 8Z" fill="#17191C"/></marker>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M36 0H0V36" fill="none" stroke="#E6EBF2" stroke-width="1"/></pattern>
+    <marker id="arrow-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5 0 7Z" fill="#1463E9"/></marker>
+    <marker id="arrow-ink" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5 0 7Z" fill="#17191C"/></marker>
     <style>
       text { font-family: Inter, 'PingFang SC', 'Noto Sans SC', sans-serif; }
-      .title { fill:#17191C; font-size:30px; font-weight:750; letter-spacing:-.6px; }
+      .title { fill:#17191C; font-size:31px; font-weight:760; letter-spacing:-.7px; }
       .subtitle { fill:#536171; font-size:15px; }
       .panel { fill:#FFFFFF; stroke:#17191C; stroke-width:2; }
-      .panel-title { fill:#17191C; font-size:17px; font-weight:700; }
-      .panel-copy { fill:#536171; font-size:12.5px; }
-      .entry { fill:#FFFFFF; stroke:#17191C; stroke-width:1.7; }
-      .key { fill:#EAF2FE; stroke:#1463E9; stroke-width:2.2; }
-      .agent { fill:#1463E9; stroke:#17191C; stroke-width:2; }
-      .sandbox { fill:#EAF2FE; stroke:#17191C; stroke-width:1.7; }
-      .workspace { fill:#EAF2FE; stroke:#1463E9; stroke-width:2.5; }
-      .box-title { fill:#17191C; font-weight:700; }
-      .agent-title { fill:#FFFFFF; }
-      .box-sub { fill:#536171; font-size:12px; }
-      .agent-copy { fill:#FFFFFF; font-size:13px; }
+      .panel-title { fill:#17191C; font-size:21px; font-weight:750; }
+      .panel-sub { fill:#536171; font-size:14px; }
+      .scope { fill:#F8FBFF; stroke:#9CBDEA; stroke-width:1.8; stroke-dasharray:7 6; }
+      .scope-blue { fill:#F5F9FF; stroke:#1463E9; stroke-width:2.4; }
+      .scope-label { fill:#394554; font-size:13px; font-weight:700; letter-spacing:.2px; }
+      .personal-card { fill:#FFFFFF; stroke:#B6C7DC; stroke-width:1.6; }
+      .workspace { fill:#EAF2FE; stroke:#1463E9; stroke-width:2.6; }
+      .workspace-label { fill:#1463E9; font-size:16px; font-weight:760; }
+      .workspace-tab { fill:#FFFFFF; stroke:#9CBDEA; stroke-width:1.4; }
+      .workspace-tab-active { fill:#1463E9; stroke:#17191C; stroke-width:1.7; }
+      .workspace-dot { fill:#9CBDEA; }
+      .workspace-dot-active { fill:#FFE24A; }
+      .workspace-tab-text { fill:#536171; font-size:10.5px; font-weight:650; }
+      .workspace-tab-text-active { fill:#FFFFFF; }
+      .person-label { fill:#394554; font-size:12.5px; font-weight:650; }
+      .bot-label { fill:#17191C; font-size:13px; font-weight:720; }
+      .chip { fill:#F6F8FB; stroke:#CDD7E3; stroke-width:1.2; }
+      .chip-blue { fill:#FFFFFF; stroke:#1463E9; stroke-width:1.5; }
+      .chip-text { fill:#536171; font-size:11.5px; font-weight:620; }
+      .chip-text-blue { fill:#1D4F9C; }
       .line-blue { fill:none; stroke:#1463E9; stroke-width:2.2; marker-end:url(#arrow-blue); stroke-linecap:round; stroke-linejoin:round; }
-      .line-ink { fill:none; stroke:#17191C; stroke-width:1.6; marker-end:url(#arrow-ink); stroke-linecap:round; stroke-linejoin:round; }
-      .chip { fill:#FFE24A; opacity:.78; }
-      .foot { fill:#FFFFFF; stroke:#17191C; stroke-width:1.5; }
-      .foot-title { fill:#17191C; font-size:14px; font-weight:750; }
-      .foot-copy { fill:#394554; font-size:13.5px; }
+      .line-ink { fill:none; stroke:#17191C; stroke-width:1.5; marker-end:url(#arrow-ink); stroke-linecap:round; }
+      .claim { fill:#17191C; font-size:14px; font-weight:730; }
+      .governance { fill:#FFFFFF; stroke:#17191C; stroke-width:1.4; }
+      .governance-text { fill:#394554; font-size:12px; font-weight:650; }
+      .footer { fill:#FFFFFF; stroke:#17191C; stroke-width:1.5; }
+      .footer-copy { fill:#394554; font-size:13.5px; }
     </style>
   </defs>
   <rect width="1600" height="920" fill="#FCFCFA"/><rect width="1600" height="920" fill="url(#grid)"/>
-  <path d="M48 88C210 28 380 36 470 96" fill="none" stroke="#EAF2FE" stroke-width="28" stroke-linecap="round"/>
-  <text x="48" y="52" class="title">Harness 线程 vs Workspace 边界</text>
-  <text x="48" y="78" class="subtitle">DeerFlow 2.0 以 Gateway + Thread/Run 跑长程任务；CubePlex 以 Workspace 固定团队 Agent 与治理入口。</text>
+  <path d="M52 92C230 28 400 34 500 96" fill="none" stroke="#EAF2FE" stroke-width="30" stroke-linecap="round"/>
+  <path d="M1360 55q95 25 170 105" fill="none" stroke="#EAF2FE" stroke-width="18" stroke-linecap="round"/>
+  <text x="48" y="52" class="title">Agent 和工作状态归谁所有？</text>
+  <text x="48" y="79" class="subtitle">两者都支持多用户，区别在于每位用户拥有自己的 Agent，还是团队共同拥有一个 Workspace Agent。</text>
 
-  <rect x="40" y="110" width="740" height="680" rx="22" class="panel"/>
-  <text x="68" y="148" class="panel-title">DeerFlow 2.0：Super Agent Harness</text>
-  <text x="68" y="172" class="panel-copy">Lead Agent 编排 skills、工具、sub-agent；sandbox 服务本次 run</text>
-  <rect x="250" y="198" width="320" height="52" rx="12" class="entry"/>
-    <text x="410" y="229" text-anchor="middle" class="box-title" style="font-size:16px">Gateway</text>
-    
-  <path d="M410 250V284" class="line-blue"/>
-  <rect x="160" y="284" width="220" height="56" rx="12" class="entry"/>
-    <text x="270" y="317" text-anchor="middle" class="box-title" style="font-size:15px">Thread</text>
-    
-  <rect x="440" y="284" width="220" height="56" rx="12" class="key"/>
-    <text x="550" y="317" text-anchor="middle" class="box-title" style="font-size:15px">Run</text>
-    
-  <path d="M550 340V372" class="line-blue"/>
-  <rect x="200" y="372" width="420" height="78" rx="12" class="agent"/>
-  <text x="410" y="404" text-anchor="middle" class="agent-title" style="font-size:17px;font-weight:700">Lead Agent</text>
-  <text x="410" y="428" text-anchor="middle" class="agent-copy">LangGraph / LangChain</text>
-  <path d="M300 450V480" class="line-ink"/><path d="M520 450V480" class="line-ink"/>
-  <rect x="120" y="480" width="260" height="56" rx="12" class="entry"/>
-    <text x="250" y="513" text-anchor="middle" class="box-title" style="font-size:14px">Skills · Tools</text>
-    
-  <rect x="440" y="480" width="260" height="56" rx="12" class="entry"/>
-    <text x="570" y="513" text-anchor="middle" class="box-title" style="font-size:14px">Sub-agents</text>
-    
-  <path d="M410 536V566" class="line-blue"/>
-  <rect x="200" y="566" width="420" height="88" rx="12" class="sandbox"/>
-    <text x="410" y="604" text-anchor="middle" class="box-title" style="font-size:16px">Sandbox</text>
-    <text x="410" y="626" text-anchor="middle" class="box-sub">Local / Docker / K8s</text>
-  <path d="M410 654V682" class="line-ink"/>
-  <rect x="200" y="682" width="420" height="52" rx="12" class="entry"/>
-    <text x="410" y="713" text-anchor="middle" class="box-title" style="font-size:14px">IM 通道（可选）</text>
-    
+  <rect x="40" y="112" width="730" height="664" rx="24" class="panel"/>
+  <text x="68" y="151" class="panel-title">DeerFlow 2.0</text>
+  <text x="68" y="177" class="panel-sub">每位用户拥有一套个人 Agent 环境</text>
+  <rect x="66" y="204" width="678" height="448" rx="20" class="scope"/>
+  <text x="88" y="235" class="scope-label">同一套 DeerFlow 部署</text>
 
-  <rect x="820" y="110" width="740" height="680" rx="22" class="panel"/>
-  <rect x="846" y="128" width="90" height="22" rx="4" class="chip"/>
-  <text x="848" y="148" class="panel-title">CubePlex：团队 Agent Workspace</text>
-  <text x="848" y="172" class="panel-copy">先定 Workspace Agent，再由入口切会话、身份与执行</text>
-  <rect x="1040" y="198" width="300" height="52" rx="12" class="entry"/>
-    <text x="1190" y="229" text-anchor="middle" class="box-title" style="font-size:16px">Org</text>
-    
-  <path d="M1190 250V280" class="line-blue"/>
-  <rect x="900" y="280" width="580" height="430" rx="18" class="workspace"/>
-  <text x="930" y="314" class="box-title" style="font-size:15px">Workspace</text>
-  <rect x="940" y="336" width="500" height="78" rx="12" class="agent"/>
-  <text x="1190" y="368" text-anchor="middle" class="agent-title" style="font-size:16px;font-weight:700">Team Agent</text>
-  <text x="1190" y="392" text-anchor="middle" class="agent-copy">Persona · Skills · MCP · memory</text>
-  <path d="M1190 414V444" class="line-blue"/>
-  <rect x="940" y="444" width="500" height="88" rx="12" class="sandbox"/>
-    <text x="1190" y="482" text-anchor="middle" class="box-title" style="font-size:16px">Durable Sandbox</text>
-    <text x="1190" y="504" text-anchor="middle" class="box-sub">跨重启保留工作现场</text>
-  <path d="M1190 532V560" class="line-ink"/>
-  <rect x="940" y="560" width="500" height="56" rx="12" class="entry"/>
-    <text x="1190" y="593" text-anchor="middle" class="box-title" style="font-size:13px">Web · Slack · Discord · Teams · 飞书 · 钉钉 · 企微</text>
-    
-  <path d="M1190 616V640" class="line-ink"/>
-  <rect x="940" y="640" width="500" height="40" rx="12" class="entry"/>
-    <text x="1190" y="665" text-anchor="middle" class="box-title" style="font-size:13px">角色 · 审批 · 共享策略</text>
-    
+    <rect x="78" y="274" width="198" height="354" rx="18" class="personal-card"/>
+    <g>
+    <circle cx="177" cy="318" r="20" fill="#EAF2FE" stroke="#17191C" stroke-width="2"/>
+    <path d="M147 366C149 338 205 338 207 366" fill="#EAF2FE" stroke="#17191C" stroke-width="2" stroke-linecap="round"/>
+    <path d="M164 315q13 9 26 0" fill="none" stroke="#17191C" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="177" y="388" text-anchor="middle" class="person-label">用户 A</text>
+  </g>
+    <path d="M177 390V416" class="line-ink"/>
+    <g>
+    <path d="M177 413v14" stroke="#17191C" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="177" cy="409" r="5" fill="#FFE24A" stroke="#17191C" stroke-width="2"/>
+    <rect x="119" y="430" width="116" height="76" rx="18" fill="#1463E9" stroke="#17191C" stroke-width="2.4"/>
+    <rect x="143" y="446" width="68" height="30" rx="15" fill="#FFFFFF" stroke="#17191C" stroke-width="2"/>
+    <circle cx="160" cy="461" r="4" fill="#17191C"/>
+    <circle cx="194" cy="461" r="4" fill="#17191C"/>
+    <path d="M164 473q13 10 26 0" fill="none" stroke="#17191C" stroke-width="2" stroke-linecap="round"/>
+    <text x="177" y="529" text-anchor="middle" class="bot-label">个人 Agent</text>
+  </g>
+    <rect x="105" y="538" width="144" height="34" rx="9" class="chip"/>
+    <text x="177" y="560" text-anchor="middle" class="chip-text">Memory</text><rect x="105" y="568" width="144" height="34" rx="9" class="chip"/>
+    <text x="177" y="590" text-anchor="middle" class="chip-text">Skills</text><rect x="105" y="598" width="144" height="34" rx="9" class="chip"/>
+    <text x="177" y="620" text-anchor="middle" class="chip-text">Files</text>
 
-  <rect x="40" y="816" width="1520" height="70" rx="15" class="foot"/>
-  <rect x="64" y="836" width="70" height="20" rx="3" class="chip"/>
-  <text x="68" y="852" class="foot-title">怎么选</text>
-  <text x="150" y="853" class="foot-copy">要一条可编排的长程 harness 线程，看 DeerFlow 2.0。要团队共用、可治理的长期工作现场，看 CubePlex Workspace。</text>
+    <rect x="302" y="274" width="198" height="354" rx="18" class="personal-card"/>
+    <g>
+    <circle cx="401" cy="318" r="20" fill="#FFF4C8" stroke="#17191C" stroke-width="2"/>
+    <path d="M371 366C373 338 429 338 431 366" fill="#FFF4C8" stroke="#17191C" stroke-width="2" stroke-linecap="round"/>
+    <path d="M388 315q13 9 26 0" fill="none" stroke="#17191C" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="401" y="388" text-anchor="middle" class="person-label">用户 B</text>
+  </g>
+    <path d="M401 390V416" class="line-ink"/>
+    <g>
+    <path d="M401 413v14" stroke="#17191C" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="401" cy="409" r="5" fill="#FFE24A" stroke="#17191C" stroke-width="2"/>
+    <rect x="343" y="430" width="116" height="76" rx="18" fill="#1463E9" stroke="#17191C" stroke-width="2.4"/>
+    <rect x="367" y="446" width="68" height="30" rx="15" fill="#FFFFFF" stroke="#17191C" stroke-width="2"/>
+    <circle cx="384" cy="461" r="4" fill="#17191C"/>
+    <circle cx="418" cy="461" r="4" fill="#17191C"/>
+    <path d="M388 473q13 10 26 0" fill="none" stroke="#17191C" stroke-width="2" stroke-linecap="round"/>
+    <text x="401" y="529" text-anchor="middle" class="bot-label">个人 Agent</text>
+  </g>
+    <rect x="329" y="538" width="144" height="34" rx="9" class="chip"/>
+    <text x="401" y="560" text-anchor="middle" class="chip-text">Memory</text><rect x="329" y="568" width="144" height="34" rx="9" class="chip"/>
+    <text x="401" y="590" text-anchor="middle" class="chip-text">Skills</text><rect x="329" y="598" width="144" height="34" rx="9" class="chip"/>
+    <text x="401" y="620" text-anchor="middle" class="chip-text">Files</text>
+
+    <rect x="526" y="274" width="198" height="354" rx="18" class="personal-card"/>
+    <g>
+    <circle cx="625" cy="318" r="20" fill="#EAF2FE" stroke="#17191C" stroke-width="2"/>
+    <path d="M595 366C597 338 653 338 655 366" fill="#EAF2FE" stroke="#17191C" stroke-width="2" stroke-linecap="round"/>
+    <path d="M612 315q13 9 26 0" fill="none" stroke="#17191C" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="625" y="388" text-anchor="middle" class="person-label">用户 C</text>
+  </g>
+    <path d="M625 390V416" class="line-ink"/>
+    <g>
+    <path d="M625 413v14" stroke="#17191C" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="625" cy="409" r="5" fill="#FFE24A" stroke="#17191C" stroke-width="2"/>
+    <rect x="567" y="430" width="116" height="76" rx="18" fill="#1463E9" stroke="#17191C" stroke-width="2.4"/>
+    <rect x="591" y="446" width="68" height="30" rx="15" fill="#FFFFFF" stroke="#17191C" stroke-width="2"/>
+    <circle cx="608" cy="461" r="4" fill="#17191C"/>
+    <circle cx="642" cy="461" r="4" fill="#17191C"/>
+    <path d="M612 473q13 10 26 0" fill="none" stroke="#17191C" stroke-width="2" stroke-linecap="round"/>
+    <text x="625" y="529" text-anchor="middle" class="bot-label">个人 Agent</text>
+  </g>
+    <rect x="553" y="538" width="144" height="34" rx="9" class="chip"/>
+    <text x="625" y="560" text-anchor="middle" class="chip-text">Memory</text><rect x="553" y="568" width="144" height="34" rx="9" class="chip"/>
+    <text x="625" y="590" text-anchor="middle" class="chip-text">Skills</text><rect x="553" y="598" width="144" height="34" rx="9" class="chip"/>
+    <text x="625" y="620" text-anchor="middle" class="chip-text">Files</text>
+
+  <path d="M101 696H710" stroke="#FFE24A" stroke-width="24" stroke-linecap="round" opacity=".72"/>
+  <text x="405" y="702" text-anchor="middle" class="claim">多个用户 · 各自独立的 Agent 环境</text>
+
+  <rect x="830" y="112" width="730" height="664" rx="24" class="panel"/>
+  <text x="858" y="151" class="panel-title">CubePlex</text>
+  <text x="858" y="177" class="panel-sub">Workspace 成员共同使用和管理一个 Agent</text>
+  <rect x="856" y="204" width="678" height="448" rx="20" class="scope-blue"/>
+  <text x="878" y="235" class="scope-label">Organization（可包含多个 Workspace）</text>
+  <rect x="1050" y="247" width="126" height="34" rx="9" class="workspace-tab workspace-tab-active"/>
+      <circle cx="1066" cy="264" r="5" class="workspace-dot workspace-dot-active"/>
+      <text x="1121" y="269" text-anchor="middle" class="workspace-tab-text workspace-tab-text-active">Workspace A</text><rect x="1188" y="247" width="126" height="34" rx="9" class="workspace-tab"/>
+      <circle cx="1204" cy="264" r="5" class="workspace-dot"/>
+      <text x="1259" y="269" text-anchor="middle" class="workspace-tab-text">Workspace B</text><rect x="1326" y="247" width="126" height="34" rx="9" class="workspace-tab"/>
+      <circle cx="1342" cy="264" r="5" class="workspace-dot"/>
+      <text x="1397" y="269" text-anchor="middle" class="workspace-tab-text">Workspace C</text>
+  <g>
+    <circle cx="970" cy="315" r="20" fill="#EAF2FE" stroke="#17191C" stroke-width="2"/>
+    <path d="M940 363C942 335 998 335 1000 363" fill="#EAF2FE" stroke="#17191C" stroke-width="2" stroke-linecap="round"/>
+    <path d="M957 312q13 9 26 0" fill="none" stroke="#17191C" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="970" y="385" text-anchor="middle" class="person-label">成员 A</text>
+  </g>
+    <path d="M970 394C970 405 1137 404 1159 422" class="line-blue"/><g>
+    <circle cx="1195" cy="315" r="20" fill="#FFF4C8" stroke="#17191C" stroke-width="2"/>
+    <path d="M1165 363C1167 335 1223 335 1225 363" fill="#FFF4C8" stroke="#17191C" stroke-width="2" stroke-linecap="round"/>
+    <path d="M1182 312q13 9 26 0" fill="none" stroke="#17191C" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="1195" y="385" text-anchor="middle" class="person-label">成员 B</text>
+  </g>
+    <path d="M1195 394C1195 405 1195 404 1195 422" class="line-blue"/><g>
+    <circle cx="1420" cy="315" r="20" fill="#EAF2FE" stroke="#17191C" stroke-width="2"/>
+    <path d="M1390 363C1392 335 1448 335 1450 363" fill="#EAF2FE" stroke="#17191C" stroke-width="2" stroke-linecap="round"/>
+    <path d="M1407 312q13 9 26 0" fill="none" stroke="#17191C" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="1420" y="385" text-anchor="middle" class="person-label">成员 C</text>
+  </g>
+    <path d="M1420 394C1420 405 1253 404 1231 422" class="line-blue"/>
+  <rect x="894" y="418" width="602" height="202" rx="20" class="workspace"/>
+  <text x="918" y="447" class="workspace-label">Workspace A（当前）</text>
+  <g>
+    <path d="M1195 427v14" stroke="#17191C" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="1195" cy="423" r="5" fill="#FFE24A" stroke="#17191C" stroke-width="2"/>
+    <rect x="1121" y="444" width="148" height="92" rx="22" fill="#1463E9" stroke="#17191C" stroke-width="2.4"/>
+    <rect x="1151" y="464" width="88" height="38" rx="19" fill="#FFFFFF" stroke="#17191C" stroke-width="2"/>
+    <circle cx="1173" cy="483" r="4" fill="#17191C"/>
+    <circle cx="1217" cy="483" r="4" fill="#17191C"/>
+    <path d="M1182 495q13 10 26 0" fill="none" stroke="#17191C" stroke-width="2" stroke-linecap="round"/>
+    <text x="1195" y="559" text-anchor="middle" class="bot-label">Workspace Agent</text>
+  </g>
+  <rect x="918" y="458" width="142" height="34" rx="9" class="chip-blue"/>
+    <text x="989" y="480" text-anchor="middle" class="chip-text chip-text-blue">Persona</text>
+  <rect x="918" y="506" width="142" height="34" rx="9" class="chip-blue"/>
+    <text x="989" y="528" text-anchor="middle" class="chip-text chip-text-blue">团队 Memory</text>
+  <rect x="1330" y="458" width="142" height="34" rx="9" class="chip-blue"/>
+    <text x="1401" y="480" text-anchor="middle" class="chip-text chip-text-blue">Skills + MCP</text>
+  <rect x="1330" y="506" width="142" height="34" rx="9" class="chip-blue"/>
+    <text x="1401" y="528" text-anchor="middle" class="chip-text chip-text-blue">长期工作现场</text>
+  <rect x="1020" y="578" width="350" height="28" rx="8" class="governance"/>
+  <text x="1195" y="597" text-anchor="middle" class="governance-text">成员角色 · 凭据授权 · 审批策略</text>
+  <path d="M908 696H1482" stroke="#FFE24A" stroke-width="24" stroke-linecap="round" opacity=".72"/>
+  <text x="1195" y="702" text-anchor="middle" class="claim">一个 Workspace · 团队共享的 Agent 与工作状态</text>
+
+  <rect x="40" y="812" width="1520" height="70" rx="16" class="footer"/>
+  <circle cx="74" cy="847" r="10" fill="#1463E9"/>
+  <path d="M70 847l3 3 6-7" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="98" y="852" class="footer-copy">DeerFlow 把 Agent 状态留给个人账号；CubePlex 把 Agent 状态留在 Workspace，成员更替后团队仍可继续。</text>
 </svg>
