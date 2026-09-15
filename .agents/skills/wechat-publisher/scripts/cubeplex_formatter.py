@@ -35,6 +35,12 @@ LINK_STYLE = (
     "text-decoration: none !important;"
 )
 
+RECOMMENDED_READING = (
+    ("CubePlex -- 企业级 Agent 平台正式开源", "./cubeplex-open-source-release"),
+    ("从 Agent computer 到团队交付：QM 与 CubePlex 的两条路径", "./qm-cubeplex-team-agent-collaboration"),
+    ("Managed Agents Harness 架构与选择", "./managed-agents-cloud-harness-vs-sandbox-harness"),
+)
+
 
 def parse_front_matter(source: str) -> tuple[dict[str, str], str]:
     match = re.match(r"\A---\n(.*?)\n---\n(.*)\Z", source, re.S)
@@ -131,6 +137,25 @@ def split_blocks(body: str) -> list[str]:
     return [block.strip() for block in re.split(r"\n\s*\n", body) if block.strip()]
 
 
+def parse_markdown_table(block: str) -> tuple[list[str], list[list[str]]] | None:
+    lines = [line.strip() for line in block.splitlines() if line.strip()]
+    if len(lines) < 2 or not all(line.startswith("|") and line.endswith("|") for line in lines):
+        return None
+
+    def cells(line: str) -> list[str]:
+        return [cell.strip() for cell in line[1:-1].split("|")]
+
+    headers = cells(lines[0])
+    separator = cells(lines[1])
+    if len(headers) != len(separator) or not all(re.fullmatch(r":?-{3,}:?", cell) for cell in separator):
+        return None
+
+    rows = [cells(line) for line in lines[2:]]
+    if any(len(row) != len(headers) for row in rows):
+        return None
+    return headers, rows
+
+
 def render_post(
     source_path: Path,
     output_path: Path,
@@ -173,6 +198,16 @@ def render_post(
             )
             continue
 
+        if block.startswith("### "):
+            heading = render_inline(block[4:].strip(), public_url, link_map=link_map)
+            parts.append(
+                '<p style="margin: 30px 0 14px 0 !important; padding: 0 !important; '
+                f'color: {TOKENS["ink"]} !important; font-size: 19px !important; font-weight: 700 !important; '
+                'line-height: 1.5 !important; text-align: left !important; text-indent: 0 !important;">'
+                f'{heading}</p>'
+            )
+            continue
+
         if skip_references:
             continue
 
@@ -191,6 +226,37 @@ def render_post(
                 '<p style="margin: 0 0 28px 0 !important; padding: 0 !important; '
                 f'color: {TOKENS["quiet"]} !important; font-size: 13px !important; font-weight: 400 !important; '
                 f'line-height: 1.6 !important; text-align: center !important; text-indent: 0 !important;">{html.escape(alt)}</p>'
+            )
+            continue
+
+        table = parse_markdown_table(block)
+        if table:
+            headers, rows = table
+            header_cells = "".join(
+                '<td style="padding: 10px 8px !important; '
+                f'border: 1px solid {TOKENS["border"]} !important; background-color: {TOKENS["soft"]} !important; '
+                f'color: {TOKENS["ink"]} !important; font-size: 13px !important; font-weight: 700 !important; '
+                'line-height: 1.55 !important; vertical-align: top !important; word-break: break-word !important; '
+                f'text-align: left !important; text-indent: 0 !important;">{render_inline(cell, public_url, link_map=link_map)}</td>'
+                for cell in headers
+            )
+            row_markup = []
+            for row in rows:
+                row_markup.append(
+                    "<tr>" + "".join(
+                        '<td style="padding: 10px 8px !important; '
+                        f'border: 1px solid {TOKENS["border"]} !important; color: {TOKENS["body"]} !important; '
+                        'font-size: 13px !important; font-weight: 400 !important; line-height: 1.6 !important; '
+                        'vertical-align: top !important; word-break: break-word !important; text-align: left !important; '
+                        f'text-indent: 0 !important;">{render_inline(cell, public_url, link_map=link_map)}</td>'
+                        for cell in row
+                    ) + "</tr>"
+                )
+            parts.append(
+                '<table style="margin: 24px 0 28px 0 !important; padding: 0 !important; width: 100% !important; '
+                f'border: 1px solid {TOKENS["border"]} !important; border-collapse: collapse !important; '
+                'border-spacing: 0 !important; table-layout: auto !important; text-indent: 0 !important;">'
+                f'<tr>{header_cells}</tr>{"".join(row_markup)}</table>'
             )
             continue
 
@@ -219,6 +285,25 @@ def render_post(
         "font-weight: 400 !important; line-height: 1.75 !important; text-align: left !important; "
         "text-indent: 0 !important;"
     )
+    parts.append(
+        f'<p style="margin: 42px 0 18px 0 !important; padding: 18px 0 0 0 !important; {about_border} '
+        f'color: {TOKENS["quiet"]} !important; font-size: 13px !important; font-weight: 600 !important; '
+        'line-height: 1.5 !important; letter-spacing: 1px !important; text-align: left !important; '
+        'text-indent: 0 !important;">推荐阅读</p>'
+    )
+    for recommended_title, recommended_path in RECOMMENDED_READING:
+        recommended_url = (link_map or {}).get(recommended_path)
+        if recommended_url and recommended_url.startswith("https://mp.weixin.qq.com/"):
+            recommended_content = (
+                f'<a href="{html.escape(recommended_url, quote=True)}" target="_blank" '
+                f'style="{LINK_STYLE}">{html.escape(recommended_title)}</a>'
+            )
+        else:
+            recommended_content = html.escape(recommended_title)
+        parts.append(
+            '<p style="margin: 0 0 12px 0 !important; padding: 0 !important; '
+            f'{about_body}">{recommended_content}</p>'
+        )
     parts.extend([
         f'<p style="margin: 42px 0 18px 0 !important; padding: 18px 0 0 0 !important; {about_border} '
         f'color: {TOKENS["quiet"]} !important; font-size: 13px !important; font-weight: 600 !important; '

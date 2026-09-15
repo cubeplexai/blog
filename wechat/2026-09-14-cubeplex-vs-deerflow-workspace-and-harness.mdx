@@ -1,0 +1,172 @@
+---
+slug: cubeplex-vs-deerflow-workspace-and-harness
+title: CubePlex 与 DeerFlow：个人 Agent 环境与团队 Agent Workspace
+description: DeerFlow 让每位用户建立自己的长期 Agent 环境；CubePlex 让团队通过 Workspace 共同拥有和管理一个 Agent 的身份、记忆、工具、凭据与工作现场。
+authors: [xfgong]
+tags: [CubePlex, DeerFlow, DeerFlow Alternative, Agent Workspace, 自托管, 团队 Agent]
+image: /img/blog/cubeplex-vs-deerflow-workspace-and-harness-cover.webp
+---
+
+[DeerFlow 2.0](https://deerflow.tech/) 和 [CubePlex](https://cubeplex.ai/) 都是通用 Agent 环境。它们都支持长期记忆、Skills、MCP、Sandbox、Sub-agent 和即时通讯入口，也都允许用户在一个对话窗口里完成研究、写作、编程和文件处理，而不是先为每个场景制作一款独立 App。两者的开源代码分别位于 [bytedance/deer-flow](https://github.com/bytedance/deer-flow) 和 [cubeplexai/cubeplex](https://github.com/cubeplexai/cubeplex)，使用与部署说明可查看 [DeerFlow Documentation](https://deerflow.tech/en/docs) 和 [CubePlex Documentation](https://cubeplex.ai/docs)。
+
+两者的区别从 Agent 的归属开始。DeerFlow 为每个用户提供一套个人 Agent 环境：登录自己的账号后，用户看到自己的 Agents、Projects、对话、记忆、Skills 和文件。CubePlex 把 Agent 放在 Workspace 中：组织创建 Workspace、添加成员、配置 Agent，并决定团队可以使用哪些 Skills、MCP 和凭据。
+
+如果把国内用户熟悉的桌面 Agent 产品 WorkBuddy 看作一个人长期使用的 Agent，CubePlex Workspace 可以理解成它的团队版。这个 Agent 有固定的名字和工作方式，知道团队已经确认的项目背景，配有团队批准的 Skills 和 MCP，也能使用组织账号、项目账号或成员自己的账号。成员可以从网页、Slack 或飞书找它工作；每段私聊、群聊或 Topic 可以有各自的对话和执行现场，但 Agent 的身份、团队知识和工具配置仍属于 Workspace。成员离开后，Agent 和它积累的团队工作状态会继续留在团队里。
+
+![个人 Agent 环境与团队 Agent Workspace](/img/blog/cubeplex-vs-deerflow-workspace-and-harness/harness-and-workspace.svg)
+
+<!-- truncate -->
+
+## DeerFlow 的多用户仍以个人所有权为中心
+
+DeerFlow 不是只能单人运行的本地工具。它有管理员和普通用户，支持登录、用户隔离以及可选的 RBAC；生产部署可以使用 PostgreSQL、Redis、容器或 Kubernetes Sandbox。多个用户可以登录同一个 DeerFlow 服务，但每个账号打开后看到的是自己的 Agent 工作区。
+
+用户创建的 Agent、Project、对话、长期记忆、Custom Skill 和文件都归这个账号所有。另一位用户登录后，会看到另一套内容，不能直接接手前一个用户的 Agent、记忆和工作文件。连接 Slack、飞书等即时通讯账号后，消息也会回到绑定者自己的 Agent 环境。
+
+DeerFlow 现在也有 Projects。用户可以把相关对话放进一个 Project，并为它设置说明，但当前 Project 仍属于创建它的用户，没有成员列表和共享角色。它更像个人工作台里的项目文件夹，不等同于 CubePlex 的团队 Workspace。
+
+所以，DeerFlow 可以服务多个用户，但这些用户是在同一套系统里分别使用自己的 Agent，并不是共同进入一个 Agent Workspace。
+
+## CubePlex 的 Agent 属于 Workspace
+
+CubePlex 先建立 Organization 和 Workspace，再把用户作为成员加入 Workspace。Workspace 是 Agent 的长期工作环境：Persona 决定它以什么身份和方式工作，团队记忆保存共同确认的背景，Skills 和 MCP 决定它会做什么、能连接哪些系统，成员角色决定谁可以修改这些配置。
+
+对团队而言，这种差别很具体：一位成员离开后，Agent 的 Persona、团队记忆、Skills 和 MCP 不需要从他的个人账号迁移；新成员加入 Workspace，也不必重新搭建一套 Agent。成员可以有不同角色，但他们面对的是同一个长期工作的团队 Agent。
+
+成员从 Web、Slack、飞书或其他入口进入时，使用的仍是同一个 Workspace Agent。私聊可以有个人对话和执行现场，群聊可以共享一段 Conversation，Topic 也可以拥有独立现场。Workspace 保存 Agent 的团队身份和能力；Conversation 或 Topic 保存这件具体工作的消息、文件和执行状态。因此，一个 Workspace 并不等于所有人共用一段聊天，也不等于所有任务挤在同一台 Sandbox 里。
+
+## 资源归属与治理边界
+
+| 对象 | DeerFlow 2.0 | CubePlex | 对使用方式的影响 |
+| --- | --- | --- | --- |
+| Agent | Custom Agent 归用户所有 | Agent Persona 属于 Workspace | 个人维护自己的 Agent，或团队共同维护一个 Agent |
+| Project / Workspace | Project 归用户所有，用来整理个人 Threads | Workspace 有成员和角色 | 分类个人工作，或建立可持续的团队协作空间 |
+| Conversation | Thread 由单个用户拥有 | Conversation 位于 Workspace，可按私聊、群聊或 Topic 划分 | 默认个人会话，或在成员权限下共享工作上下文 |
+| Memory | 主要按用户及 Agent 保存 | personal / workspace / org 三种范围 | 个人 Agent 学到的内容，或明确区分个人、团队和组织知识 |
+| Skills | 公共与集成 Skills 全局提供，Custom Skills 按用户存储 | 全局目录、组织安装、Workspace 启用 | 用户自行扩展，或由组织统一选择版本并分配给 Workspace |
+| MCP | 部署级配置，由管理员管理；可以按用户或请求注入凭据 | 组织安装、Workspace 启用、凭据分级授权 | 管理一套实例级工具目录，或按不同团队控制工具和账号 |
+| Sandbox | 通常按用户与 Thread 复用；计算环境可回收，Thread 文件可单独持久化 | 位于 Organization / Workspace 边界内，再按用户、Conversation 或 Topic 分配 | 个人对话的工作电脑，或与团队协作范围对应的执行现场 |
+| 高风险操作 | 用户隔离、可选授权和 Sandbox 共同限制影响范围 | 成员角色、Workspace 策略和人工确认共同生效 | 控制谁可以运行工具，以及哪些命令必须停下来等待批准 |
+
+这张表反映的不是功能数量，而是同一个管理动作落在哪一级。例如“添加 GitHub MCP”，可以是管理员给整套 DeerFlow 实例增加一个 Server，也可以是 CubePlex 组织安装 Connector 后，只允许指定 Workspace 使用，并要求每位成员连接自己的 GitHub 账号。
+
+## MCP：Server 配置与凭据授权
+
+DeerFlow 的 MCP Server 列表保存在部署级 `extensions_config.json` 中。Gateway 提供运行时配置接口，但增删和修改 MCP Server 需要管理员权限。一个共享的远程 MCP Server 可以通过 `user_auth` 为不同 DeerFlow 用户注入不同凭据，也可以从每次请求的 Secret Context 读取凭据。缺少对应凭据时，默认行为是拒绝请求。
+
+这套设计解决了“一套 DeerFlow 部署如何让不同用户登录同一个 MCP 服务”的问题，但 Server 本身仍属于部署配置。它没有继续区分哪个组织安装了 Connector、哪些 Workspace 启用它，以及一个 Workspace 应该使用组织共享账号还是成员个人账号。
+
+CubePlex 把这几个动作拆开：
+
+- MCP Template 是可安装的连接器目录，不保存运行凭据；
+- Organization 安装 Connector，形成组织拥有的连接器；
+- 每个 Workspace 单独启用或禁用 Connector，并选择凭据策略；
+- Credential Grant 可以是组织共享、Workspace 共享，也可以绑定到 Workspace 中的具体用户。
+
+这种分层适合同时运行多个团队的环境。财务 Workspace 可以使用组织统一管理的财务系统账号；研发 Workspace 可以启用 GitHub MCP，并让每位工程师授权自己的身份；不需要某项工具的 Workspace 看不到它，也拿不到它的凭据。
+
+## Skills：个人扩展与团队分发
+
+DeerFlow 同时支持公共 Skills、集成提供的 Skills 和用户上传的 Custom Skills。Custom Skills 位于 `{base_dir}/users/{user_id}/skills/custom/`，不同用户可以拥有同名但内容不同的 Skill。运行时会把当前用户和当前 Agent 启用的 Skills 投影到 Sandbox。Custom Agent 还可以限制自己使用的 Skills 和 Tool Groups。
+
+对用户来说，这意味着每个人可以给自己的 Agent 安装和修改工作方法，不会影响同一实例上的其他用户。它适合个人逐步打造自己的 Agent。
+
+CubePlex 的 Skill 生命周期更接近内部软件分发：Skill 进入全局目录并产生不可变版本，组织选择要安装的版本，Workspace 再决定是否启用。组织可以把一套经过检查的 Skills 分配给多个 Workspace，也可以只为某个 Workspace 安装私有 Skill。
+
+这里不宜笼统地写成“CubePlex 的 Skills 有 user / workspace / org 三层”。当前持久化管理是全局目录、组织安装和 Workspace 绑定；用户层主要体现在谁上传、安装或执行操作。CubePlex 的 user / workspace / org 三种授权范围明确存在于 MCP 凭据和 Memory，而不是每一种资源都机械地复制三层。
+
+## Memory 决定 Agent 为谁积累经验
+
+DeerFlow 的 Memory 服务于个人 Agent。用户在不同对话中工作，Agent 可以继续记住这个人的偏好和事实；用户创建的不同 Agent 也可以形成自己的记忆。其他账号不会自动继承这些内容。
+
+CubePlex 保存 Memory 时需要选择范围：
+
+- personal 只属于当前用户在当前 Workspace 中的个人偏好和修正；
+- workspace 对成员共享，适合项目事实、团队约定和工作进度；
+- org 面向整个组织，只在用户明确要求时保存。
+
+这决定了 Agent 换一个使用者之后是否仍然“知道团队在做什么”。个人助理应当避免把一个人的偏好泄露给别人；团队 Agent 则需要把经过确认的项目知识留给后续成员。两种需求不能只靠一份没有范围的长期记忆同时满足。
+
+## 文件留在一条对话，还是留在工作空间
+
+用户判断 Sandbox 是否“长期可用”，通常不关心后台的容器 ID。他们关心的是：关闭聊天后文件是否还在，第二天新开一个对话能否继续使用，换一位成员能否接手，以及重启执行环境会不会丢掉已经完成的工作。
+
+DeerFlow 和 CubePlex 都可以让文件在容器或 Pod 回收后继续保留。两者的主要区别是文件跟随的对象不同：DeerFlow 的文件跟随 Thread，CubePlex 的文件跟随 Workspace 中的个人或共享工作现场。
+
+![DeerFlow 与 CubePlex 的 Sandbox 文件持久化范围](/img/blog/cubeplex-vs-deerflow-workspace-and-harness/sandbox-persistence.svg)
+
+### DeerFlow：每条 Thread 带一套文件
+
+DeerFlow 通常为一个用户的一条 Thread 分配 Sandbox。用户继续原来的对话时，Agent 会重新使用这条 Thread 的 uploads、workspace 和 outputs；Lead Agent 派出的 Sub-agent 也在这套文件上工作。配置宿主目录或 PVC 后，即使原来的 Docker 容器或 Kubernetes Pod 已经销毁，新 Sandbox 仍可以重新挂载这些文件。
+
+新建 Thread 时，用户会进入另一套文件空间。DeerFlow 的 Project 可以把多条 Thread 归在一起，并为它们提供共同 Instructions，但当前 Project 本身不提供一套供这些 Thread 共同使用的项目文件系统。要继续操作上一次的文件，最直接的方式是回到原来的 Thread。
+
+因此，DeerFlow 的持久化解决的是“这条对话做过的工作还在”。一条 Thread 像一项持续任务，聊天记录和工作目录一起构成它的现场。
+
+### CubePlex：对话可以换，工作目录继续使用
+
+CubePlex 把 Conversation 和工作目录分开管理。同一成员在一个 Workspace 中进行普通一对一对话时，不同 Conversation 可以回到这个成员自己的 Workspace Sandbox。用户可以新开对话，避开越来越长的聊天记录，同时继续使用已有的项目文件、依赖和工作树。
+
+多人协作时，群组 Conversation 可以拥有参与者共同使用的 Sandbox；Topic 可以沿用创建者的环境，也可以选择独立 Sandbox。团队既可以共享一个项目现场，也可以把敏感或容易冲突的工作放进隔离环境，而 Workspace Agent 的 Persona、团队记忆、Skills 和 MCP 始终保持一致。
+
+CubePlex 的持久化解决的是“这位成员或这个团队的工作现场还在”。Conversation 负责一次沟通的上下文，Sandbox 负责长期文件和执行环境，Workspace 则把它们放在同一个 Agent 和成员权限下。
+
+| 用户操作 | DeerFlow 2.0 | CubePlex |
+| --- | --- | --- |
+| 继续原来的对话 | 回到原 Thread，继续使用它的文件 | 回到原 Conversation，继续使用相应工作现场 |
+| 在同一项目中新开对话 | 新 Thread 默认使用新的文件空间 | 同一成员的一对一 Conversation 可以继续使用自己的 Workspace Sandbox |
+| 让其他成员接手 | Thread 和文件属于原用户，另一账号不能直接进入 | 群聊或 Topic 的成员可以继续使用共享 Sandbox |
+| 重启或回收容器 | 配置宿主目录或 PVC 后，Thread 文件可重新挂载 | 重启、暂停、恢复或重建容器时，持久存储中的文件、项目依赖和工作树保留 |
+| 主动清理 | 删除 Thread 会同时删除它的 Thread 目录 | 重启可以保留文件；删除 Sandbox 才会让下次执行从空存储开始 |
+
+计算资源仍然可以是临时的。DeerFlow 的容器可能进入 warm pool，随后因空闲或容量被销毁；CubePlex 的 OpenSandbox 实例也可以暂停、停止或重建。产品形态上的差别不在容器是否永远运行，而在持久文件是附着于一条个人 Thread，还是成为 Workspace 内可以跨对话、按成员关系共享的长期工作现场。
+
+## 安全差异来自管理责任
+
+DeerFlow 已经提供用户身份、资源 Owner 检查、可选 RBAC、Sandbox Provider、运行事件和审计能力。它不是“只有单用户，所以不考虑安全”。它保护的是同一部署中各个用户自己的 Agent 资源。
+
+DeerFlow 也处理了 Sandbox 中的密钥风险。它默认清理 Gateway 环境里名称类似 Key、Secret、Token、Password 的变量，避免 Sandbox 进程继承平台密钥。Skill 需要凭据时，要在 `SKILL.md` 中声明 `required-secrets`，调用方再通过请求上下文提供；密钥不会写进对话、Checkpoint 或运行记录。执行命令时，真实密钥作为一次性环境变量进入新建的命令进程，随后从返回给 Agent 的标准输出中脱敏。DeerFlow 的 Lark 集成还提供可选 Broker Sidecar，让该集成的原始凭据不进入主 Sandbox。
+
+CubePlex 对通用 Sandbox 密钥采用了更严格的边界。组织、Workspace 或用户保存密钥后，Sandbox 环境中只会出现一个无实际权限的 `cbxref_…` 占位符。代码带着占位符发起请求，出口代理确认目标主机和 Header 都符合该密钥的策略后，才在 Sandbox 外把它替换成真实值。因此，Agent 运行的代码、进程、文件和日志都拿不到真实密钥；即使占位符泄露，也不能脱离指定 Sandbox 和目标地址使用。
+
+网络方面，两者都可以限制 Sandbox 出站访问，但覆盖范围和默认值不同：
+
+| 网络控制 | DeerFlow 2.0 | CubePlex |
+| --- | --- | --- |
+| 默认策略 | Docker AIO 默认为 `open`，保持普通 Docker 出站访问 | 管理员可选择默认 Allow 或 Deny，并添加主机、通配域名或 CIDR 规则 |
+| 限制模式 | `isolated` 禁止出站；`allowlist` 只允许指定 HTTP / HTTPS 域名 | 网络策略在 Sandbox 创建时下发，由 OpenSandbox 出口层执行 Allow / Deny |
+| 临时放行 | allowlist 拦截公共域名后，可让用户临时允许或在当前 Sandbox 生命周期内允许 | 命令本身可以配置 `allow`、`deny`、`confirm`；网络目的地由管理员策略管理 |
+| 当前限制 | 受限网络模式目前只支持本地 Docker 后端，并要求 Docker Engine 28 或更高版本；Provisioner 等模式不支持时会拒绝启动 | 网络策略与密钥替换集成在 OpenSandbox 出口链路中，部署时需要启用对应的 Egress 组件 |
+
+DeerFlow 的网络控制已经覆盖常见的开放、断网和域名白名单场景；CubePlex 的区别主要在于，这套网络策略与分层密钥管理、出口替换和 Workspace 权限使用同一套治理模型。
+
+部署管理员在 DeerFlow 中仍承担较大责任。MCP 配置由管理员维护；API 注册的 stdio MCP 即使限制了可执行命令和危险参数，也只是纵深防御，管理员仍可以让 Gateway 加载其控制的软件包。DeerFlow 文档还明确说明，Skill 的 `allowed-tools` 是面向模型的行为约束，不应当被当成硬安全边界。默认 LocalSandbox 直接使用宿主环境，也需要部署者根据威胁模型切换到容器或远程隔离环境。
+
+CubePlex 把一部分部署管理员的日常责任下放成组织和 Workspace 内的产品权限：组织决定可安装的能力，Workspace 决定是否启用，成员角色决定谁能修改配置，MCP 凭据与 Connector 定义分开保存。Sandbox 命令策略支持 `allow`、`deny` 和 `confirm`；命中 `confirm` 的命令会暂停执行，等待人工批准或拒绝。
+
+因此，两者的安全对比不应简化成“谁更安全”。更准确的说法是：
+
+- DeerFlow 的主要安全边界是用户、Thread 和部署管理员；
+- CubePlex 的主要安全边界是 Organization、Workspace、成员，以及当前 Conversation 或 Topic 的执行范围。
+
+个人环境里，管理员可以直接决定整套实例开放哪些能力。团队环境里，同一个 Connector、Skill 或命令需要对不同 Workspace、成员和凭据来源产生不同结果。
+
+## Agent Runtime 与长程执行
+
+DeerFlow 的 Agent Runtime 基于 LangGraph 和 LangChain，运行在 Gateway 中。Lead Agent 负责接收任务，Middleware 负责上下文压缩、计划、Sandbox、Memory 和 Sub-agent 等环节。Gateway 提供兼容 LangGraph 的 Threads、Runs 和流式接口。
+
+CubePlex 的 Agent Runtime 基于独立的开源框架 CubeLoop。CubeLoop 提供异步的多模型接入、工具调用、流式事件、Middleware、Checkpoint、人工确认和 Sub-agent；CubePlex 控制面在每次运行时，把当前 Workspace 的 Persona、Skills、MCP、分层 Memory、Sandbox 策略和成员身份组装到这条 Agent loop 中。模型推理与任务调度留在控制面，Sandbox 只负责文件、Shell、浏览器等需要隔离的执行工作。
+
+两套 Runtime 都能规划长程任务、调用 Skills 和 MCP，并把研究、编码或内容生成交给 Sub-agent 并行执行。DeerFlow 的 Sub-agent 拥有独立上下文和工具配置，并与父 Agent 共享当前 Thread 的 Sandbox 文件；上下文压缩、任务列表、Artifacts、后台 MCP 任务、运行事件和多种 Sandbox Provider 共同服务于个人用户的完整任务过程。
+
+CubePlex 把同样的长程执行放进 Workspace 的治理范围：Sub-agent 使用团队批准的能力，运行成本归属到 Organization、Workspace、用户和 Conversation，高风险命令可以暂停等待确认，执行结果继续留在相应的团队工作现场。任务由哪个团队发起、可以使用哪些组织能力、花费归到哪里、哪些信息应该共享，以及下一位成员如何继续工作，都由同一套控制面处理。
+
+## 适用场景
+
+DeerFlow 2.0 更适合个人或相互独立的多用户环境：每个用户希望拥有自己的 Agents、Projects、Skills、Memory 和 Sandbox，并重视长程任务、Sub-agent 编排以及丰富的内容生产能力。团队可以统一部署和运维 DeerFlow，但成员的工作资产仍主要归各自所有。
+
+CubePlex 更适合把 Agent 作为团队工作环境长期运行：成员共同使用一个 Workspace Agent，组织统一分发 Skills 和 MCP，不同 Workspace 有不同能力和凭据策略，个人记忆与团队记忆明确分开，高风险操作可以进入审批流程。
+
+Workspace 并不要求必须加入多位成员。创建者可以独自使用一个 Workspace，把它当作自己的长期 Agent 环境，这已经覆盖了 DeerFlow 最常见的个人使用方式。区别在需要协作时才会出现：Workspace 主人可以直接邀请其他成员，让他们使用同一个 Agent、团队记忆、Skills、MCP 和工作现场，不需要先把个人 Agent 迁移成另一套团队系统。
+
+因此，CubePlex 可以从一个人的 Agent 开始，并沿用同一个 Workspace 扩展到整个团队。Agent 不必在“个人工具”和“团队基础设施”之间重新选择归属。
