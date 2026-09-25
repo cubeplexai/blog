@@ -16,13 +16,13 @@ OpenSandbox 和 CubeSandbox 都为 Agent 提供隔离的代码执行环境，但
 
 ### OpenSandbox
 
-[OpenSandbox](https://github.com/opensandbox-group/OpenSandbox) 最初由阿里开源，早期仓库位于 `alibaba/OpenSandbox`，目前代码已迁移到独立的 `opensandbox-group` 组织。Java、JavaScript、.NET 和 Go 的包名仍保留 Alibaba 标识。项目采用 Apache 2.0 许可证，提供多语言 SDK、CLI 和 MCP Server，运行环境可以部署在 Docker 或 Kubernetes 上。
+[OpenSandbox](https://github.com/opensandbox-group/OpenSandbox) 最初由阿里开源，早期仓库位于 `alibaba/OpenSandbox`，目前代码已迁移到独立的 `opensandbox-group` 组织。Java、JavaScript、.NET 和 Go 的包名仍保留 Alibaba 标识。项目提供多语言 SDK、CLI 和 MCP Server，运行环境可以部署在 Docker 或 Kubernetes 上。
 
 本文关注它的 Kubernetes 实现。OpenSandbox 在集群内提供 `BatchSandbox`、`Pool` 和 `SandboxSnapshot` 等自定义资源，由 controller 负责创建、预热、暂停和回收 Sandbox。应用调用生命周期 API 后，实际工作负载由 Kubernetes 调度和管理。
 
 ### CubeSandbox
 
-[CubeSandbox](https://github.com/TencentCloud/CubeSandbox) 是腾讯云开源的 Sandbox 平台，同样采用 Apache 2.0 许可证。项目包含 CubeAPI、CubeMaster、Cubelet、CubeShim、CubeHypervisor、网络和存储组件，Sandbox 运行在 KVM MicroVM 中。
+[CubeSandbox](https://github.com/TencentCloud/CubeSandbox) 是腾讯云开源的 Sandbox 平台。项目包含 CubeAPI、CubeMaster、Cubelet、CubeShim、CubeHypervisor、网络和存储组件，Sandbox 运行在 KVM MicroVM 中。
 
 v0.6 首次提供 Preview 状态的 Kubernetes 部署。Kubernetes 负责交付控制面和节点组件，CubeMaster 继续负责 Sandbox 调度，Cubelet 在选定节点上创建 MicroVM。单个 Sandbox 不是一个 Kubernetes Pod，也没有对应的 Sandbox CR。
 

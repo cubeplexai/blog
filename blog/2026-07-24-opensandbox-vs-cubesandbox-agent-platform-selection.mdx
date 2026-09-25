@@ -16,13 +16,13 @@ OpenSandbox and CubeSandbox both provide isolated code execution environments fo
 
 ### OpenSandbox
 
-[OpenSandbox](https://github.com/opensandbox-group/OpenSandbox) was originally open-sourced by Alibaba. The repository first lived under `alibaba/OpenSandbox` and has since moved to the independent `opensandbox-group` organization. The Java, JavaScript, .NET, and Go package names still carry Alibaba identifiers. The Apache-2.0 project provides multi-language SDKs, a CLI, and an MCP server, with Docker and Kubernetes deployment options.
+[OpenSandbox](https://github.com/opensandbox-group/OpenSandbox) was originally open-sourced by Alibaba. The repository first lived under `alibaba/OpenSandbox` and has since moved to the independent `opensandbox-group` organization. The Java, JavaScript, .NET, and Go package names still carry Alibaba identifiers. The project provides multi-language SDKs, a CLI, and an MCP server, with Docker and Kubernetes deployment options.
 
 This article focuses on the Kubernetes implementation. OpenSandbox defines custom resources such as `BatchSandbox`, `Pool`, and `SandboxSnapshot`. Its controller creates, prewarms, pauses, and reclaims sandboxes. Applications call the lifecycle API, while Kubernetes schedules and manages the underlying workloads.
 
 ### CubeSandbox
 
-[CubeSandbox](https://github.com/TencentCloud/CubeSandbox) is an Apache-2.0 sandbox platform open-sourced by Tencent Cloud. The project includes CubeAPI, CubeMaster, Cubelet, CubeShim, CubeHypervisor, networking, and storage components. Each sandbox runs inside a KVM MicroVM.
+[CubeSandbox](https://github.com/TencentCloud/CubeSandbox) is a sandbox platform open-sourced by Tencent Cloud. The project includes CubeAPI, CubeMaster, Cubelet, CubeShim, CubeHypervisor, networking, and storage components. Each sandbox runs inside a KVM MicroVM.
 
 Version 0.6 introduced Kubernetes deployment in Preview. Kubernetes delivers the control-plane and node components. CubeMaster still schedules sandboxes, and Cubelet creates MicroVMs on the selected node. An individual sandbox is not a Kubernetes Pod and has no corresponding sandbox custom resource.
 
