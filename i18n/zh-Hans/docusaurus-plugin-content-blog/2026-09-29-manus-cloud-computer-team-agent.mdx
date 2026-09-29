@@ -1,58 +1,62 @@
 ---
 slug: manus-cloud-computer-team-agent
-title: Manus 2.0 为 Agent 配了一台长期在线的电脑
-description: Manus Cloud Computer 把项目运行环境做成长期在线的产品能力。CubePlex 也将执行环境纳入 Agent 工作流，但由 Workspace Agent 管理团队配置，再按工作范围使用 Sandbox。
+title: Manus 2.0 的云电脑，任务结束后环境还在
+description: Manus 原有的远程 Sandbox 用于临时执行任务。Cloud Computer 跨会话保留文件、已安装工具和运行进程；CubePlex 的 Sandbox 同样支持持久工作文件，并按个人或团队任务划分使用范围。
 authors: [xfgong]
 tags: [Manus, Manus Alternative, Cloud Computer, Agent Runtime, Agent Workspace, CubePlex, Team Agent]
 image: /img/blog/manus-cloud-computer-team-agent-cover.webp
 ---
 
-Manus 2.0 把 Cloud Computer 带进了产品：用户可以为项目购买一台专属云电脑，让游戏服务器在笔记本合上后继续运行，也让自动化流程拥有全天候工作的地方。Agent 不再只在用户发来一条消息后启动、完成任务后停下；它开始拥有一个可以持续运行的项目环境。
+Manus 早就能在远程 Sandbox 中运行代码、处理文件和操作浏览器。用户离开电脑，云端任务也能继续执行。2026 年 9 月 28 日发布的 Manus 2.0，再次重点介绍了 Cloud Computer，并用于多人游戏服务器和长期自动化。
 
-这个变化和 Manus 2.0 的其他架构更新连在一起。Cascade 让简报、页面、视频和自动化保持在同一个项目中；Automations 可以由日历事件、Slack 消息、Notion 更新等事件触发；Cloud Computer 则为需要长期在线的项目提供计算环境。[Manus 2.0 发布说明](https://manus.im/zh-cn/blog/introducing-manus-2-0)
+这里值得关注的是执行环境能保留多久。普通 Sandbox 在任务结束后会被关闭，报告、表格等交付结果保存在聊天记录里，底下的工作环境不再保留。Cloud Computer 是专属的持久化云端虚拟机，文件和已安装工具可以跨会话使用，程序也能持续运行。[Manus Cloud Computer 帮助说明](https://help.manus.im/en/articles/15392111-what-is-the-cloud-computer)
 
 <!-- truncate -->
 
-## Agent 为什么需要长期在线的电脑
+## 临时 Sandbox 和持久化云电脑
 
-一次性任务有明确的开始和结束。用户提出目标，Agent 调用工具，交付文件或结论。这种工作可以在临时执行环境中完成。项目一旦需要等待新事件、持续提供服务，或者让其他人随时访问，就需要一台不会随着当前对话结束而退出的机器。
+临时 Sandbox 适合有明确结束点的工作。分析一份数据、运行一个脚本、生成一份文档，完成后交付结果，执行环境随后可以回收。
 
-Manus 在发布中给出了两个例子。多人游戏需要服务器持续在线，让玩家可以随时加入；自动化流程需要一个持续运行的地方，在连接服务发生变化时启动任务。过去，用户还要自行处理服务器托管、网络和日常维护。Cloud Computer 把这些基础设施步骤收进 Manus 的产品流程：用户选择项目需要的云电脑，后续由 Manus 负责环境配置与运行。[Manus 2.0 发布说明](https://manus.im/zh-cn/blog/introducing-manus-2-0)
+持续开发的项目需要保留更多东西。下次继续修改代码时，依赖已经装好，数据还在原来的目录，之前配置的数据库也能接着用。Cloud Computer 会保留这些文件和软件配置。服务进程可以跨会话运行，用户结束一次对话，机器人或服务器仍然在线。
 
-长期运行环境带来的直接变化，是 Agent 的工作不再受发起任务的那台个人电脑是否开机限制。事件发生时，自动化可以启动；项目需要提供服务时，服务可以留在云端运行；用户也不必把部署和网络运维作为使用 Agent 的前置条件。
+文件留存和程序持续运行分别解决了两类麻烦。前者省去重复上传、安装和配置的工作；后者支持机器人、游戏服务器等需要一直响应请求的服务。对这类项目，交付一份代码之后，还需要长期保留并维护运行它的环境。
 
-这让 Cloud Computer 成为项目的一部分，而不只是一个远程桌面入口。Manus 把它和 Game Dev、Automations 放在一起：项目可以先生成代码或内容，再把持续运行的部分交给云电脑。Studio 中的人仍然可以修改素材、代码和时间线，Agent 也可以继续参与后续工作。Manus 2.0 将执行、编辑和托管放进同一条项目流程。
+Manus 仍然保留普通 Sandbox。官方说明中，每个任务先在临时 Sandbox 中开始，再根据任务需求决定是否使用 Cloud Computer。持久化云电脑适用于需要延续环境或常驻服务的工作，不要求每个一次性任务都长期占用一台机器。[Cloud Computer 产品说明](https://manus.im/blog/manus-cloud-computer)
 
-## Manus 2.0 把 Agent 从任务执行推进到项目运行
+## 每周更新同一个数据库
 
-Cloud Computer 的意义需要结合 Cascade 一起看。Cascade 根据当前工作引入所需的专业能力，让简报、页面、视频和自动化保持在同一个项目上下文中。Cloud Computer 则让项目中的长时间任务和在线服务有稳定的执行位置。两者合起来，Manus 管理的对象从一次任务的输入和输出，扩展到一个可以持续推进的项目。
+Manus 的 Cloud Computer 产品页给出了一个周度销售分析的例子。用户建立 MySQL 数据库，每周上传新的 CSV，由程序更新数据并生成趋势报告。后面的报告可以使用此前积累的数据，数据库也不需要随每次任务重新建立。
 
-Manus 还把 Automations 从定时任务扩展到事件触发。新邮件、广告数据变化、日历事件、Slack 消息或 Notion 更新都可以启动工作流。事件不再只生成一条待办，而是可以让 Agent 在项目环境中开始处理后续步骤。用户仍然设定要关注的变化和处理目标，Manus 负责组织连接器、触发器和执行过程。
+这类工作需要保留的不只有最后导出的表格。数据库中的历史记录、处理数据的程序和运行配置都要留着，下周才能继续执行。聊天记录里存有上周的报告，不能替代仍然可用的数据库。
 
-Manus 在同一篇发布中报告，Cascade 在一项测试配置中比旧系统少用 23.2% 的 Token，任务用时减少 28.2%，运行成本降低 32%。这是 Manus 自己公布的测试结果，适合说明其架构目标，不代表所有任务都能获得相同比例的提升。
+已经安装的软件也有类似需求。Manus 列举了 Metabase、Home Assistant 等开源工具，以及命令行开发工具。安装和配置完成后，用户可以继续使用它们，让 Agent 在原来的环境中修改或处理新的文件。每次重新创建临时 Sandbox，都要再次准备这些软件和配置。[Cloud Computer 产品说明](https://manus.im/blog/manus-cloud-computer)
 
-Cloud Computer 解决了项目需要持续运行时“任务在哪里继续”的问题。团队共同维护这些项目时，还要管理另一组边界：谁能接手工作，Agent 的角色和团队知识如何复用，每位成员使用什么连接器凭据，个人会话的文件是否与团队工作共享。运行环境的生命周期和团队 Agent 的协作边界，彼此相关，但需要分别设计。
+## 机器人和采集程序继续运行
 
-## CubePlex 将 Workspace Agent 与执行环境分层管理
+帮助说明还列举了全天在线的 Discord 机器人，以及每小时执行一次的网页采集程序。机器人需要接收用户消息，采集程序需要按计划继续执行。用户结束当前对话后，这些程序仍然有工作要做。[Cloud Computer 帮助说明](https://help.manus.im/en/articles/15392111-what-is-the-cloud-computer)
 
-CubePlex 从 Workspace Agent 的组织方式处理这些团队需求。成员使用同一个 Workspace 中配置的 Persona、Skills、MCP 连接器和 Workspace Memory；组织可以管理成员、角色与工具访问。这个 Workspace Agent 可以从 Web 或 IM 入口承接工作。[CubePlex Workspace 设置](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/docs/site/docs/getting-started/workspace-setup.md)、[核心概念](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/docs/site/docs/getting-started/core-concepts.md)
+持续保存环境和持续运行程序，各有具体用途。销售数据要跨周积累，安装过的工具要在后续任务中使用；机器人需要保持服务可用，采集程序则要在指定时间运行。临时 Sandbox 适合执行完就交付结果的任务，Cloud Computer 为这些后续工作保留了文件、软件配置和运行环境。
 
-执行代码和操作文件时，CubePlex 为用户、会话或 Topic 提供独立的 Sandbox。Sandbox 的工作文件保存在持久存储中，容器重启或暂停后可以在同一工作范围内继续使用；容器本身可以暂停或关闭，下一次需要执行时再恢复。文件的持续保留和计算实例始终在线是两件不同的事。[Sandbox 使用说明](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/docs/site/docs/guides/conversations/sandboxes.md)、[Sandbox 作用域实现](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/backend/cubeplex/models/user_sandbox.py)
+Manus 2.0 的多人游戏沿用了同样的需求。Agent 生成游戏之后，联机服务器还要持续响应玩家。用户在 Game Dev 中选择多人联机并购买 Cloud Computer，Manus 负责后续配置。游戏生成后的托管也能在产品内完成，用户可以继续修改游戏，同时保留运行中的服务。
 
-这套分层让团队可以复用同一个 Agent 的长期配置，同时让每项工作的文件和执行状态保留在相应的会话或 Topic 中。成员可以接续团队的 Persona、Skills、工具和共享记忆，但个人会话与协作 Topic 不必共用同一份工作文件。
+## 团队继续使用 Agent 时留下什么
 
-## 两种产品管理不同的长期边界
+Cloud Computer 所强调的环境延续，同样适用于团队日常使用 Agent。代码和素材经常需要隔天继续处理，后续任务也可能使用已经安装的软件。执行环境保留下来，成员就能接着工作。多人协作时，还需要确定哪些文件由团队共享，哪些只属于个人任务。
 
-| | Manus 2.0 | CubePlex |
-| --- | --- | --- |
-| 长期工作的组织单位 | 项目及其 Cloud Computer | Workspace Agent 与成员协作空间 |
-| 计算环境的作用 | 为需要持续运行的项目提供专属云端环境 | 为会话、用户或 Topic 提供隔离的代码与文件执行环境 |
-| 工作如何延续 | Cloud Computer 支持项目服务和自动化长期运行 | Workspace 复用 Agent 配置；Sandbox 文件跨容器重启保留，容器按需恢复 |
-| 用户主要管理什么 | 项目目标、自动化行为及所购买的运行环境 | 团队成员、Agent 配置、连接器授权和工作范围 |
+CubePlex 的 Sandbox 同样支持工作环境的延续。成员的一对一对话默认使用个人的 Workspace Sandbox，新建对话仍可使用其中的工作文件。群聊会话和 Topic 可以有各自的 Sandbox，让多人讨论中的文件与个人工作分开保存。执行代码时，Agent 在对应环境里运行命令、安装工具、读写文件。
 
-Manus 2.0 展示了 Agent 产品向长期运行推进的一条路径：由平台把云端电脑直接交给项目使用，降低持续托管服务和自动化的门槛。CubePlex 也将执行环境纳入 Agent 产品设计，但把长期的团队 Agent 配置与具体工作的运行状态分开管理。前者让个人项目更容易持续运行；后者让团队在共享 Agent 的同时保留成员、会话和执行环境的边界。
+这里需要区分文件保存和机器在线。CubePlex 的 Sandbox 可以暂停或关闭，工作文件仍保留在持久存储中。下次需要运行代码时，容器启动或恢复后继续使用这些文件。CubePlex 在这里保证的是工作文件的延续。Manus Cloud Computer 除了保留文件和软件环境，还强调程序全天候在线。需要托管常驻服务时，仍要单独考虑实例的暂停、回收与服务可用性。
+
+团队还需要复用 Agent 已经掌握的工作方式。文件可以保存下来，角色设定、业务知识和工具授权也应当有明确的管理位置。
+
+在 CubePlex 中，这些配置围绕 Workspace 组织。成员使用同一套 Agent Persona 和启用的 Skills，Workspace Memory 保存共享的项目事实和流程。成员从 Web 或 IM 入口发起不同任务时，继续使用这些配置，无需为每段新对话重新准备一个 Agent。
+
+共享工具也有授权范围。MCP 连接器在 Workspace 中启用，凭据可以属于组织、Workspace 或某位成员。同一个连接器可以使用团队的服务账号，也可以要求每位成员连接自己的账号。共享 Agent 的工具配置时，个人身份仍能分别管理。
+
+因此，团队在 CubePlex 中可以持续维护一个 Workspace Agent，让它使用已经配置的知识和工具处理新任务。个人工作和协作任务使用各自的 Sandbox，文件在相应范围内保留。关闭一次对话以后，团队仍然能继续使用这个 Agent，也能找到此前工作留下的文件。
 
 ## 来源与版本
 
+- [Cloud Computer 帮助说明](https://help.manus.im/en/articles/15392111-what-is-the-cloud-computer)与[产品说明](https://manus.im/blog/manus-cloud-computer)介绍临时 Sandbox 与持久化环境的区别。帮助说明日期为 2026 年 6 月 5 日，早于 2.0 发布。
 - [Manus 2.0 官方发布说明（2026 年 9 月 28 日）](https://manus.im/zh-cn/blog/introducing-manus-2-0)
 - CubePlex 源码与文档按提交 [`67e05e4a7ece02a13aa37480cc998aedc92fb731`](https://github.com/cubeplexai/cubeplex/commit/67e05e4a7ece02a13aa37480cc998aedc92fb731) 核对： [Workspace 设置](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/docs/site/docs/getting-started/workspace-setup.md)、[Sandbox 管理](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/docs/site/docs/guides/conversations/sandboxes.md)、[Sandbox 作用域模型](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/backend/cubeplex/models/user_sandbox.py)
