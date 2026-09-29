@@ -1,0 +1,58 @@
+---
+slug: manus-cloud-computer-team-agent
+title: Manus 2.0 为 Agent 配了一台长期在线的电脑
+description: Manus Cloud Computer 把项目运行环境做成长期在线的产品能力。CubePlex 也将执行环境纳入 Agent 工作流，但由 Workspace Agent 管理团队配置，再按工作范围使用 Sandbox。
+authors: [xfgong]
+tags: [Manus, Manus Alternative, Cloud Computer, Agent Runtime, Agent Workspace, CubePlex, Team Agent]
+image: /img/blog/manus-cloud-computer-team-agent-cover.webp
+---
+
+Manus 2.0 把 Cloud Computer 带进了产品：用户可以为项目购买一台专属云电脑，让游戏服务器在笔记本合上后继续运行，也让自动化流程拥有全天候工作的地方。Agent 不再只在用户发来一条消息后启动、完成任务后停下；它开始拥有一个可以持续运行的项目环境。
+
+这个变化和 Manus 2.0 的其他架构更新连在一起。Cascade 让简报、页面、视频和自动化保持在同一个项目中；Automations 可以由日历事件、Slack 消息、Notion 更新等事件触发；Cloud Computer 则为需要长期在线的项目提供计算环境。[Manus 2.0 发布说明](https://manus.im/zh-cn/blog/introducing-manus-2-0)
+
+<!-- truncate -->
+
+## Agent 为什么需要长期在线的电脑
+
+一次性任务有明确的开始和结束。用户提出目标，Agent 调用工具，交付文件或结论。这种工作可以在临时执行环境中完成。项目一旦需要等待新事件、持续提供服务，或者让其他人随时访问，就需要一台不会随着当前对话结束而退出的机器。
+
+Manus 在发布中给出了两个例子。多人游戏需要服务器持续在线，让玩家可以随时加入；自动化流程需要一个持续运行的地方，在连接服务发生变化时启动任务。过去，用户还要自行处理服务器托管、网络和日常维护。Cloud Computer 把这些基础设施步骤收进 Manus 的产品流程：用户选择项目需要的云电脑，后续由 Manus 负责环境配置与运行。[Manus 2.0 发布说明](https://manus.im/zh-cn/blog/introducing-manus-2-0)
+
+长期运行环境带来的直接变化，是 Agent 的工作不再受发起任务的那台个人电脑是否开机限制。事件发生时，自动化可以启动；项目需要提供服务时，服务可以留在云端运行；用户也不必把部署和网络运维作为使用 Agent 的前置条件。
+
+这让 Cloud Computer 成为项目的一部分，而不只是一个远程桌面入口。Manus 把它和 Game Dev、Automations 放在一起：项目可以先生成代码或内容，再把持续运行的部分交给云电脑。Studio 中的人仍然可以修改素材、代码和时间线，Agent 也可以继续参与后续工作。Manus 2.0 将执行、编辑和托管放进同一条项目流程。
+
+## Manus 2.0 把 Agent 从任务执行推进到项目运行
+
+Cloud Computer 的意义需要结合 Cascade 一起看。Cascade 根据当前工作引入所需的专业能力，让简报、页面、视频和自动化保持在同一个项目上下文中。Cloud Computer 则让项目中的长时间任务和在线服务有稳定的执行位置。两者合起来，Manus 管理的对象从一次任务的输入和输出，扩展到一个可以持续推进的项目。
+
+Manus 还把 Automations 从定时任务扩展到事件触发。新邮件、广告数据变化、日历事件、Slack 消息或 Notion 更新都可以启动工作流。事件不再只生成一条待办，而是可以让 Agent 在项目环境中开始处理后续步骤。用户仍然设定要关注的变化和处理目标，Manus 负责组织连接器、触发器和执行过程。
+
+Manus 在同一篇发布中报告，Cascade 在一项测试配置中比旧系统少用 23.2% 的 Token，任务用时减少 28.2%，运行成本降低 32%。这是 Manus 自己公布的测试结果，适合说明其架构目标，不代表所有任务都能获得相同比例的提升。
+
+Cloud Computer 解决了项目需要持续运行时“任务在哪里继续”的问题。团队共同维护这些项目时，还要管理另一组边界：谁能接手工作，Agent 的角色和团队知识如何复用，每位成员使用什么连接器凭据，个人会话的文件是否与团队工作共享。运行环境的生命周期和团队 Agent 的协作边界，彼此相关，但需要分别设计。
+
+## CubePlex 将 Workspace Agent 与执行环境分层管理
+
+CubePlex 从 Workspace Agent 的组织方式处理这些团队需求。成员使用同一个 Workspace 中配置的 Persona、Skills、MCP 连接器和 Workspace Memory；组织可以管理成员、角色与工具访问。这个 Workspace Agent 可以从 Web 或 IM 入口承接工作。[CubePlex Workspace 设置](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/docs/site/docs/getting-started/workspace-setup.md)、[核心概念](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/docs/site/docs/getting-started/core-concepts.md)
+
+执行代码和操作文件时，CubePlex 为用户、会话或 Topic 提供独立的 Sandbox。Sandbox 的工作文件保存在持久存储中，容器重启或暂停后可以在同一工作范围内继续使用；容器本身可以暂停或关闭，下一次需要执行时再恢复。文件的持续保留和计算实例始终在线是两件不同的事。[Sandbox 使用说明](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/docs/site/docs/guides/conversations/sandboxes.md)、[Sandbox 作用域实现](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/backend/cubeplex/models/user_sandbox.py)
+
+这套分层让团队可以复用同一个 Agent 的长期配置，同时让每项工作的文件和执行状态保留在相应的会话或 Topic 中。成员可以接续团队的 Persona、Skills、工具和共享记忆，但个人会话与协作 Topic 不必共用同一份工作文件。
+
+## 两种产品管理不同的长期边界
+
+| | Manus 2.0 | CubePlex |
+| --- | --- | --- |
+| 长期工作的组织单位 | 项目及其 Cloud Computer | Workspace Agent 与成员协作空间 |
+| 计算环境的作用 | 为需要持续运行的项目提供专属云端环境 | 为会话、用户或 Topic 提供隔离的代码与文件执行环境 |
+| 工作如何延续 | Cloud Computer 支持项目服务和自动化长期运行 | Workspace 复用 Agent 配置；Sandbox 文件跨容器重启保留，容器按需恢复 |
+| 用户主要管理什么 | 项目目标、自动化行为及所购买的运行环境 | 团队成员、Agent 配置、连接器授权和工作范围 |
+
+Manus 2.0 展示了 Agent 产品向长期运行推进的一条路径：由平台把云端电脑直接交给项目使用，降低持续托管服务和自动化的门槛。CubePlex 也将执行环境纳入 Agent 产品设计，但把长期的团队 Agent 配置与具体工作的运行状态分开管理。前者让个人项目更容易持续运行；后者让团队在共享 Agent 的同时保留成员、会话和执行环境的边界。
+
+## 来源与版本
+
+- [Manus 2.0 官方发布说明（2026 年 9 月 28 日）](https://manus.im/zh-cn/blog/introducing-manus-2-0)
+- CubePlex 源码与文档按提交 [`67e05e4a7ece02a13aa37480cc998aedc92fb731`](https://github.com/cubeplexai/cubeplex/commit/67e05e4a7ece02a13aa37480cc998aedc92fb731) 核对： [Workspace 设置](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/docs/site/docs/getting-started/workspace-setup.md)、[Sandbox 管理](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/docs/site/docs/guides/conversations/sandboxes.md)、[Sandbox 作用域模型](https://github.com/cubeplexai/cubeplex/blob/67e05e4a7ece02a13aa37480cc998aedc92fb731/backend/cubeplex/models/user_sandbox.py)
