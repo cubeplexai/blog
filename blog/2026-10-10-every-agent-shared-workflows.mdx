@@ -1,0 +1,105 @@
+---
+slug: every-agent-shared-workflows
+title: 'Every Agent: Enterprise Agents Shift from Personal Replicas to Shared Teammates'
+description: "Every initially deployed isolated cloud agents for every employee before switching to a single shared agent for the entire company. This shift highlights an architectural reality: enterprise agents belong in team workspaces rather than per-user silos, sharing durable capabilities while strictly isolating sessions, credentials, and execution environments."
+authors: [xfgong]
+tags: [Every Agent, Slack, Claude Managed Agents, Team Agent, Agent Workspace, Skills]
+image: /img/blog/every-agent-shared-workflows-cover.webp
+---
+
+In October 2026, Every launched Every Agent, a company-wide Slack agent. Its product evolution did not start from scratch. Months earlier, Every operated an internal setup called Plus One: every employee received an OpenClaw instance running inside an isolated cloud virtual machine. In practice, Every retired these personal instances, switched to a single shared agent identity for the entire company, and handed the underlying harness, session scheduling, and sandboxes to Claude Managed Agents.
+
+This shift points to a fundamental architectural mismatch in enterprise agent deployments: **replicating an independent agent for each employee is an organizational topology error.** It creates heavy infrastructure maintenance burdens and fragments company knowledge into disconnected silos. Moving to a shared agent shifts the technical challenge: the goal is not stuffing everyone into a single chat window, but establishing clear boundaries across sessions, memory, tool credentials, and execution sandboxes while sharing a stable identity and durable capabilities.
+
+<!-- truncate -->
+
+## The Topology Mismatch of 1:1 Replicas: From Helpful Assistants to Infrastructure Pets
+
+Deploying a dedicated agent for each employee sounds intuitive: every worker gets a personal assistant that knows their habits and stays on standby in Slack. In practice, this 1:1 replication model quickly ran into infrastructure and collaboration bottlenecks.
+
+First was the operational burden of infrastructure "pets" (pets vs. cattle). Running OpenClaw in a dedicated cloud VM for every employee turned dozens of virtual machines into pets requiring around-the-around supervision. The engineering team had to build health-check probes polling instances every 30 seconds, write a dedicated `/heal-bot` command to reboot failed instances, handle silent agent freezes when ChatGPT web sessions expired, and run hourly cron jobs to refresh Slack tokens. OpenClaw also reset conversations daily at 4:00 AM, causing multiple overlapping memory mechanisms to collide.
+
+The steeper cost lay in fragmented collaboration and siloed knowledge assets:
+
+- **Knowledge silos**: Each agent understood only its owner's immediate tasks and had no visibility into cross-team workflows. When editor-in-chief Kate packaged 30,000 editorial edits into a skill called Kate Pass, teammates rarely used it because it remained hidden in isolated instances.
+- **Configuration drift**: When an employee improved an agent workflow, the improvement remained locked in their personal setup. Rolling it out across the company required synchronizing dozens of configurations manually. Conversely, bugs fixed in one agent never improved the resilience of the rest.
+- **Cost and utilization mismatch**: Keeping dedicated cloud VMs running 24/7 incurred steady costs, while individual task invocations were sparse and bursty, leaving compute idle most of the day.
+
+Every engineer Paridhi Agarwal summarized the experience with "servers should be cattle, not pets": Plus One gave each employee a pet that needed feeding, leaving the engineering team as full-time zookeepers.
+
+At the same time, Every noticed that the most effective collaborations occurred when teammates invited the same agent into a shared Slack thread. This observation drove the architectural shift: stop replicating personal instances and maintain a shared team agent instead.
+
+## Four Decoupling Boundaries for Enterprise Agents
+
+A shared agent does not mean creating an unbounded group chat bot. Stuffing messages from dozens of colleagues into an endlessly expanding context window immediately triggers context bleeding, privilege escalation, and memory corruption.
+
+Every Agent structured its shared identity around four distinct architectural boundaries:
+
+### 1. Asset and Identity Layer: Shared Persona and Governed Skills
+
+Every Agent presents a single `@Every` identity across Slack, accessible in channels and direct messages. What the team shares is the agent's durable persona and accumulated capabilities.
+
+For skills, Every introduced an ownership governance model: any member can propose skill updates, but changes take effect only after the skill's owner reviews and approves them. This governance prevents accidental ad-hoc corrections from corrupting the company-wide baseline.
+
+### 2. Session Layer: Thread-Scoped Sessions
+
+Every binds each Slack thread to an independent session. The session stores the full conversation history and execution state for that specific task, allowing discussions to pause and resume cleanly.
+
+Direct messages follow a similar boundary: long DM threads split into fresh sessions after periods of inactivity, carrying forward a concise summary of earlier context. This design prevents unbounded context window growth and cuts token costs by 39% when replaying conversation histories.
+
+### 3. State Layer: Task Sessions vs. Long-Term Team Memory
+
+Ephemeral task execution remains inside the session, while cross-thread context shifts to memory. Every implements memory as structured note files that the agent loads at the start of each session and updates during execution.
+
+This separation establishes clear information lifecycles: per-task execution steps remain scoped to their thread, while general background knowledge and durable decisions distill into shared long-term memory.
+
+### 4. Execution and Credential Layer: Per-User Auth Delegation
+
+A shared agent must never hold broad administrator privileges. When Every Agent needs to call external APIs or access protected systems, Claude Managed Agents suspends the execution loop and hands the tool request back to Every's servers.
+
+Every's backend executes the request using the **initiating user's credentials**, then returns the output to the model. The agent never stores third-party secrets directly, ensuring that administrative access granted to one teammate cannot be leveraged by another.
+
+## Public Workflows Drive Natural Adoption and Self-Healing
+
+Every placed its shared agent directly in team Slack threads rather than private direct messages or standalone terminals. This surface design delivered two immediate advantages: visible workflow adoption and public error correction.
+
+In private chats, prompts and agent steering remain invisible. Teammates see only the final output—a report, pitch draft, or code commit—without seeing how the prompt was framed, how many rounds of steering were required, or which tools were invoked. Techniques rarely spread through post-hoc walkthroughs.
+
+Working in public threads turns agent usage into observable team artifacts. For example, when Dan Shipper called the Kate Pass skill with `@Every` in an active writing thread, the agent generated structured review comments directly in the linked Google Doc. Colleagues observed the prompt syntax, tool execution, and human review boundaries firsthand, and subsequently adopted the skill in their own writing threads.
+
+Public execution also surfaces errors early. When Every prompted the agent to draft a speaker agreement and confirmation email, the initial output condensed the message into an unformatted single paragraph. A user rejected the output in the thread and corrected the formatting. The agent fixed the output and proposed updating the skill with a rule requiring formatted email verification before delivery. Once approved, that single public correction improved output quality across all future email drafting tasks.
+
+## Managed Harness Trade-offs: Reduced Operations vs. Vendor Lock-in
+
+Consolidating dozens of instances into one shared agent reduced machine count, but it did not eliminate the state machine and execution orchestration complexity required beneath the agent. Multi-step tasks still require file inspection, code execution, approval pauses, and crash recovery.
+
+Every initially attempted to self-host the shared agent's control plane. After a month of operational overhead, they migrated the foundation to Claude Managed Agents. The managed architecture cleanly separates responsibilities: Claude and the control-plane harness handle reasoning and loop decisions (the brain), on-demand virtual computers handle isolated execution (the hands), and sessions record state transitions. Execution sandboxes run on-demand at $0.08 per hour per active session, ending the waste of persistent idle VMs.
+
+However, relying entirely on a vendor-managed harness introduced clear constraints:
+
+1. **Distributed hang risks**: If Every's own servers restart while the agent waits for external tool results, connection state can drop, leaving requests hanging indefinitely.
+2. **Implicit behavioral drift**: Upstream model adjustments directly impact application behavior. Following one backend update, Every observed typical agent response lengths expand from roughly 280 characters to 880 characters.
+3. **Vendor lock-in and compliance conflicts**: Claude Managed Agents strictly binds execution to Anthropic models. Furthermore, because resuming tasks requires persisting session history in the cloud, it currently conflicts with Anthropic's Zero Data Retention (ZDR) policy, blocking deployments for compliance-sensitive enterprises.
+4. **Steep exit barriers**: Migrating away requires rebuilding the control-plane harness, session scheduler, memory state machine, and sandbox orchestration from scratch—a multi-month engineering effort.
+
+## Workspace as the True Boundary for Enterprise Agents
+
+Every's architectural migration confirms a foundational pattern: **the minimum deployment unit for an enterprise agent is never the individual employee, but the team workspace.**
+
+Personal desktop agents (such as OpenClaw) fit single-user local environments. In collaborative team settings, organizations require a durable Workspace Agent shared across members.
+
+CubePlex was architected around this workspace boundary from day one:
+
+- **Assets belong to the Workspace**: A stable agent persona and accumulated organizational knowledge live at the workspace level. Skills follow a governed lifecycle—catalog -> organization install -> workspace enablement—ensuring capabilities distribute securely.
+- **Execution contexts stay isolated by collaboration scope**: Whether accessed via Web, Slack, or other IM channels, conversation threads map directly to discrete conversations. Execution sandboxes (`UserSandbox`) allocate across user, conversation, or topic scopes. Compute containers can be paused or reclaimed when idle, while working files and environment state persist across sessions through durable volume storage.
+- **Credential scoping and egress secret exchange**: MCP connectors support organization, workspace, or user credential scoping. For sandboxed code execution requiring secrets, CubePlex's Kubernetes deployment uses opaque `EgressRef` placeholders rather than plain environment variables, exchanging real secrets exclusively at the egress proxy boundary based on destination host and policy.
+- **An independent control plane prevents vendor lock-in**: Built on CubeLoop, CubePlex's control-plane harness completely decouples orchestration from execution runtimes. It combines centralized scheduling with multi-model provider support (Anthropic, OpenAI, and local models) and Docker/Helm self-hosting, preserving enterprise data sovereignty and compliance.
+
+Every Agent's evolution offers a clear industry case study. Replicating isolated personal bots creates an operational and architectural dead end. Sustainable enterprise agents anchor durable capabilities in a shared team workspace while enforcing strict physical boundaries across sessions, credentials, and execution environments.
+
+## Sources and Scope
+
+- [Introducing the Every Agent](https://every.to/on-every/introducing-the-every-agent), Dan Shipper, published October 6, 2026, updated October 10. Product background and pricing reflect Every's published details.
+- [Why We Handed Our Agent’s Infrastructure to Anthropic](https://every.to/source-code/why-we-handed-our-agent-s-infrastructure-to-anthropic), Paridhi Agarwal, published October 8, 2026, updated October 10. Plus One maintenance history, Claude Managed Agents architecture, and the 39% token reduction from replay optimizations are drawn from this post-mortem.
+- [Every's Self-Critique: Why We Shouldn't Give Every Employee an Agent](https://x.com/yibie/status/2108395080319128051), yibie, October 9, 2026. Summarizes the key lessons from Every's shift from personal agents to a shared agent.
+- CubePlex workspace and runtime architecture details are documented in [CubePlex Core Concepts](https://docs.cubeplex.ai/docs/getting-started/core-concepts), [CubePlex Open Source Release](/blog/cubeplex-open-source-release), and [Managed Agents Harness Architecture](/blog/managed-agents-cloud-harness-vs-sandbox-harness).

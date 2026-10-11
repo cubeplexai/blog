@@ -1,0 +1,105 @@
+---
+slug: every-agent-shared-workflows
+title: Every Agent：企业 Agent 从个人副本转向共享同事
+description: Every 曾为每位员工部署独立的云端 Agent，随后改为全公司共享一个 Agent。这一转向验证了企业 Agent 的架构规律：部署单位应是团队工作区而非员工个人，长期能力由团队共享，执行与凭据则按任务严格隔离。
+authors: [xfgong]
+tags: [Every Agent, Slack, Claude Managed Agents, 团队 Agent, Agent Workspace, Skills]
+image: /img/blog/every-agent-shared-workflows-cover.webp
+---
+
+Every 在 2026 年 10 月发布 Every Agent，一个由全公司共同使用的 Slack Agent。它的产品演进并非平地起步。此前数月，Every 曾运行名为 Plus One 的内部系统：为每位员工在云端虚拟机中独立分配一个 OpenClaw 实例。实际运行后，Every 彻底关闭了这批个人实例，改为全公司共享同一个 Agent 身份，并把底层的 Harness、会话调度与沙箱交给 Claude Managed Agents 托管。
+
+这一转向指出了企业 Agent 落地中的一个根本性架构矛盾：**给每位员工复制一套独立的 Agent，在组织拓扑上是错位的。**它不仅带来繁重的实例运维负担，还会把组织知识切碎为互不相通的孤岛；而把 Agent 转为团队共享后，难点不再是“大家进入同一个对话框”，而是如何在共享长期身份与能力的同时，重新划分会话、记忆、工具凭据与执行沙箱的边界。
+
+<!-- truncate -->
+
+## 1:1 独立副本的拓扑错位：从效率助手到运维宠物
+
+为每位员工部署一个独立 Agent 的构想很符合直觉：每人拥有一位了解自己习惯的专属助手，在 Slack 中随时待命。但在基础设施运维与组织协作上，这种 1:1 复制模式迅速遇到了瓶颈。
+
+首先是基础设施层面的“宠物化（Pets vs Cattle）”负担。Every 为每位员工在云端单独租用虚拟机运行 OpenClaw，实际上等于把几十台虚拟机变成了需要全天候照看的“宠物”。工程团队需要编写存活探针每 30 秒轮询一次实例状态，开发专门的 `/heal-bot` 命令重启故障；ChatGPT 登录态定期失效后，Agent 会持续静默，直到人工介入重新登录；系统还必须每小时执行定时任务刷新 Slack 访问令牌。OpenClaw 当时还会在每天凌晨 4 点强制重置对话，导致多套记忆机制彼此冲突。
+
+比服务器维护更严重的代价，是协作与知识资产的严重割裂：
+
+- **知识孤岛**：每个 Agent 仅了解自己主人的工作，无法感知跨团队协作。主编 Kate 的 30,000 条审稿经验被整理为一个名为 Kate Pass 的 Skill，但分发到各个个人 Agent 时，其他成员鲜少主动尝试。
+- **配置漂移（Configuration Drift）**：一位员工改进了某项工作流，该能力仅留存在其个人实例中；若要推广至全员，必须手动同步多份配置。反之，某个 Agent 修复的 Bug，也无法转化为整个组织的免疫力。
+- **成本与利用率倒挂**：为每个人全天候维持一台独立运行的云虚拟机，但员工实际发起复杂任务的频次高度离散，大部分计算资源处于闲置轮询状态。
+
+Every 工程师 Paridhi Agarwal 用 “servers should be cattle, not pets” 总结这段经历：Plus One 给每位员工发了一只必须持续喂养的宠物，而工程团队则沦为了全职宠物管理员。
+
+同时，Every 观察到一个显著的协作现象：效果最好的使用场景，往往发生在团队成员把同一个 Agent 拉进公共 Slack 线程共同处理任务时。这一现象直接促成了产品转向——停止复制个人实例，转为维护一个团队共享的 Agent。
+
+## 企业 Agent 的四层解耦边界
+
+共享 Agent 绝不等于搭建一个无边界的超级群聊机器人。如果把所有成员的消息塞进同一段无限膨胀的上下文，立刻会引发上下文污染、特权穿透与记忆错乱。
+
+Every Agent 的实际设计，是在统一的 Agent 身份之下，建立了四道明确的解耦边界：
+
+### 1. 资产与身份层：共享统一 Persona 与受治理的 Skills
+
+Every Agent 在 Slack 中对外呈现为同一个 `@Every` 身份，员工可以在频道中提及它，也可以在私信中使用它。共享的是 Agent 的长期角色设定与团队沉淀的能力资产。
+
+对于技能扩展，Every 建立了所有权治理机制：任何成员都可以向 Agent 提议更新某项 Skill，但更新必须经过该 Skill 的所有者（Owner）审核批准后才能生效。这一机制避免了任何一次偶发纠正直接污染全公司的执行基线。
+
+### 2. 会话层：以 Thread 划分独立 Session
+
+Every 为每条 Slack 线程（Thread）绑定一个独立的 Session。Session 保存单次任务的完整执行历史与上下文，允许对话随时中断并从断点继续。
+
+私信场景同样适用该边界：长私信在闲置一段时间后会自动开启新的 Session，并将前一段会话提炼为简短摘要带入新会话。这避免了上下文窗口无限膨胀导致的性能下降，同时通过重用精简上下文，将历史对话重放的 token 成本降低了 39%。
+
+### 3. 状态层：区分单次 Session 记录与长时团队 Memory
+
+单次任务的具体执行细节停留在 Session 内部，而跨线程的公共事实则交由 Memory 承担。Every 将 Memory 设计为一组由 Agent 在会话启动时读取、并在工作过程中动态更新的结构化笔记文件。
+
+这一划分明确了信息的生命周期：具体任务的过程状态不应全局泄漏，而跨任务通用的背景与决策事实才被提炼为长时记忆。
+
+### 4. 凭据与执行层：强制实行发起人凭据代理
+
+共享 Agent 绝不能持有全公司的超级管理员密钥。当 Every Agent 需要调用外部 API 或访问受限数据时，Claude Managed Agents 会暂停执行循环，将工具调用请求抛回 Every 自有服务器。
+
+Every 服务器以**当前发起该请求的员工本人身份**调用目标业务系统，并将执行结果返回给模型。Agent 本身不持久化第三方系统的私密令牌，即使某位管理员接入了高级工具，其他普通成员在调用时也无法逾越自身的权限边界。
+
+## 公开场域下的工作流分发与自愈
+
+Every 将共享 Agent 的主入口设在团队日常沟通的 Slack 线程中，而不是私聊窗口或独立终端。这一产品决策带来了两项直接收益：工作流自然传播，以及错误的公开自愈。
+
+在传统的私聊模式下，Prompt 与调试过程是隐形的。团队成员只能看到最终生成的报告、公关稿或代码合并请求，看不到最初如何下达指令、中间经过了哪些轮次的纠偏、以及 Agent 调用了哪些工具。工作流方法很难仅凭事后宣讲得到推广。
+
+当 Agent 进入公开线程后，使用过程转变为团队可观察的工作记录。例如，Dan Shipper 在文章修改线程中公开 `@Every` 并调用 Kate Pass Skill，Agent 直接在关联的 Google Doc 中留下结构化审校建议。其他团队成员在围观中明确看到了指令结构、工具执行效果与人类的审查断点，随后自然地在自己的写作任务中复用该 Skill。
+
+公开协作同样暴露失败，并将其转化为共享资产。Every 曾让 Agent 创建演讲者协议并起草确认邮件，初次生成的邮件文本挤成了一个无换行的段落。用户在公开线程中退回并纠正了格式问题，Agent 在修复当次输出的同时提议更新 Skill，将“发送前必须渲染并检查邮件排版”固化为规则。一次公开的错误修正，直接提升了后续所有使用者的输出质量。
+
+## 托管 Harness 的收益与平台锁定代价
+
+从几十个个人实例合并为一个共享 Agent，大幅减少了机器数量，但并没有消除 Agent 底层的状态机与执行编排开销。复杂任务依然需要搜索文件、执行代码、挂起等待审批以及跨故障恢复。
+
+Every 曾尝试自建并托管这个共享 Agent 的控制面，维持一个月后因运维复杂度过高，选择将底层接入 Claude Managed Agents。托管架构带来了清晰的职责切分：Claude 与控制面 Harness 承担推理与流程决策（“脑”），按需创建的虚拟电脑承担隔离执行（“手”），Session 记录状态变化。沙箱环境按需计费（每个 Session 独占一台虚拟电脑，运行时单价为每小时 0.08 美元），避免了全天常驻虚拟机的资源浪费。
+
+然而，公有云托管方案也带来了不可忽视的架构约束：
+
+1. **分布式悬空风险**：Every 的自有服务在 Agent 等待外部工具调用时若发生重启，容易导致上下文连接中断，使模型请求陷入悬空状态。
+2. **隐式行为漂移**：托管服务底层的模型版本调整会直接穿透到上层应用。Every 团队曾在一次底层升级后，观察到 Agent 的典型回复长度从约 280 个字符骤增至约 880 个字符。
+3. **厂商锁定与合规冲突**：Claude Managed Agents 强绑定 Anthropic 自身的模型家族；为了支持长任务的中断恢复，Session 历史必须在云端持久化存储，这导致其当前无法兼容 Anthropic 自身的零数据保留（Zero Data Retention, ZDR）协议，直接阻碍了对数据留存有严格合规要求的企业客户。
+4. **高昂的迁移成本**：脱离该托管体系意味着必须重新研发控制面 Harness、Session 调度器、Memory 状态机与沙箱编排层，Every 评估其迁移周期长达数月。
+
+## Workspace：企业 Agent 的真实物理边界
+
+Every 的技术演进路径证明了一个核心架构原则：**企业 Agent 的最小物理边界从来不是员工个人，而是团队工作区（Workspace）。**
+
+个人桌面 Agent（例如 WorkBuddy）适合单人独占的本地工作环境；但在多人协同的企业场景下，团队需要的是一个共同拥有、具备稳定身份的 Workspace Agent。
+
+CubePlex 从一开始就确立了以 Workspace 为核心的架构边界：
+
+- **资产归属于 Workspace**：Agent 的稳定 Persona、沉淀的团队业务知识，均由 Workspace 统一持有；Skills 遵循“平台内置 / 组织上传 / 工作区启用”的三级生命周期，确保工作流能力在团队内受控分发；
+- **执行上下文按协作单元隔离**：无论是通过 Web 界面、Slack 还是飞书等 IM 渠道，IM Thread 均直接映射为独立的 Conversation；执行沙箱 `UserSandbox` 按照用户（`user`）、对话（`conversation`）或主题（`topic`）多态分配，计算容器可随任务结束被安全回收，而工作文件与环境状态通过底层持久化卷跨会话保留；
+- **凭据最小化与网络出口置换**：MCP 连接器支持 Organization / Workspace / User 三级凭据授权；对于沙箱中执行不可信代码所需的环境变量，CubePlex 在 Kubernetes 部署下引入 `EgressRef` 占位机制，密钥真值仅在出向网络代理层按目标主机与策略进行置换，杜绝明文密钥直接暴露给沙箱进程；
+- **独立控制面规避厂商锁定**：基于 CubeLoop 构建的控制面 Harness 将调度逻辑与执行环境彻底解耦，既享受集中调度的免运维优势，又原生支持多模型切换（兼容 Anthropic、OpenAI 及本地模型）与 Docker / Helm 私有化交付，保障了企业的数据主权与合规要求。
+
+Every Agent 的转向是一次极具参考价值的行业标本。它证明了为每个人复制独立的“数字分身”往往走向运维与资产的泥潭；真正可落地的企业 Agent，必须以团队工作区为锚点沉淀长期能力，同时在会话、权限与执行层建立清晰严密的物理隔离。
+
+## 来源与范围
+
+- [Introducing the Every Agent](https://every.to/on-every/introducing-the-every-agent)，Dan Shipper，2026 年 10 月 6 日发布、10 月 10 日更新。文中提及的产品背景与定价来自 Every 官方发布说明。
+- [Why We Handed Our Agent’s Infrastructure to Anthropic](https://every.to/source-code/why-we-handed-our-agent-s-infrastructure-to-anthropic)，Paridhi Agarwal，2026 年 10 月 8 日发布、10 月 10 日更新。Plus One 运维代价、Claude Managed Agents 架构与历史会话重放（降低 39% token 成本）数据来自该工程复盘。
+- [来自 Every 的自我批评，不应该让每个员工一个 Agent](https://x.com/yibie/status/2108395080319128051)，yibie，2026 年 10 月 9 日。该文系统梳理了 Every 从个人 Agent 转向共享 Agent 的关键教训。
+- CubePlex 的 Workspace 与运行时设计参见 [CubePlex 核心概念文档](https://docs.cubeplex.ai/docs/getting-started/core-concepts)、[CubePlex 开源发布说明](/blog/zh-Hans/cubeplex-open-source-release) 及 [Managed Agents Harness 架构分析](/blog/zh-Hans/managed-agents-cloud-harness-vs-sandbox-harness)。
