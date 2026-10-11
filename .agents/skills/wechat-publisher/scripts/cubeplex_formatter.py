@@ -38,6 +38,7 @@ LINK_STYLE = (
 RECOMMENDED_READING = (
     ("CubePlex -- 企业级 Agent 平台正式开源", "./cubeplex-open-source-release"),
     ("从 Agent computer 到团队交付：QM 与 CubePlex 的两条路径", "./qm-cubeplex-team-agent-collaboration"),
+    ("CubePlex 与 DeerFlow：个人 Agent 环境与团队 Agent Workspace", "./cubeplex-vs-deerflow-workspace-and-harness"),
     ("Managed Agents Harness 架构与选择", "./managed-agents-cloud-harness-vs-sandbox-harness"),
 )
 
@@ -310,7 +311,7 @@ def render_post(
         'line-height: 1.5 !important; letter-spacing: 1px !important; text-align: left !important; text-indent: 0 !important;">关于</p>',
         f'<p style="margin: 0 0 6px 0 !important; padding: 0 !important; {about_heading}">CubeLoop</p>',
         f'<p style="margin: 0 0 6px 0 !important; padding: 0 !important; {about_body}">原生支持异步的 Python Agent Harness 框架，专为高性能、高可读性及生产级持久化能力而设计。</p>',
-        f'<p style="margin: 0 0 20px 0 !important; padding: 0 !important; {about_body}">https://cubeloop.dev</p>',
+        f'<p style="margin: 0 0 20px 0 !important; padding: 0 !important; {about_body}">https://github.com/cubeplexai/cubeloop</p>',
         f'<p style="margin: 0 0 6px 0 !important; padding: 0 !important; {about_heading}">CubePlex</p>',
         f'<p style="margin: 0 0 6px 0 !important; padding: 0 !important; {about_body}">CubePlex 是为团队构建的企业级智能体平台。Agent 的 Skills、Memory、工具、自动化任务和整个工作现场都在 Workspace 里持久保存，任务可以交接，经验可以复用，交付物以版本化产物留存。</p>',
         f'<p style="margin: 0 !important; padding: 0 !important; {about_body}">https://github.com/cubeplexai/cubeplex</p>',
