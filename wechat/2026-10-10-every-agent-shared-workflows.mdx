@@ -1,13 +1,13 @@
 ---
 slug: every-agent-shared-workflows
 title: Every Agent：企业 Agent 从个人副本转向共享同事
-description: Every 曾为每位员工部署独立的云端 Agent，随后改为全公司共享一个 Agent。这一转向验证了企业 Agent 的架构规律：部署单位应是团队工作区而非员工个人，长期能力由团队共享，执行与凭据则按任务严格隔离。
+description: Every.to 曾为每位员工部署独立的云端 Agent，随后改为全公司共享一个 Agent。这一转向验证了企业 Agent 的架构规律：部署单位应是团队工作区而非员工个人，长期能力由团队共享，执行与凭据则按任务严格隔离。
 authors: [xfgong]
 tags: [Every Agent, Slack, Claude Managed Agents, 团队 Agent, Agent Workspace, Skills]
 image: /img/blog/every-agent-shared-workflows-cover.webp
 ---
 
-Every 在 2026 年 10 月发布 Every Agent，一个由全公司共同使用的 Slack Agent。它的产品演进并非平地起步。此前数月，Every 曾运行名为 Plus One 的内部系统：为每位员工在云端虚拟机中独立分配一个 OpenClaw 实例。实际运行后，Every 彻底关闭了这批个人实例，改为全公司共享同一个 Agent 身份，并把底层的 Harness、会话调度与沙箱交给 Claude Managed Agents 托管。
+Every.to 在 2026 年 10 月发布 Every Agent，一个由全公司共同使用的 Slack Agent。它的产品演进并非平地起步。此前数月，Every 曾运行名为 Plus One 的内部系统：为每位员工在云端虚拟机中独立分配一个 OpenClaw 实例。实际运行后，Every 彻底关闭了这批个人实例，改为全公司共享同一个 Agent 身份，并把底层的 Harness、会话调度与沙箱交给 Claude Managed Agents 托管。
 
 这一转向指出了企业 Agent 落地中的一个根本性架构矛盾：**给每位员工复制一套独立的 Agent，在组织拓扑上是错位的。**它不仅带来繁重的实例运维负担，还会把组织知识切碎为互不相通的孤岛；而把 Agent 转为团队共享后，难点不再是“大家进入同一个对话框”，而是如何在共享长期身份与能力的同时，重新划分会话、记忆、工具凭据与执行沙箱的边界。
 
