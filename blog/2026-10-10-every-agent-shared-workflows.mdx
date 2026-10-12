@@ -1,13 +1,13 @@
 ---
 slug: every-agent-shared-workflows
 title: 'Every Agent: Enterprise Agents Shift from Personal Replicas to Shared Teammates'
-description: "Every.to initially deployed isolated cloud agents for every employee before switching to a single shared agent for the entire company. This shift highlights an architectural reality: enterprise agents belong in team workspaces rather than per-user silos, sharing durable capabilities while strictly isolating sessions, credentials, and execution environments."
+description: "Every (Every.to), a tech publication focused on AI workflows, initially deployed isolated cloud agents for every employee before switching to a single shared agent for the entire company. This shift highlights an architectural reality: enterprise agents belong in team workspaces rather than per-user silos, sharing durable capabilities while strictly isolating sessions, credentials, and execution environments."
 authors: [xfgong]
 tags: [Every Agent, Slack, Claude Managed Agents, Team Agent, Agent Workspace, Skills]
 image: /img/blog/every-agent-shared-workflows-cover.webp
 ---
 
-In October 2026, Every.to launched Every Agent, a company-wide Slack agent. Its product evolution did not start from scratch. Months earlier, Every operated an internal setup called Plus One: every employee received an OpenClaw instance running inside an isolated cloud virtual machine. In practice, Every retired these personal instances, switched to a single shared agent identity for the entire company, and handed the underlying harness, session scheduling, and sandboxes to Claude Managed Agents.
+In October 2026, Every (Every.to), a tech publication and studio focused on AI tools and workflows, launched Every Agent, a company-wide Slack agent. Its product evolution did not start from scratch. Months earlier, Every operated an internal setup called Plus One: every employee received an OpenClaw instance running inside an isolated cloud virtual machine. In practice, Every retired these personal instances, switched to a single shared agent identity for the entire company, and handed the underlying harness, session scheduling, and sandboxes to Claude Managed Agents.
 
 This shift points to a fundamental architectural mismatch in enterprise agent deployments: **replicating an independent agent for each employee is an organizational topology error.** It creates heavy infrastructure maintenance burdens and fragments company knowledge into disconnected silos. Moving to a shared agent shifts the technical challenge: the goal is not stuffing everyone into a single chat window, but establishing clear boundaries across sessions, memory, tool credentials, and execution sandboxes while sharing a stable identity and durable capabilities.
 
