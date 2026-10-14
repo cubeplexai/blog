@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 860" role="img" aria-labelledby="life-title life-desc">
+  <title id="life-title">Decoupled Background Task Lifecycle &amp; Event Resumption</title>
+  <desc id="life-desc">An end-to-end state machine covering 60s demotion, host-validated Todo contracts, log cursor commits, and idle resumption.</desc>
+  <defs>
+    <pattern id="grid2" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M36 0H0V36" fill="none" stroke="#E6EBF2" stroke-width="1"/></pattern>
+    <marker id="arrow-blue2" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5 0 7Z" fill="#1463E9"/></marker>
+    <style>
+      text { font-family: Inter, 'PingFang SC', 'Noto Sans SC', sans-serif; }
+      .title { fill:#17191C; font-size:30px; font-weight:760; letter-spacing:-.7px; }
+      .subtitle { fill:#536171; font-size:14.5px; }
+      .step-card { fill:#FFFFFF; stroke:#17191C; stroke-width:1.8; }
+      .step-card-active { fill:#F5F9FF; stroke:#1463E9; stroke-width:2.2; }
+      .step-title { fill:#17191C; font-size:17px; font-weight:750; }
+      .time-chip { fill:#F6F8FB; stroke:#CDD7E3; stroke-width:1.2; }
+      .time-chip-active { fill:#EAF2FE; stroke:#1463E9; stroke-width:1.3; }
+      .time-text { fill:#536171; font-size:11px; font-weight:650; }
+      .time-text-active { fill:#1463E9; font-size:11px; font-weight:700; }
+      .line-step-arrow { fill:none; stroke:#1463E9; stroke-width:2.4; marker-end:url(#arrow-blue2); stroke-linecap:round; }
+      .tag-box { fill:#F6F8FB; stroke:#CDD7E3; stroke-width:1.2; }
+      .tag-box-active { fill:#EAF2FE; stroke:#1463E9; stroke-width:1.4; }
+      .tag-text { fill:#536171; font-size:11.5px; font-weight:650; }
+      .tag-text-active { fill:#1463E9; font-size:11.5px; font-weight:720; }
+      .summary-box { fill:#FFFFFF; stroke:#17191C; stroke-width:1.6; }
+      .summary-copy { fill:#17191C; font-size:14px; font-weight:650; }
+    </style>
+  </defs>
+  <rect width="1600" height="860" fill="#FCFCFA"/><rect width="1600" height="860" fill="url(#grid2)"/>
+
+  <!-- Top Titles -->
+  <text x="40" y="56" class="title">Decoupled Background Task Lifecycle &amp; Event Resumption</text>
+  <text x="40" y="86" class="subtitle">An end-to-end state machine covering 60s demotion, host-validated Todo contracts, log cursor commits, and idle resumption.</text>
+
+  <!-- Step Cards -->
+
+    <!-- Step Card 1 -->
+    <rect x="40" y="160" width="280" height="470" rx="16" class="step-card"/>
+
+    <!-- Step Number Badge -->
+    <rect x="60" y="186" width="68" height="24" rx="6" fill="#17191C"/>
+    <text x="94" y="202" text-anchor="middle" style="font-size:11px; font-weight:750; fill:#FFFFFF">Step 01</text>
+
+    <!-- Time Chip -->
+    <rect x="136" y="186" width="164" height="24" rx="6" class="time-chip"/>
+    <text x="218" y="202" text-anchor="middle" class="time-text">0 ~ 60 Seconds</text>
+
+    <!-- Step Title -->
+    <text x="60" y="246" class="step-title">Synchronous Streaming</text>
+    <line x1="60" y1="262" x2="300" y2="262" stroke="#E6EBF2" stroke-width="1.2"/>
+
+    <!-- Step Bullet Lines -->
+    <text x="62" y="292" style="font-size:13px; fill:#394554; font-weight:450">
+    <tspan x="62" dy="0">Command starts execution</tspan><tspan x="62" dy="24">stdout streams into active reply</tspan><tspan x="62" dy="24">HTTP / SSE connection held open</tspan><tspan x="62" dy="24">User and agent wait synchronously</tspan>
+  </text>
+
+    <!-- Step State Tag -->
+    <rect x="60" y="574" width="240" height="32" rx="8" class="tag-box"/>
+    <circle cx="76" cy="590" r="4" fill="#536171"/>
+    <text x="88" y="594" class="tag-text">Active Connection</text>
+
+    <!-- Connector Arrow -->
+    <path d="M320 390h30" class="line-step-arrow"/>
+
+    <!-- Step Card 2 -->
+    <rect x="350" y="160" width="280" height="470" rx="16" class="step-card-active"/>
+
+    <!-- Step Number Badge -->
+    <rect x="370" y="186" width="68" height="24" rx="6" fill="#1463E9"/>
+    <text x="404" y="202" text-anchor="middle" style="font-size:11px; font-weight:750; fill:#FFFFFF">Step 02</text>
+
+    <!-- Time Chip -->
+    <rect x="446" y="186" width="164" height="24" rx="6" class="time-chip-active"/>
+    <text x="528" y="202" text-anchor="middle" class="time-text-active">At 60s Threshold</text>
+
+    <!-- Step Title -->
+    <text x="370" y="246" class="step-title">60s Background Demotion</text>
+    <line x1="370" y1="262" x2="610" y2="262" stroke="#E6EBF2" stroke-width="1.2"/>
+
+    <!-- Step Bullet Lines -->
+    <text x="372" y="292" style="font-size:13px; fill:#394554; font-weight:450">
+    <tspan x="372" dy="0">Command runtime exceeds 60s</tspan><tspan x="372" dy="24">Registered as Background Task</tspan><tspan x="372" dy="24">Declares wait_for_tasks list</tspan><tspan x="372" dy="24">Host validation locks items open</tspan>
+  </text>
+
+    <!-- Step State Tag -->
+    <rect x="370" y="574" width="240" height="32" rx="8" class="tag-box-active"/>
+    <circle cx="386" cy="590" r="4" fill="#1463E9"/>
+    <text x="398" y="594" class="tag-text-active">Todo Remains Open</text>
+
+    <!-- Connector Arrow -->
+    <path d="M630 390h30" class="line-step-arrow"/>
+
+    <!-- Step Card 3 -->
+    <rect x="660" y="160" width="280" height="470" rx="16" class="step-card"/>
+
+    <!-- Step Number Badge -->
+    <rect x="680" y="186" width="68" height="24" rx="6" fill="#17191C"/>
+    <text x="714" y="202" text-anchor="middle" style="font-size:11px; font-weight:750; fill:#FFFFFF">Step 03</text>
+
+    <!-- Time Chip -->
+    <rect x="756" y="186" width="164" height="24" rx="6" class="time-chip"/>
+    <text x="838" y="202" text-anchor="middle" class="time-text">Connection Released</text>
+
+    <!-- Step Title -->
+    <text x="680" y="246" class="step-title">Clean Reply Finalization</text>
+    <line x1="680" y1="262" x2="920" y2="262" stroke="#E6EBF2" stroke-width="1.2"/>
+
+    <!-- Step Bullet Lines -->
+    <text x="682" y="292" style="font-size:13px; fill:#394554; font-weight:450">
+    <tspan x="682" dy="0">Agent ends reply cleanly</tspan><tspan x="682" dy="24">Writes Checkpoint extra state</tspan><tspan x="682" dy="24">Releases gateway connection</tspan><tspan x="682" dy="24">Presents interim status card to user</tspan>
+  </text>
+
+    <!-- Step State Tag -->
+    <rect x="680" y="574" width="240" height="32" rx="8" class="tag-box"/>
+    <circle cx="696" cy="590" r="4" fill="#536171"/>
+    <text x="708" y="594" class="tag-text">Gateway Released</text>
+
+    <!-- Connector Arrow -->
+    <path d="M940 390h30" class="line-step-arrow"/>
+
+    <!-- Step Card 4 -->
+    <rect x="970" y="160" width="280" height="470" rx="16" class="step-card"/>
+
+    <!-- Step Number Badge -->
+    <rect x="990" y="186" width="68" height="24" rx="6" fill="#17191C"/>
+    <text x="1024" y="202" text-anchor="middle" style="font-size:11px; font-weight:750; fill:#FFFFFF">Step 04</text>
+
+    <!-- Time Chip -->
+    <rect x="1066" y="186" width="164" height="24" rx="6" class="time-chip"/>
+    <text x="1148" y="202" text-anchor="middle" class="time-text">Up to 1 Hour in Sandbox</text>
+
+    <!-- Step Title -->
+    <text x="990" y="246" class="step-title">Autonomous Execution</text>
+    <line x1="990" y1="262" x2="1230" y2="262" stroke="#E6EBF2" stroke-width="1.2"/>
+
+    <!-- Step Bullet Lines -->
+    <text x="992" y="292" style="font-size:13px; fill:#394554; font-weight:450">
+    <tspan x="992" dy="0">Sandbox process runs autonomously</tspan><tspan x="992" dy="24">Logs write to durable Command Log</tspan><tspan x="992" dy="24">Provider cursor advances on commit</tspan><tspan x="992" dy="24">State: pending ──&gt; readable</tspan>
+  </text>
+
+    <!-- Step State Tag -->
+    <rect x="990" y="574" width="240" height="32" rx="8" class="tag-box"/>
+    <circle cx="1006" cy="590" r="4" fill="#536171"/>
+    <text x="1018" y="594" class="tag-text">Cursor Recoverable</text>
+
+    <!-- Connector Arrow -->
+    <path d="M1250 390h30" class="line-step-arrow"/>
+
+    <!-- Step Card 5 -->
+    <rect x="1280" y="160" width="280" height="470" rx="16" class="step-card-active"/>
+
+    <!-- Step Number Badge -->
+    <rect x="1300" y="186" width="68" height="24" rx="6" fill="#1463E9"/>
+    <text x="1334" y="202" text-anchor="middle" style="font-size:11px; font-weight:750; fill:#FFFFFF">Step 05</text>
+
+    <!-- Time Chip -->
+    <rect x="1376" y="186" width="164" height="24" rx="6" class="time-chip-active"/>
+    <text x="1458" y="202" text-anchor="middle" class="time-text-active">Exit / Timeout</text>
+
+    <!-- Step Title -->
+    <text x="1300" y="246" class="step-title">Internal Event Resumption</text>
+    <line x1="1300" y1="262" x2="1540" y2="262" stroke="#E6EBF2" stroke-width="1.2"/>
+
+    <!-- Step Bullet Lines -->
+    <text x="1302" y="292" style="font-size:13px; fill:#394554; font-weight:450">
+    <tspan x="1302" dy="0">Emits internal task event</tspan><tspan x="1302" dy="24">Queues if another user speaks</tspan><tspan x="1302" dy="24">Resumes agent when conversation idle</tspan><tspan x="1302" dy="24">Agent verifies output &amp; completes Todo</tspan>
+  </text>
+
+    <!-- Step State Tag -->
+    <rect x="1300" y="574" width="240" height="32" rx="8" class="tag-box-active"/>
+    <circle cx="1316" cy="590" r="4" fill="#1463E9"/>
+    <text x="1328" y="594" class="tag-text-active">Clean Completion</text>
+
+    <!-- Connector Arrow -->
+
+
+
+  <!-- Bottom Summary Banner -->
+  <rect x="40" y="670" width="1520" height="80" rx="16" class="summary-box"/>
+  <rect x="64" y="695" width="144" height="30" rx="6" fill="#FFE24A"/>
+  <text x="136" y="715" text-anchor="middle" style="font-size:12px; font-weight:750; fill:#17191C">SYSTEM CONTRACT</text>
+  <text x="228" y="715" class="summary-copy">Core guarantees: no dropped gateway connections, no hallucinated completion, no lost tail logs, no misdirected stop signals across retries.</text>
+</svg>

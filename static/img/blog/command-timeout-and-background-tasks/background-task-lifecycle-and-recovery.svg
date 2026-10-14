@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 860" role="img" aria-labelledby="life-title life-desc">
+  <title id="life-title">手脑分离下的长任务全生命周期流转</title>
+  <desc id="life-desc">从 60 秒前后台分流、Todo 宿主校验到日志游标落盘与事件驱动唤醒的完整闭环。</desc>
+  <defs>
+    <pattern id="grid2" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M36 0H0V36" fill="none" stroke="#E6EBF2" stroke-width="1"/></pattern>
+    <marker id="arrow-blue2" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M0 0L9 3.5 0 7Z" fill="#1463E9"/></marker>
+    <style>
+      text { font-family: Inter, 'PingFang SC', 'Noto Sans SC', sans-serif; }
+      .title { fill:#17191C; font-size:30px; font-weight:760; letter-spacing:-.7px; }
+      .subtitle { fill:#536171; font-size:14.5px; }
+      .step-card { fill:#FFFFFF; stroke:#17191C; stroke-width:1.8; }
+      .step-card-active { fill:#F5F9FF; stroke:#1463E9; stroke-width:2.2; }
+      .step-title { fill:#17191C; font-size:17px; font-weight:750; }
+      .time-chip { fill:#F6F8FB; stroke:#CDD7E3; stroke-width:1.2; }
+      .time-chip-active { fill:#EAF2FE; stroke:#1463E9; stroke-width:1.3; }
+      .time-text { fill:#536171; font-size:11px; font-weight:650; }
+      .time-text-active { fill:#1463E9; font-size:11px; font-weight:700; }
+      .line-step-arrow { fill:none; stroke:#1463E9; stroke-width:2.4; marker-end:url(#arrow-blue2); stroke-linecap:round; }
+      .tag-box { fill:#F6F8FB; stroke:#CDD7E3; stroke-width:1.2; }
+      .tag-box-active { fill:#EAF2FE; stroke:#1463E9; stroke-width:1.4; }
+      .tag-text { fill:#536171; font-size:11.5px; font-weight:650; }
+      .tag-text-active { fill:#1463E9; font-size:11.5px; font-weight:720; }
+      .summary-box { fill:#FFFFFF; stroke:#17191C; stroke-width:1.6; }
+      .summary-copy { fill:#17191C; font-size:14px; font-weight:650; }
+    </style>
+  </defs>
+  <rect width="1600" height="860" fill="#FCFCFA"/><rect width="1600" height="860" fill="url(#grid2)"/>
+
+  <!-- Top Titles -->
+  <text x="40" y="56" class="title">手脑分离下的长任务全生命周期流转</text>
+  <text x="40" y="86" class="subtitle">从 60 秒前后台分流、Todo 宿主校验到日志游标落盘与事件驱动唤醒的完整闭环。</text>
+
+  <!-- Step Cards -->
+
+    <!-- Step Card 1 -->
+    <rect x="40" y="160" width="280" height="470" rx="16" class="step-card"/>
+
+    <!-- Step Number Badge -->
+    <rect x="60" y="186" width="68" height="24" rx="6" fill="#17191C"/>
+    <text x="94" y="202" text-anchor="middle" style="font-size:11px; font-weight:750; fill:#FFFFFF">阶段 01</text>
+
+    <!-- Time Chip -->
+    <rect x="136" y="186" width="164" height="24" rx="6" class="time-chip"/>
+    <text x="218" y="202" text-anchor="middle" class="time-text">0 ~ 60 秒</text>
+
+    <!-- Step Title -->
+    <text x="60" y="246" class="step-title">前台同步流式</text>
+    <line x1="60" y1="262" x2="300" y2="262" stroke="#E6EBF2" stroke-width="1.2"/>
+
+    <!-- Step Bullet Lines -->
+    <text x="62" y="292" style="font-size:13px; fill:#394554; font-weight:450">
+    <tspan x="62" dy="0">命令启动并开始执行</tspan><tspan x="62" dy="24">stdout 实时推入当前回复</tspan><tspan x="62" dy="24">HTTP / SSE 保持长连接</tspan><tspan x="62" dy="24">用户与模型在前台同步等待</tspan>
+  </text>
+
+    <!-- Step State Tag -->
+    <rect x="60" y="574" width="240" height="32" rx="8" class="tag-box"/>
+    <circle cx="76" cy="590" r="4" fill="#536171"/>
+    <text x="88" y="594" class="tag-text">连接持续占用</text>
+
+    <!-- Connector Arrow -->
+    <path d="M320 390h30" class="line-step-arrow"/>
+
+    <!-- Step Card 2 -->
+    <rect x="350" y="160" width="280" height="470" rx="16" class="step-card-active"/>
+
+    <!-- Step Number Badge -->
+    <rect x="370" y="186" width="68" height="24" rx="6" fill="#1463E9"/>
+    <text x="404" y="202" text-anchor="middle" style="font-size:11px; font-weight:750; fill:#FFFFFF">阶段 02</text>
+
+    <!-- Time Chip -->
+    <rect x="446" y="186" width="164" height="24" rx="6" class="time-chip-active"/>
+    <text x="528" y="202" text-anchor="middle" class="time-text-active">第 60 秒阈值</text>
+
+    <!-- Step Title -->
+    <text x="370" y="246" class="step-title">60s 降级转后台</text>
+    <line x1="370" y1="262" x2="610" y2="262" stroke="#E6EBF2" stroke-width="1.2"/>
+
+    <!-- Step Bullet Lines -->
+    <text x="372" y="292" style="font-size:13px; fill:#394554; font-weight:450">
+    <tspan x="372" dy="0">命令超时未完成</tspan><tspan x="372" dy="24">注册为 Background Task</tspan><tspan x="372" dy="24">声明 wait_for_tasks 列表</tspan><tspan x="372" dy="24">控制面宿主校验通过后强锁 Todo</tspan>
+  </text>
+
+    <!-- Step State Tag -->
+    <rect x="370" y="574" width="240" height="32" rx="8" class="tag-box-active"/>
+    <circle cx="386" cy="590" r="4" fill="#1463E9"/>
+    <text x="398" y="594" class="tag-text-active">Todo 保持 open</text>
+
+    <!-- Connector Arrow -->
+    <path d="M630 390h30" class="line-step-arrow"/>
+
+    <!-- Step Card 3 -->
+    <rect x="660" y="160" width="280" height="470" rx="16" class="step-card"/>
+
+    <!-- Step Number Badge -->
+    <rect x="680" y="186" width="68" height="24" rx="6" fill="#17191C"/>
+    <text x="714" y="202" text-anchor="middle" style="font-size:11px; font-weight:750; fill:#FFFFFF">阶段 03</text>
+
+    <!-- Time Chip -->
+    <rect x="756" y="186" width="164" height="24" rx="6" class="time-chip"/>
+    <text x="838" y="202" text-anchor="middle" class="time-text">释放网络连接</text>
+
+    <!-- Step Title -->
+    <text x="680" y="246" class="step-title">当前回复收敛</text>
+    <line x1="680" y1="262" x2="920" y2="262" stroke="#E6EBF2" stroke-width="1.2"/>
+
+    <!-- Step Bullet Lines -->
+    <text x="682" y="292" style="font-size:13px; fill:#394554; font-weight:450">
+    <tspan x="682" dy="0">Agent 正常结束当前回复</tspan><tspan x="682" dy="24">写入持久化 Checkpoint extra</tspan><tspan x="682" dy="24">释放网关连接与活跃 Run 锁</tspan><tspan x="682" dy="24">向用户展示阶段性任务卡片</tspan>
+  </text>
+
+    <!-- Step State Tag -->
+    <rect x="680" y="574" width="240" height="32" rx="8" class="tag-box"/>
+    <circle cx="696" cy="590" r="4" fill="#536171"/>
+    <text x="708" y="594" class="tag-text">网络连接释放</text>
+
+    <!-- Connector Arrow -->
+    <path d="M940 390h30" class="line-step-arrow"/>
+
+    <!-- Step Card 4 -->
+    <rect x="970" y="160" width="280" height="470" rx="16" class="step-card"/>
+
+    <!-- Step Number Badge -->
+    <rect x="990" y="186" width="68" height="24" rx="6" fill="#17191C"/>
+    <text x="1024" y="202" text-anchor="middle" style="font-size:11px; font-weight:750; fill:#FFFFFF">阶段 04</text>
+
+    <!-- Time Chip -->
+    <rect x="1066" y="186" width="164" height="24" rx="6" class="time-chip"/>
+    <text x="1148" y="202" text-anchor="middle" class="time-text">沙箱内最长 1 小时</text>
+
+    <!-- Step Title -->
+    <text x="990" y="246" class="step-title">独立执行与日志确认</text>
+    <line x1="990" y1="262" x2="1230" y2="262" stroke="#E6EBF2" stroke-width="1.2"/>
+
+    <!-- Step Bullet Lines -->
+    <text x="992" y="292" style="font-size:13px; fill:#394554; font-weight:450">
+    <tspan x="992" dy="0">沙箱内进程继续独立运行</tspan><tspan x="992" dy="24">日志写入持久化 Command Log</tspan><tspan x="992" dy="24">落盘成功后推进 Provider 游标</tspan><tspan x="992" dy="24">状态流转: pending ──&gt; readable</tspan>
+  </text>
+
+    <!-- Step State Tag -->
+    <rect x="990" y="574" width="240" height="32" rx="8" class="tag-box"/>
+    <circle cx="1006" cy="590" r="4" fill="#536171"/>
+    <text x="1018" y="594" class="tag-text">游标断点可恢复</text>
+
+    <!-- Connector Arrow -->
+    <path d="M1250 390h30" class="line-step-arrow"/>
+
+    <!-- Step Card 5 -->
+    <rect x="1280" y="160" width="280" height="470" rx="16" class="step-card-active"/>
+
+    <!-- Step Number Badge -->
+    <rect x="1300" y="186" width="68" height="24" rx="6" fill="#1463E9"/>
+    <text x="1334" y="202" text-anchor="middle" style="font-size:11px; font-weight:750; fill:#FFFFFF">阶段 05</text>
+
+    <!-- Time Chip -->
+    <rect x="1376" y="186" width="164" height="24" rx="6" class="time-chip-active"/>
+    <text x="1458" y="202" text-anchor="middle" class="time-text-active">任务完成 / 超时</text>
+
+    <!-- Step Title -->
+    <text x="1300" y="246" class="step-title">内部事件空闲唤醒</text>
+    <line x1="1300" y1="262" x2="1540" y2="262" stroke="#E6EBF2" stroke-width="1.2"/>
+
+    <!-- Step Bullet Lines -->
+    <text x="1302" y="292" style="font-size:13px; fill:#394554; font-weight:450">
+    <tspan x="1302" dy="0">产出内部任务事件</tspan><tspan x="1302" dy="24">检查会话锁: 若有发言则排队</tspan><tspan x="1302" dy="24">会话空闲时以发起者身份唤醒</tspan><tspan x="1302" dy="24">Agent 检查输出并勾销 Checklist</tspan>
+  </text>
+
+    <!-- Step State Tag -->
+    <rect x="1300" y="574" width="240" height="32" rx="8" class="tag-box-active"/>
+    <circle cx="1316" cy="590" r="4" fill="#1463E9"/>
+    <text x="1328" y="594" class="tag-text-active">断点恢复完成</text>
+
+    <!-- Connector Arrow -->
+
+
+
+  <!-- Bottom Summary Banner -->
+  <rect x="40" y="670" width="1520" height="80" rx="16" class="summary-box"/>
+  <rect x="64" y="695" width="144" height="30" rx="6" fill="#FFE24A"/>
+  <text x="136" y="715" text-anchor="middle" style="font-size:12px; font-weight:750; fill:#17191C">SYSTEM CONTRACT</text>
+  <text x="228" y="715" class="summary-copy">端到端契约保证：不拖垮网关长连接、不产生假装收工幻觉、不丢失未确认日志、不跨代误杀重试进程。</text>
+</svg>

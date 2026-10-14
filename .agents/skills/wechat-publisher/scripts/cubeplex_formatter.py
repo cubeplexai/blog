@@ -135,7 +135,21 @@ def resolve_image(src: str, repo: Path, output_dir: Path) -> str:
 
 def split_blocks(body: str) -> list[str]:
     body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
-    return [block.strip() for block in re.split(r"\n\s*\n", body) if block.strip()]
+    placeholders: list[str] = []
+
+    def save_fence(match: re.Match[str]) -> str:
+        placeholders.append(match.group(0))
+        return f"@@CUBEPLEX_FENCE_{len(placeholders) - 1}@@"
+
+    # Protect ``` ... ``` blocks from being split across blank lines
+    body = re.sub(r"```[^\n]*\n.*?```", save_fence, body, flags=re.S)
+    blocks = [block.strip() for block in re.split(r"\n\s*\n", body) if block.strip()]
+    restored: list[str] = []
+    for b in blocks:
+        for idx, fence in enumerate(placeholders):
+            b = b.replace(f"@@CUBEPLEX_FENCE_{idx}@@", fence)
+        restored.append(b)
+    return restored
 
 
 def parse_markdown_table(block: str) -> tuple[list[str], list[list[str]]] | None:
@@ -261,9 +275,31 @@ def render_post(
             )
             continue
 
-        if block.startswith("- "):
+        if block.startswith("```") and block.endswith("```"):
+            raw_lines = block.splitlines()
+            code_lines = raw_lines[1:-1] if len(raw_lines) >= 2 else []
+            formatted_lines = []
+            for line in code_lines:
+                escaped = html.escape(line)
+                leading_len = len(escaped) - len(escaped.lstrip(" "))
+                if leading_len > 0:
+                    escaped = ("&nbsp;" * leading_len) + escaped[leading_len:]
+                formatted_lines.append(escaped)
+            code_html = "<br />".join(formatted_lines)
+            parts.append(
+                '<p style="margin: 20px 0 24px 0 !important; padding: 14px 16px !important; '
+                f'border: 1px solid {TOKENS["border"]} !important; border-radius: 6px !important; '
+                f'background-color: {TOKENS["soft"]} !important; color: {TOKENS["ink"]} !important; '
+                "font-family: -apple-system-font, BlinkMacSystemFont, Consolas, Monaco, 'Courier New', monospace !important; "
+                'font-size: 13px !important; line-height: 1.65 !important; '
+                'text-align: left !important; text-indent: 0 !important; '
+                f'word-break: break-all !important;">{code_html}</p>'
+            )
+            continue
+
+        if block.startswith(("- ", "* ")) or re.match(r"^\d+\.\s+", block):
             for item in block.splitlines():
-                item = re.sub(r"^-\s+", "", item.strip())
+                item = re.sub(r"^([-\*])\s+", "", item.strip())
                 parts.append(
                     '<p style="margin: 0 0 12px 0 !important; padding: 0 0 0 15px !important; '
                     f'border-left: 2px solid {TOKENS["border"]} !important; color: {TOKENS["muted"]} !important; '

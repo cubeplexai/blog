@@ -1,0 +1,140 @@
+---
+slug: command-timeout-and-background-tasks
+title: "Command Timeouts and Faked Completion: Long-Running Task Governance in Decoupled Agents"
+description: Moving from single-node agents to decoupled control plane and sandbox architectures exposes long commands to reverse proxy timeouts, hallucinated task completion, and misdirected stop signals. CubePlex and CubeLoop introduce 60-second execution demotion, host-validated Todo contracts, committed log cursors, and generation fences to govern long-running background tasks in production.
+authors: [xfgong]
+tags: [Agent Architecture, Managed Agents, Background Tasks, Sandboxes, CubeLoop, CubePlex]
+image: /img/blog/command-timeout-and-background-tasks-cover-en.webp
+---
+
+In local terminal environments, letting an agent run long-duration commands in the background is well-understood. From Claude Code to CLI-based coding agents, developers are accustomed to moving long commands off the foreground interactive prompt. The shell process and the agent reasoning loop run on the same local machine; a background task is fundamentally an asynchronous child process handle in the host operating system's process tree and local memory. Polling state queries local pipes, and canceling a run dispatches a local OS signal. Its complexity remains cleanly encapsulated within single-host operating system abstractions.
+
+When agents move to enterprise production and adopt a "decoupled brain-and-hand" architecture—where a protected control plane owns the reasoning loop, conversation state, and checkpoints (the "brain"), while remote isolated sandboxes lease compute and run commands on demand (the "hand")—the single-host assumptions that previously masked this complexity collapse.
+
+In this architecture, a background task is no longer a local PID that can be polled in memory. It becomes a **distributed state transfer across network failure boundaries**. Systems must survive gateway connection timeouts, maintain consistency across network interruptions and worker restarts, manage concurrency in multiplayer conversations, and eliminate a frequent model failure mode: pretending a long-running command has finished and prematurely checking off unfinished tasks. Governing long commands requires complete state contracts across turn lifecycles, task list validation, log recovery, and cancellation propagation.
+
+<!-- truncate -->
+
+## The State and Network Boundary in Single-Node vs. Decoupled Agents
+
+The fundamental difference between single-node agents and distributed architectures is not whether background tasks are supported, but whether state and lifecycles must be synchronized across network failure domains:
+
+![Single-Node vs Decoupled Agent Background Task Topology](/img/blog/command-timeout-and-background-tasks/single-node-vs-decoupled-topology-en.svg)
+
+| Dimension | Single-Node Agent (e.g. Claude Code / CLI) | Decoupled Architecture (Control Plane + Remote Sandboxes) |
+|---|---|---|
+| **Execution Topology** | Brain and hand share local host OS memory and process tree | Brain lives in control plane (API/Worker); hand runs in remote sandboxes |
+| **Background Mechanism** | Local async child process (OS PID and file descriptors) | Cross-network distributed tasks with durable state and metadata transfer |
+| **Connection & Lifecycle** | Local terminal interaction with no intermediate timeout | Web/IM client via gateway, subject to 60s–120s read timeout caps |
+| **State Persistence** | In-memory; terminates with CLI process; no multi-node failover | Durable database checkpointer; workers recover state after crashes |
+| **Task Cancellation** | Direct local `SIGTERM` / `SIGKILL` to process group | Networked signal dispatch requiring generation fences against retry races |
+| **Coordination Scope** | Single user with dedicated terminal | Multiplayer team conversations; run lock contention and queuing |
+
+In a decoupled architecture, the control plane (API / Worker nodes) and client interfaces (browsers or enterprise IM platforms) maintain persistent connections over HTTP or Server-Sent Events (SSE). If a command runs synchronously for longer than 60 seconds, reverse proxies and ingress gateways terminate the connection on read timeout, leaving the execution state stranded.
+
+CubePlex introduces an explicit **60-second cutover threshold**:
+
+1. **Synchronous Foreground Streaming**: During the first 60 seconds, standard command output streams directly into the active reply while the agent waits.
+2. **Cross-Network Demotion and Background Registration**: If a command is still running at 60 seconds, CubePlex registers it as a durable conversation background task, returning the corresponding Task ID and Command ID to the agent.
+3. **Clean Reply Finalization**: The agent completes its current turn, persists its checkpoint, and closes the HTTP connection. The underlying process continues running autonomously inside the remote sandbox, governed by a default 1-hour deadline.
+
+Under this threshold mechanism, the runtime explicitly eliminates two common engineering anti-patterns:
+
+* **Preventing Shell Detachment Escapes (`&`, `nohup`, `disown`)**: Developers and models often reflexively append `&` to long commands (e.g., `npm run build &`). Inside a remote sandbox, this causes the shell subshell to exit immediately with return code 0, severing the process from managed execution. The detached process lacks a persistent Task ID, cannot capture stdout/stderr or non-zero exit codes, and cannot trigger an event callback on completion. CubePlex sandbox execution layers and system prompts strictly prohibit models from using background shell syntax; commands must launch in the foreground and be safely detached into managed background tasks by the control plane upon reaching the 60-second limit.
+* **Suppressing Busy-Wait Polling**: When a task moves to the background, LLMs tend to enter busy-wait loops across subsequent turns, repeatedly invoking `sleep 5`, `ps aux`, or `pgrep` to probe the process. This rapidly exhausts the context window and token budget while blocking normal conversation turns. CubeLoop constrains the model to declare an explicit task wait and terminate its turn immediately, delegating wake-up entirely to event-driven mechanics.
+
+![Decoupled Background Task Lifecycle & Event Resumption](/img/blog/command-timeout-and-background-tasks/background-task-lifecycle-and-recovery-en.svg)
+
+This cutover prevents long commands from degrading web connections. However, separating the reasoning loop from the executing process introduces a critical operational challenge: ensuring the model recognizes that work is still ongoing instead of declaring victory prematurely.
+
+## Preventing Faked Completion: Todo Lists and Host Validation Contracts
+
+When long tasks become asynchronous, a common model failure mode is "hallucinated completion." Because the runtime allows the current reply to end, the model frequently outputs statements such as "I have launched the data migration script in the background," and then promptly marks the corresponding checklist item as finished.
+
+In reality, the command has just started. Required build artifacts do not yet exist, and the background process could fail three minutes later from an out-of-memory error.
+
+CubeLoop addresses this at the framework level through [`TodoListMiddleware`](file:///Users/chris/work/cubepi/cubeloop/middleware/todo.py) and a host validation callback:
+
+```python
+# CubeLoop TodoListMiddleware task-wait declaration
+write_todos(
+    todos=[
+        {"content": "Fetch baseline source", "status": "completed"},
+        {"content": "Run full test suite", "status": "in_progress"},
+        {"content": "Build production container", "status": "pending"},
+    ],
+    wait_for_tasks=["task-deploy-build-892"],  # Explicit declaration of active background task
+)
+```
+
+This runtime enforces three defensive boundaries:
+
+1. **Unfinished State Enforcement**: While a background task is pending, associated items must remain `in_progress` or `pending`. The model cannot mark them `completed`.
+2. **Bidirectional Host Validation**: When a model submits a checklist containing `wait_for_tasks`, CubeLoop invokes the `validate_task_wait` callback against the host (the CubePlex control plane). The declaration is accepted and checkpointed only if the host validates that the task ID exists and is actively running. Unvalidated declarations are rejected.
+3. **Guard Against Premature Suspension**: Before concluding a turn, guard logic checks whether unfinished items are backed by a verified task wait. If valid background tasks exist, the agent suspends cleanly. If unfinished items remain without an active wait, the guard forces an additional model turn, preventing the agent from idling arbitrarily.
+
+Crucially, task-wait declarations feature **automatic invalidation** and **snapshot consistency across parallel tool calls**:
+
+* **Granular Invalidation Boundaries**: When an agent suspends on `wait_for_tasks`, internal automated policy approvals (such as pre-approved read permissions) or periodic heartbeats preserve the wait state, keeping the agent silent. However, any human intervention—a user steering message, an answer to a Human-in-the-Loop (HITL) prompt, or manual approval/rejection of a tool invocation—immediately invalidates the active wait declaration, launching a new model turn to prioritize human intent.
+* **Snapshot Idempotency Under Parallel Tool Calls**: Modern models frequently issue parallel tool calls in a single turn (e.g., launching a background build while updating a checklist and reading config files). If lifecycle callbacks like `after_tool_call` perform destructive reads (such as popping a todo snapshot), the first tool in the batch consumes the state, causing subsequent tool callbacks to lose context. CubeLoop enforces read-only, idempotent snapshot access (`get` instead of `pop`) across batches, guaranteeing a consistent context view for all concurrent calls.
+
+## Log Cursors and Crash Recovery Across Network Boundaries
+
+In local execution, reading command completion and exit codes directly follows process termination. In remote sandboxes, however, **process termination** and **durable output ingestion** are separate distributed stages.
+
+Failure conditions frequently emerge across this boundary: a container finishes executing and notifies the control plane, but network failure interrupts the final log batch; alternatively, a backend worker crashes before committing retrieved output to the database. Relying solely on process exit codes results in inconsistent states where a task is reported as successful while its command detail panel is missing terminal output.
+
+CubePlex 0.9.0 establishes an authoritative state machine paired with log cursor commits:
+
+```
+[ Sandbox Provider Process ]
+       │  (1) Produces output chunk
+       ▼
+[ Streaming Ingestion Buffer ]
+       │  (2) Cursor advances only after write to Command Log succeeds
+       ▼
+[ Durable Database (Command Log) ]
+       │  (3) Verifies output availability
+       ▼
+[ Result State Machine: result_pending ──> readable ──> delivered ]
+```
+
+* **Committed Cursor Progression**: The control plane advances the provider log cursor only after output chunks are committed to the durable Command Log. Temporary read or write errors retain the `result_pending` state rather than fabricating incomplete records.
+* **Crash-Safe Replay**: When a worker restarts, recovery routines inspect the last confirmed cursor and re-fetch missing tail chunks. The system tolerates replaying the final output chunk during recovery to prevent silent data loss, avoiding duplicate event notifications.
+* **Explicit Output Availability**: If a sandbox instance becomes unreachable due to hardware failure, the system explicitly reports output as unavailable rather than displaying a false empty success.
+* **Worker Restarts and Orphaned Task Recovery**: When backend workers restart or fail over due to releases, OOM events, or node rebalancing, long commands in remote sandboxes continue running, but in-memory process handles and SSE log streams sever. The control plane's Background Task Coordinator reconciles database records against sandbox provider state during startup and periodic sweeps. By querying completed orphaned tasks through generation-fenced lookups, the coordinator idempotently settles pending notices, preventing tasks from freezing indefinitely while guarding against duplicate notification storms.
+
+## Generation Fences and Networked Cancellation Signals
+
+Long commands invariably require human intervention. If a build hangs or behaves unexpectedly, users need immediate controls to stop execution.
+
+CubePlex provides two cancellation scopes:
+
+* **Stop task**: Targets an individual background task.
+* **Stop all**: Simultaneously terminates the active response and all background tasks belonging to the current execution generation.
+
+Across decoupled networks, cancellation introduces race conditions between asynchronous signals and automatic retries.
+
+Consider a scenario where a user clicks "Stop task." The cancellation request is queued in the control plane and dispatched to the sandbox runner. If the command timed out and exited immediately before the signal arrived, and an automated policy triggered a retry process, a delayed stop signal could mistakenly terminate the newly created task.
+
+To prevent misdirected stops, CubePlex applies **Execution Generation Fences**:
+
+Every background task is bound to the Generation ID of its originating run. When the control plane issues a termination request, it carries this generation identifier. Before dispatching OS signals (`SIGTERM`, escalating to `SIGKILL` on timeout), the sandbox runner validates the target process's generation. Requests targeting obsolete generations are dropped, safeguarding subsequent retries and downstream steps.
+
+In user interfaces, accepted cancellation requests remain visible as `Stopping` until the sandbox provider delivers verified evidence that the underlying process has exited.
+
+## Event Resumption and Lock Contention in Multiplayer Conversations
+
+When a sandbox command completes after running for thirty minutes, the control plane must resume the agent to continue the remaining checklist items.
+
+While resumption is straightforward in 1:1 chats, team environments—such as CubePlex Topics or shared Slack and Feishu channels—face **conversation lock contention**:
+
+1. **Originating Identity Binding**: Final task outcomes are delivered as internal conversation events (Internal Task Events). To preserve audit trails and permissions, the completion event is dispatched under the identity of the user who initiated the task, never under anonymous system tokens or another active participant's identity.
+2. **Preserving Active Dialogue**: At the moment a background task finishes, another team member may be chatting with the agent, or an interactive approval card may be awaiting review. Delivering a background result immediately would disrupt the active conversation turn.
+3. **Queuing and Idle Resumption**: Internal task events follow queued admission. If a conversation is occupied by another user's active run, the task event remains queued. Once the active run completes and the conversation returns to idle, the runtime starts a follow-up turn under the originating user's identity, allowing the agent to inspect command output and check off items.
+
+## Conclusion
+
+Single-node agents mask the complexity of long-running commands by relying on operating system process abstractions, but these assumptions fail in enterprise team environments.
+
+Decoupling the harness into the control plane while isolating execution in remote sandboxes is essential for system availability, auditability, and multi-tenant security. This architecture requires end-to-end task governance: 60-second execution demotion, host-validated Todo contracts, committed log cursors, generation fences, and collaborative event queuing. Solidifying these state transitions into deterministic runtime mechanics ensures agents reliably deliver verified outcomes across hours of continuous work, eliminating faked completion and dropped connections.
