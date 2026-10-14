@@ -1,0 +1,208 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 960" role="img" aria-labelledby="top-title-en top-desc-en">
+  <title id="top-title-en">Enterprise Agent Platform Overall Architecture (Decoupled Brain-Hand &amp; Four System Boundaries)</title>
+  <desc id="top-desc-en">Protected control plane holds reasoning state machine and collaboration context; elastic execution plane leases isolated compute; egress proxies and persistent storage ensure security and state closure.</desc>
+  <defs>
+    <pattern id="grid-en" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M36 0H0V36" fill="none" stroke="#E6EBF2" stroke-width="1"/>
+    </pattern>
+    <marker id="arrow-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0L9 3.5 0 7Z" fill="#1463E9"/>
+    </marker>
+    <marker id="arrow-ink" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0L9 3.5 0 7Z" fill="#17191C"/>
+    </marker>
+    <marker id="arrow-teal" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0L9 3.5 0 7Z" fill="#0D9488"/>
+    </marker>
+    <marker id="arrow-slate" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0L9 3.5 0 7Z" fill="#334155"/>
+    </marker>
+    <style>
+      text { font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      .main-title { fill:#17191C; font-size:26px; font-weight:750; letter-spacing:-.5px; }
+      .main-sub { fill:#536171; font-size:13.5px; }
+      .layer-panel { fill:#FFFFFF; stroke:#17191C; stroke-width:2; }
+      .layer-title { fill:#17191C; font-size:17px; font-weight:750; letter-spacing:-.3px; }
+      .layer-sub { fill:#64748B; font-size:12px; }
+      .box { fill:#FFFFFF; stroke:#17191C; stroke-width:1.6; }
+      .box-blue { fill:#F4F8FF; stroke:#1463E9; stroke-width:2; }
+      .box-teal { fill:#F0FDF4; stroke:#0D9488; stroke-width:2; }
+      .box-slate { fill:#F8FAFC; stroke:#334155; stroke-width:1.8; }
+      .box-title { fill:#17191C; font-size:14px; font-weight:720; }
+      .box-desc { fill:#64748B; font-size:11.5px; line-height:1.4; }
+      .badge-text { fill:#FFFFFF; font-size:11px; font-weight:700; text-anchor:middle; }
+      .line-blue { fill:none; stroke:#1463E9; stroke-width:2; marker-end:url(#arrow-blue); }
+      .line-teal { fill:none; stroke:#0D9488; stroke-width:2; marker-end:url(#arrow-teal); }
+      .line-slate { fill:none; stroke:#334155; stroke-width:1.8; marker-end:url(#arrow-slate); }
+      .line-ink { fill:none; stroke:#17191C; stroke-width:1.6; marker-end:url(#arrow-ink); }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1600" height="960" fill="#FCFCFA"/>
+  <rect width="1600" height="960" fill="url(#grid-en)"/>
+
+  <!-- Header -->
+  <text x="44" y="52" class="main-title">Enterprise Agent Platform Architecture (Decoupled Brain-Hand &amp; Four System Boundaries)</text>
+  <text x="44" y="80" class="main-sub">Protected control plane holds reasoning state and team context; elastic execution plane leases isolated compute; egress proxies and persistent storage ensure security and state closure.</text>
+
+  <!-- 1. Client & Ingress Layer (Top Layer) -->
+  <rect x="44" y="108" width="1512" height="116" rx="16" class="layer-panel"/>
+  <text x="72" y="142" class="layer-title">Client &amp; Ingress Layer</text>
+  <text x="72" y="164" class="layer-sub">Unified AuthN · Org RBAC · Multi-IM Topic Routing</text>
+
+  <rect x="500" y="126" width="230" height="78" rx="10" class="box"/>
+  <text x="520" y="156" class="box-title">Enterprise IM (Slack / Lark)</text>
+  <text x="520" y="180" class="box-desc">Webhooks · Interactive Cards · Approval</text>
+
+  <rect x="750" y="126" width="230" height="78" rx="10" class="box"/>
+  <text x="770" y="156" class="box-title">Web Collaborative Workspace</text>
+  <text x="770" y="180" class="box-desc">Topic Containers · File Browser · Auditing</text>
+
+  <rect x="1000" y="126" width="240" height="78" rx="10" class="box-blue"/>
+  <text x="1020" y="156" class="box-title" style="fill:#1463E9">API Gateway &amp; Router</text>
+  <text x="1020" y="180" class="box-desc">SSE Streaming · Auth · Read Timeout Policy</text>
+
+  <rect x="1260" y="126" width="268" height="78" rx="10" class="box-slate"/>
+  <text x="1280" y="156" class="box-title">External Tools &amp; Code Repos</text>
+  <text x="1280" y="180" class="box-desc">GitHub · GitLab · SaaS OpenAPI</text>
+
+  <!-- Client Ingress to Control Plane (Brain) -->
+  <path d="M615 204 v 64" class="line-blue"/>
+
+  <!-- Clean RPC Lease Bridge from Control Plane to Sandbox Pool (Runs in gap y=248) -->
+  <path d="M380 268 v -20 h 740 v 20" fill="none" stroke="#1463E9" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <rect x="620" y="236" width="280" height="24" rx="4" fill="#FFFFFF" stroke="#1463E9" stroke-width="1.3"/>
+  <text x="760" y="252" text-anchor="middle" fill="#1463E9" font-size="11" font-weight="700">gRPC / RPC Lease Allocation Contract</text>
+
+  <!-- 2. Control Plane / Harness - "Brain" -->
+  <rect x="44" y="268" width="630" height="432" rx="16" class="box-blue"/>
+  <rect x="68" y="288" width="160" height="24" rx="5" fill="#1463E9"/>
+  <text x="148" y="304" class="badge-text">Protected Control Plane · Brain</text>
+  <text x="246" y="306" class="layer-title" style="fill:#1463E9">Control Plane (Harness)</text>
+  <text x="68" y="332" class="layer-sub">Long-running HA cluster · Holds state machine, reasoning loops, and policy compliance</text>
+
+  <!-- Inner boxes in Control Plane -->
+  <rect x="68" y="352" width="265" height="96" rx="10" class="box"/>
+  <text x="84" y="380" class="box-title">Session State Machine</text>
+  <text x="84" y="404" class="box-desc">Native async while-loop linear runner</text>
+  <text x="84" y="426" class="box-desc" style="fill:#1463E9; font-weight:600">Append-Only Incremental Events (O(1) I/O)</text>
+
+  <rect x="353" y="352" width="297" height="96" rx="10" class="box"/>
+  <text x="369" y="380" class="box-title">LLM Scheduling &amp; Context Defense</text>
+  <text x="369" y="404" class="box-desc">Dynamic prompt assembly · Model fallbacks</text>
+  <text x="369" y="426" class="box-desc" style="fill:#1463E9; font-weight:600">20k-char truncation &amp; history compaction</text>
+
+  <rect x="68" y="466" width="265" height="106" rx="10" class="box"/>
+  <text x="84" y="494" class="box-title">Security &amp; Policy (HITL Engine)</text>
+  <text x="84" y="518" class="box-desc">Tool whitelists · High-risk interception</text>
+  <text x="84" y="540" class="box-desc" style="fill:#17191C">Interactive ask_user card approval flow</text>
+
+  <rect x="353" y="466" width="297" height="106" rx="10" class="box"/>
+  <text x="369" y="494" class="box-title">Long-Task Lifecycle Coordinator</text>
+  <text x="369" y="518" class="box-desc">60s threshold demotion (foreground to bg)</text>
+  <text x="369" y="540" class="box-desc" style="fill:#0F172A; font-weight:600">Generation fences preventing race conflicts</text>
+
+  <rect x="68" y="590" width="582" height="86" rx="10" class="box-slate"/>
+  <text x="84" y="618" class="box-title">Persistent Checkpoint DB (PostgreSQL / MySQL)</text>
+  <text x="84" y="642" class="box-desc">Incrementally records message stream, Task ID cursors, unfulfilled Todo contracts, and audit traces</text>
+
+  <!-- 3. Center: Secret Broker & Egress Barrier (Neutral Slate Security Gateway) -->
+  <rect x="696" y="268" width="288" height="432" rx="16" class="box-slate"/>
+  <rect x="716" y="288" width="160" height="24" rx="5" fill="#334155"/>
+  <text x="796" y="304" class="badge-text">Security &amp; Egress Gateway</text>
+  <text x="716" y="338" class="layer-title" style="fill:#0F172A">Secret Broker (Egress Proxy)</text>
+  <text x="716" y="358" class="layer-sub">Secret Exclusion Mechanism · Dynamic Token Swap</text>
+
+  <!-- Box 1: Vault -->
+  <rect x="716" y="374" width="248" height="88" rx="8" class="box"/>
+  <text x="732" y="402" class="box-title">Vault / KMS Secret Store</text>
+  <text x="732" y="426" class="box-desc">Holds genuine credentials · Isolated from sandboxes</text>
+  <text x="732" y="446" class="box-desc" style="fill:#0F172A; font-weight:600">Never delivered to sandboxes</text>
+
+  <!-- Connector: Vault supplies credentials to Egress Proxy -->
+  <path d="M840 462 v 12" class="line-slate"/>
+
+  <!-- Box 2: Egress Proxy -->
+  <rect x="716" y="474" width="248" height="124" rx="8" class="box"/>
+  <text x="732" y="502" class="box-title">Egress Reverse Proxy</text>
+  <text x="732" y="526" class="box-desc">Host domain whitelist (*.github.com)</text>
+  <text x="732" y="548" class="box-desc">Request header verification &amp; sanitization</text>
+  <text x="732" y="570" class="box-desc" style="fill:#1463E9; font-weight:600">Dynamic token swap at perimeter</text>
+
+  <!-- Box 3: Placeholder tag -->
+  <rect x="716" y="612" width="248" height="64" rx="8" fill="#FFFFFF" stroke="#334155" stroke-width="1.3"/>
+  <text x="840" y="638" text-anchor="middle" class="box-title" style="font-size:13px; fill:#334155">Sandbox Holds Opaque Placeholders</text>
+  <text x="840" y="658" text-anchor="middle" class="box-desc">Prevents prompt injection exfiltration</text>
+
+  <!-- Connector: Control Plane to Vault -->
+  <path d="M674 418 h 42" class="line-blue"/>
+
+  <!-- 4. Execution Plane / Sandbox - "Hand" -->
+  <rect x="1006" y="268" width="550" height="432" rx="16" class="box-teal"/>
+  <rect x="1030" y="288" width="150" height="24" rx="5" fill="#0D9488"/>
+  <text x="1105" y="304" class="badge-text">Elastic Execution · Hand</text>
+  <text x="1190" y="306" class="layer-title" style="fill:#0D9488">Data Plane (Sandbox Pool)</text>
+  <text x="1030" y="332" class="layer-sub">Lightweight containers / MicroVMs · On-demand leases · Reclaimed after task</text>
+
+  <!-- Sandbox Pool Inner Boxes -->
+  <rect x="1030" y="352" width="242" height="154" rx="10" class="box"/>
+  <text x="1046" y="380" class="box-title">Isolated Sandbox Pod</text>
+  <text x="1046" y="404" class="box-desc">Linux namespaces &amp; cgroups</text>
+  <text x="1046" y="426" class="box-desc">Opaque placeholder env vars</text>
+  <text x="1046" y="448" class="box-desc">Read-only base + dynamic volumes</text>
+  <text x="1046" y="470" class="box-desc" style="fill:#0D9488; font-weight:600">Egress restricted to Secret Broker</text>
+
+  <rect x="1288" y="352" width="244" height="154" rx="10" class="box"/>
+  <text x="1304" y="380" class="box-title">Managed Task Runner</text>
+  <text x="1304" y="404" class="box-desc">60s timeout smooth demotion</text>
+  <text x="1304" y="426" class="box-desc">Disallows unmanaged nohup/&amp;</text>
+  <text x="1304" y="448" class="box-desc">Host-validated Todo keeps Open</text>
+  <text x="1304" y="470" class="box-desc" style="fill:#0F172A; font-weight:600">Committed log cursor recovery</text>
+
+  <!-- Sandbox Lease orchestrator -->
+  <rect x="1030" y="522" width="502" height="74" rx="10" class="box"/>
+  <text x="1046" y="550" class="box-title">Sandbox Lease Manager</text>
+  <text x="1046" y="574" class="box-desc">Issues dynamic leases per topic/session · Freezes/reclaims compute on idle · Preserves storage independently</text>
+
+  <rect x="1030" y="612" width="502" height="64" rx="8" class="box-teal"/>
+  <text x="1281" y="649" text-anchor="middle" class="box-desc" style="fill:#0D9488; font-weight:700; font-size:13px">Compute Lifetime (Ephemeral Lease) != Data Lifetime (Durable Workspace)</text>
+
+  <!-- Line connecting Sandbox Egress to Secret Broker (Egress Proxy) -->
+  <path d="M1030 470 H 1018 V 548 H 964" class="line-teal"/>
+  <!-- Clean Outbound SaaS Line: Routes cleanly via corridor between Broker & Sandbox, then across to External Tools -->
+  <path d="M964 496 H 992 V 226 H 1394 V 204" class="line-ink"/>
+  <rect x="1080" y="214" width="270" height="24" rx="4" fill="#FFFFFF" stroke="#17191C" stroke-width="1.3"/>
+  <text x="1215" y="230" text-anchor="middle" fill="#17191C" font-size="11" font-weight="700">Dynamic Token Injection · Outbound API / Git</text>
+
+  <!-- 5. Team Collaboration & Workspace Persistence (Bottom Layer) -->
+  <rect x="44" y="726" width="1512" height="204" rx="16" class="layer-panel"/>
+  <text x="72" y="760" class="layer-title">Team Collaboration &amp; Workspace Persistence Layer</text>
+  <text x="72" y="782" class="layer-sub">Organizational digital teammate assets · Independent of individual employee accounts · Zero offboarding fallout</text>
+
+  <rect x="68" y="802" width="340" height="106" rx="10" class="box"/>
+  <text x="88" y="832" class="box-title">Persistent File Systems (Volumes)</text>
+  <text x="88" y="856" class="box-desc">PVC / Host volume mounts</text>
+  <text x="88" y="878" class="box-desc">Retains code, reports, build caches, and dependencies across sessions</text>
+
+  <rect x="428" y="802" width="340" height="106" rx="10" class="box"/>
+  <text x="448" y="832" class="box-title">Workspace Entity (Team Assets)</text>
+  <text x="448" y="856" class="box-desc">Stable Persona identities &amp; system prompts</text>
+  <text x="448" y="878" class="box-desc">Team-shared memory, business specs, and audit rules</text>
+
+  <rect x="788" y="802" width="350" height="106" rx="10" class="box"/>
+  <text x="808" y="832" class="box-title">Approved Tool Catalog (Skills &amp; MCP)</text>
+  <text x="808" y="856" class="box-desc">Team-level pre-installed &amp; authorized connectors</text>
+  <text x="808" y="878" class="box-desc">Enabled per workspace without sharing personal tokens</text>
+
+  <rect x="1158" y="802" width="374" height="106" rx="10" class="box"/>
+  <text x="1178" y="832" class="box-title">Audit Logs &amp; Telemetry</text>
+  <text x="1178" y="856" class="box-desc">Complete command execution histories, stdout/stderr streams</text>
+  <text x="1178" y="878" class="box-desc">OpenTelemetry distributed tracing &amp; token consumption audit</text>
+
+  <!-- Vertical lines from Sandbox to PVC -->
+  <path d="M1140 676 v 126" class="line-teal"/>
+  <!-- Vertical lines from Control Plane to Workspace Assets (x=600 cleanly avoids crossing the title text) -->
+  <path d="M600 700 v 102" class="line-blue"/>
+
+</svg>

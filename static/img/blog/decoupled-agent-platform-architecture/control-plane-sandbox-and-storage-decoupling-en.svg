@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 690" role="img" aria-labelledby="d1-en-title d1-en-desc">
+  <title id="d1-en-title">Decoupling Control Plane and Execution: Ephemeral Compute vs. Persistent Storage</title>
+  <desc id="d1-en-desc">Control plane manages reasoning and leases; sandbox pool provides ephemeral isolated compute; persistent volumes survive container lifecycles.</desc>
+  <defs>
+    <pattern id="grid1-en" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M30 0H0V30" fill="none" stroke="#E6EBF2" stroke-width="1"/>
+    </pattern>
+    <marker id="arrow-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0L9 3.5 0 7Z" fill="#1463E9"/>
+    </marker>
+    <marker id="arrow-teal" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0L9 3.5 0 7Z" fill="#0D9488"/>
+    </marker>
+    <style>
+      text { font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      .main-title { fill:#17191C; font-size:24px; font-weight:750; letter-spacing:-.4px; }
+      .main-sub { fill:#536171; font-size:13.5px; }
+      .layer-title { fill:#17191C; font-size:16px; font-weight:750; }
+      .layer-sub { fill:#64748B; font-size:12px; }
+      .box { fill:#FFFFFF; stroke:#17191C; stroke-width:1.5; }
+      .box-title { fill:#17191C; font-size:13.5px; font-weight:700; }
+      .box-desc { fill:#536171; font-size:11.5px; line-height:1.45; }
+      .badge-text { font-size:11px; font-weight:700; fill:#FFFFFF; text-anchor:middle; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="690" fill="#FCFCFA"/>
+  <rect width="1200" height="690" fill="url(#grid1-en)"/>
+
+  <!-- Header -->
+  <text x="40" y="42" class="main-title">Decoupling Control Plane &amp; Execution: Ephemeral Compute vs. Persistent Storage</text>
+  <text x="40" y="68" class="main-sub">Control plane holds reasoning state and leases; sandboxes provide isolated compute; storage mounts persist across sessions.</text>
+
+  <!-- Layer 1: Control Plane (Brain) -->
+  <rect x="40" y="96" width="1120" height="136" rx="14" fill="#F4F8FF" stroke="#1463E9" stroke-width="2"/>
+  <rect x="64" y="114" width="190" height="22" rx="4" fill="#1463E9"/>
+  <text x="159" y="129" class="badge-text">Protected Control Plane · HA</text>
+  <text x="268" y="132" class="layer-title" style="fill:#1463E9">Control Plane (Harness API &amp; Workers) - "The Brain"</text>
+  <text x="64" y="152" class="layer-sub">Long-running service cluster · Holds state machine, reasoning, and policy compliance · Never runs arbitrary code</text>
+
+  <rect x="64" y="162" width="330" height="56" rx="8" class="box"/>
+  <text x="80" y="184" class="box-title">Session Machine (async while-loop)</text>
+  <text x="80" y="204" class="box-desc" style="fill:#1463E9; font-weight:600">Append-Only Incremental Events · O(1) DB I/O</text>
+
+  <rect x="410" y="162" width="360" height="56" rx="8" class="box"/>
+  <text x="426" y="184" class="box-title">LLM Scheduling &amp; Context Defense</text>
+  <text x="426" y="204" class="box-desc">20k-character tool truncation · History compaction</text>
+
+  <rect x="786" y="162" width="350" height="56" rx="8" class="box"/>
+  <text x="802" y="184" class="box-title">Sandbox Lease Manager</text>
+  <text x="802" y="204" class="box-desc" style="fill:#0D9488; font-weight:600">Issues per-topic leases · Freezes/reclaims idle compute</text>
+
+  <!-- Connectors: Control Plane -> Sandbox Pool -->
+  <path d="M240 232 v 42" fill="none" stroke="#1463E9" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <path d="M960 232 v 42" fill="none" stroke="#1463E9" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <rect x="340" y="242" width="520" height="24" rx="4" fill="#FFFFFF" stroke="#1463E9" stroke-width="1.2"/>
+  <text x="600" y="258" text-anchor="middle" fill="#1463E9" font-size="11.5" font-weight="650">gRPC / RPC Lease Dispatch · Passes Task ID &amp; Opaque Secret Identifiers</text>
+
+  <!-- Layer 2: Data Plane (Sandbox Pool) -->
+  <rect x="40" y="280" width="1120" height="170" rx="14" fill="#F0FDF4" stroke="#0D9488" stroke-width="2"/>
+  <rect x="64" y="298" width="190" height="22" rx="4" fill="#0D9488"/>
+  <text x="159" y="313" class="badge-text">Elastic Data Plane · Ephemeral</text>
+  <text x="268" y="316" class="layer-title" style="fill:#0D9488">Data Plane (Sandbox Pool) - "The Hand"</text>
+  <text x="64" y="336" class="layer-sub">On-demand lease · Linux namespaces &amp; cgroups · Destroyed or frozen after execution to free CPU/RAM</text>
+
+  <!-- Sandbox A -->
+  <rect x="64" y="346" width="520" height="90" rx="8" class="box"/>
+  <text x="82" y="370" class="box-title">Sandbox A (Topic 1: Incident Triage Pod)</text>
+  <text x="82" y="392" class="box-desc">Lightweight Pod · Read-only base image + mounted workspace at /workspace</text>
+  <text x="82" y="414" class="box-desc" style="fill:#0D9488; font-weight:600">Smooth 60s background demotion · Pod can be reclaimed whenever idle</text>
+
+  <!-- Sandbox B -->
+  <rect x="604" y="346" width="532" height="90" rx="8" class="box"/>
+  <text x="622" y="370" class="box-title">Sandbox B (Topic 2: Report Generation Pod)</text>
+  <text x="622" y="392" class="box-desc">Dedicated MicroVM / Pod · Completely isolated compute resources from Sandbox A</text>
+  <text x="622" y="414" class="box-desc" style="fill:#0D9488; font-weight:600">Exclusive environment · Eliminates noisy-neighbor interference</text>
+
+  <!-- Connectors: Sandbox Pool -> Persistent Volumes -->
+  <path d="M240 450 v 40" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)"/>
+  <path d="M960 450 v 40" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)"/>
+  <rect x="410" y="458" width="380" height="24" rx="4" fill="#FFFFFF" stroke="#0D9488" stroke-width="1.2"/>
+  <text x="600" y="474" text-anchor="middle" fill="#0D9488" font-size="11.5" font-weight="650">Dynamic Volume Mounts (Persistent Volume Claims / Host Mounts)</text>
+
+  <!-- Layer 3: Persistent Storage (Asset & Memory) -->
+  <rect x="40" y="496" width="1120" height="154" rx="14" fill="#FFFFFF" stroke="#17191C" stroke-width="2"/>
+  <rect x="64" y="514" width="230" height="22" rx="4" fill="#17191C"/>
+  <text x="179" y="529" class="badge-text">Durable Storage · Survives Compute</text>
+  <text x="308" y="532" class="layer-title">Persistent Storage Layer - "Memory &amp; Assets"</text>
+  <text x="64" y="552" class="layer-sub">Storage lifetime decoupled from containers · Re-attaches automatically when containers restart</text>
+
+  <!-- PVC A -->
+  <rect x="64" y="562" width="520" height="72" rx="8" class="box" fill="#F8FAFC"/>
+  <text x="82" y="586" class="box-title">PVC A (/data/workspaces/topic-1)</text>
+  <text x="82" y="608" class="box-desc">Retains git repositories, crash dumps, and code patches</text>
+  <text x="82" y="626" class="box-desc" style="fill:#17191C; font-weight:600">Teammates can seamlessly continue work where the previous run left off</text>
+
+  <!-- PVC B -->
+  <rect x="604" y="562" width="532" height="72" rx="8" class="box" fill="#F8FAFC"/>
+  <text x="622" y="586" class="box-title">PVC B (/data/workspaces/topic-2)</text>
+  <text x="622" y="608" class="box-desc">Retains package caches, exported Excel/PDF artifacts</text>
+  <text x="622" y="626" class="box-desc" style="fill:#17191C; font-weight:600">Revisiting the workspace weeks later leaves files intact with zero rebuild</text>
+
+  <!-- Bottom Core Principle Banner -->
+  <rect x="40" y="658" width="1120" height="26" rx="5" fill="#FFFBEB" stroke="#D97706" stroke-width="1.2"/>
+  <text x="600" y="675" text-anchor="middle" fill="#D97706" font-size="12" font-weight="700">Core Principle: Compute Lifetime (Ephemeral &amp; Disposable) != Data Lifetime (Durable &amp; Shared)</text>
+</svg>

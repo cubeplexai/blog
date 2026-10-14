@@ -1,0 +1,208 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 960" role="img" aria-labelledby="top-title top-desc">
+  <title id="top-title">企业级 Agent 平台总体架构拓扑（手脑分离与四大系统边界）</title>
+  <desc id="top-desc">受控控制面（Harness）持有推理状态机与协同上下文；弹性执行面（Sandbox）按需租借隔离算力；通过出网代理与持久存储实现安全与状态闭环。</desc>
+  <defs>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M36 0H0V36" fill="none" stroke="#E6EBF2" stroke-width="1"/>
+    </pattern>
+    <marker id="arrow-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0L9 3.5 0 7Z" fill="#1463E9"/>
+    </marker>
+    <marker id="arrow-ink" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0L9 3.5 0 7Z" fill="#17191C"/>
+    </marker>
+    <marker id="arrow-teal" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0L9 3.5 0 7Z" fill="#0D9488"/>
+    </marker>
+    <marker id="arrow-slate" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0L9 3.5 0 7Z" fill="#334155"/>
+    </marker>
+    <style>
+      text { font-family: Inter, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans SC', sans-serif; }
+      .main-title { fill:#17191C; font-size:27px; font-weight:750; letter-spacing:-.5px; }
+      .main-sub { fill:#536171; font-size:13.5px; }
+      .layer-panel { fill:#FFFFFF; stroke:#17191C; stroke-width:2; }
+      .layer-title { fill:#17191C; font-size:18px; font-weight:750; letter-spacing:-.3px; }
+      .layer-sub { fill:#64748B; font-size:12px; }
+      .box { fill:#FFFFFF; stroke:#17191C; stroke-width:1.6; }
+      .box-blue { fill:#F4F8FF; stroke:#1463E9; stroke-width:2; }
+      .box-teal { fill:#F0FDF4; stroke:#0D9488; stroke-width:2; }
+      .box-slate { fill:#F8FAFC; stroke:#334155; stroke-width:1.8; }
+      .box-title { fill:#17191C; font-size:14px; font-weight:720; }
+      .box-desc { fill:#64748B; font-size:11.5px; line-height:1.4; }
+      .badge-text { fill:#FFFFFF; font-size:11px; font-weight:700; text-anchor:middle; }
+      .line-blue { fill:none; stroke:#1463E9; stroke-width:2; marker-end:url(#arrow-blue); }
+      .line-teal { fill:none; stroke:#0D9488; stroke-width:2; marker-end:url(#arrow-teal); }
+      .line-slate { fill:none; stroke:#334155; stroke-width:1.8; marker-end:url(#arrow-slate); }
+      .line-ink { fill:none; stroke:#17191C; stroke-width:1.6; marker-end:url(#arrow-ink); }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1600" height="960" fill="#FCFCFA"/>
+  <rect width="1600" height="960" fill="url(#grid)"/>
+
+  <!-- Header -->
+  <text x="44" y="52" class="main-title">企业级 Agent 平台总体架构拓扑（手脑分离与四大系统边界）</text>
+  <text x="44" y="80" class="main-sub">受控控制面持有推理状态机与协同上下文；弹性执行面按需租借隔离算力；通过出网代理与持久存储实现安全与状态闭环。</text>
+
+  <!-- 1. 接入与交互层 (Top Layer) -->
+  <rect x="44" y="108" width="1512" height="116" rx="16" class="layer-panel"/>
+  <text x="72" y="142" class="layer-title">接入与交互层 (Client &amp; Ingress Layer)</text>
+  <text x="72" y="164" class="layer-sub">统一身份认证 · 组织 RBAC · 跨 IM 会话 Topic 分流路由</text>
+
+  <rect x="520" y="126" width="220" height="78" rx="10" class="box"/>
+  <text x="540" y="156" class="box-title">企业 IM (飞书 / Slack)</text>
+  <text x="540" y="180" class="box-desc">Webhook / 卡片交互 / 审批流</text>
+
+  <rect x="760" y="126" width="220" height="78" rx="10" class="box"/>
+  <text x="780" y="156" class="box-title">Web 协同工作区</text>
+  <text x="780" y="180" class="box-desc">Topic 容器 / 文件浏览 / 执行审计</text>
+
+  <rect x="1000" y="126" width="240" height="78" rx="10" class="box-blue"/>
+  <text x="1020" y="156" class="box-title" style="fill:#1463E9">API Gateway &amp; Router</text>
+  <text x="1020" y="180" class="box-desc">SSE 流式网关 / 鉴权 / 读超时管控</text>
+
+  <rect x="1260" y="126" width="268" height="78" rx="10" class="box-slate"/>
+  <text x="1280" y="156" class="box-title">外部工具与 Git 代码源</text>
+  <text x="1280" y="180" class="box-desc">GitHub / GitLab / SaaS OpenAPI</text>
+
+  <!-- Client Ingress to Control Plane (Brain) -->
+  <path d="M630 204 v 64" class="line-blue"/>
+
+  <!-- Clean RPC Lease Bridge from Control Plane to Sandbox Pool (Runs in gap y=248) -->
+  <path d="M380 268 v -20 h 740 v 20" fill="none" stroke="#1463E9" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <rect x="620" y="236" width="280" height="24" rx="4" fill="#FFFFFF" stroke="#1463E9" stroke-width="1.3"/>
+  <text x="760" y="252" text-anchor="middle" fill="#1463E9" font-size="11" font-weight="700">gRPC / RPC 派发执行租约 (Lease Contract)</text>
+
+  <!-- 2. 控制面 (Control Plane / Harness - "脑") -->
+  <rect x="44" y="268" width="630" height="432" rx="16" class="box-blue"/>
+  <rect x="68" y="288" width="130" height="24" rx="5" fill="#1463E9"/>
+  <text x="133" y="304" class="badge-text">受控控制面 · 脑</text>
+  <text x="210" y="306" class="layer-title" style="fill:#1463E9">Control Plane (Harness)</text>
+  <text x="68" y="332" class="layer-sub">长期驻留的高可用集群 · 持有状态机、推理调度与策略合规</text>
+
+  <!-- Inner boxes in Control Plane -->
+  <rect x="68" y="352" width="265" height="96" rx="10" class="box"/>
+  <text x="84" y="380" class="box-title">会话状态机 (Session Machine)</text>
+  <text x="84" y="404" class="box-desc">原生 async while-loop 线性循环</text>
+  <text x="84" y="426" class="box-desc" style="fill:#1463E9; font-weight:600">Append-Only 增量持久化 (O(1) I/O)</text>
+
+  <rect x="353" y="352" width="297" height="96" rx="10" class="box"/>
+  <text x="369" y="380" class="box-title">LLM 推理调度与上下文防御</text>
+  <text x="369" y="404" class="box-desc">Prompt 动态组装 · 模型降级切换</text>
+  <text x="369" y="426" class="box-desc" style="fill:#1463E9; font-weight:600">20k 字符前置截断与历史压实 (Compaction)</text>
+
+  <rect x="68" y="466" width="265" height="106" rx="10" class="box"/>
+  <text x="84" y="494" class="box-title">安全策略与审批 (HITL Engine)</text>
+  <text x="84" y="518" class="box-desc">工具白名单 · 高危行为拦截</text>
+  <text x="84" y="540" class="box-desc" style="fill:#17191C">ask_user 飞书卡片与人工确认审计</text>
+
+  <rect x="353" y="466" width="297" height="106" rx="10" class="box"/>
+  <text x="369" y="494" class="box-title">长任务生命周期协调器</text>
+  <text x="369" y="518" class="box-desc">60 秒阈值切分（前台流转后台任务）</text>
+  <text x="369" y="540" class="box-desc" style="fill:#0F172A; font-weight:600">代际栅栏 (Generation Fence) 防误杀</text>
+
+  <rect x="68" y="590" width="582" height="86" rx="10" class="box-slate"/>
+  <text x="84" y="618" class="box-title">持久化检查点数据库 (Postgres / MySQL)</text>
+  <text x="84" y="642" class="box-desc">增量保存消息事件流、Task ID 游标、未完成 Todo 合约状态与审计日志</text>
+
+  <!-- 3. Center: Secret Broker & Egress Barrier (Neutral Slate Security Gateway) -->
+  <rect x="696" y="268" width="288" height="432" rx="16" class="box-slate"/>
+  <rect x="716" y="288" width="130" height="24" rx="5" fill="#334155"/>
+  <text x="781" y="304" class="badge-text">出网与凭据边界</text>
+  <text x="716" y="338" class="layer-title" style="fill:#0F172A">Secret Broker (出网代理)</text>
+  <text x="716" y="358" class="layer-sub">密钥排除而非脱敏 · 边缘动态置换 Token</text>
+
+  <!-- Box 1: Vault -->
+  <rect x="716" y="374" width="248" height="88" rx="8" class="box"/>
+  <text x="732" y="402" class="box-title">Vault / KMS 凭据保险箱</text>
+  <text x="732" y="426" class="box-desc">统一持有真实 Token · 与沙箱物理隔离</text>
+  <text x="732" y="446" class="box-desc" style="fill:#0F172A; font-weight:600">凭据绝不下发给沙箱环境</text>
+
+  <!-- Connector: Vault supplies credentials to Egress Proxy -->
+  <path d="M840 462 v 12" class="line-slate"/>
+
+  <!-- Box 2: Egress Proxy -->
+  <rect x="716" y="474" width="248" height="124" rx="8" class="box"/>
+  <text x="732" y="502" class="box-title">出网反向代理 (Egress Proxy)</text>
+  <text x="732" y="526" class="box-desc">目的域名白名单匹配 (*.github.com)</text>
+  <text x="732" y="548" class="box-desc">请求 Header 与 Path 安全校验</text>
+  <text x="732" y="570" class="box-desc" style="fill:#1463E9; font-weight:600">边缘动态置换真实 Token</text>
+
+  <!-- Box 3: Placeholder tag -->
+  <rect x="716" y="612" width="248" height="64" rx="8" fill="#FFFFFF" stroke="#334155" stroke-width="1.3"/>
+  <text x="840" y="638" text-anchor="middle" class="box-title" style="font-size:13px; fill:#334155">沙箱环境仅持有占位符</text>
+  <text x="840" y="658" text-anchor="middle" class="box-desc">杜绝 Prompt 注入导致的凭据外泄</text>
+
+  <!-- Connector: Control Plane to Vault -->
+  <path d="M674 418 h 42" class="line-blue"/>
+
+  <!-- 4. 执行面 (Data Plane / Sandbox - "手") -->
+  <rect x="1006" y="268" width="550" height="432" rx="16" class="box-teal"/>
+  <rect x="1030" y="288" width="130" height="24" rx="5" fill="#0D9488"/>
+  <text x="1095" y="304" class="badge-text">弹性执行面 · 手</text>
+  <text x="1172" y="306" class="layer-title" style="fill:#0D9488">Data Plane (Sandbox Pool)</text>
+  <text x="1030" y="332" class="layer-sub">轻量容器 / MicroVM 算力租约 · 独立隔离 · 用完即回收</text>
+
+  <!-- Sandbox Pool Inner Boxes -->
+  <rect x="1030" y="352" width="242" height="154" rx="10" class="box"/>
+  <text x="1046" y="380" class="box-title">隔离沙箱实例 (Sandbox Pod)</text>
+  <text x="1046" y="404" class="box-desc">独立 Linux 命名空间 / cgroups</text>
+  <text x="1046" y="426" class="box-desc">环境变量注入不透明占位符</text>
+  <text x="1046" y="448" class="box-desc">只读基础镜像 + 动态工作区挂载</text>
+  <text x="1046" y="470" class="box-desc" style="fill:#0D9488; font-weight:600">Egress 仅允许访问 Secret Broker</text>
+
+  <rect x="1288" y="352" width="244" height="154" rx="10" class="box"/>
+  <text x="1304" y="380" class="box-title">受管后台任务运行器 (Runner)</text>
+  <text x="1304" y="404" class="box-desc">60s 前台超时平滑降级后台</text>
+  <text x="1304" y="426" class="box-desc">禁止 nohup / &amp; 逃逸进程</text>
+  <text x="1304" y="448" class="box-desc">宿主校验 Todo 保持 Open 状态</text>
+  <text x="1304" y="470" class="box-desc" style="fill:#0F172A; font-weight:600">断点日志游标落盘确认</text>
+
+  <!-- Sandbox Lease orchestrator -->
+  <rect x="1030" y="522" width="502" height="74" rx="10" class="box"/>
+  <text x="1046" y="550" class="box-title">沙箱租借管理器 (Sandbox Lease Manager)</text>
+  <text x="1046" y="574" class="box-desc">按会话 / Topic 动态签发租约 · 算力随任务闲置主动休眠/回收 · 数据脱离算力独立保留</text>
+
+  <rect x="1030" y="612" width="502" height="64" rx="8" class="box-teal"/>
+  <text x="1281" y="649" text-anchor="middle" class="box-desc" style="fill:#0D9488; font-weight:700; font-size:13px">算力生命周期 (短期租用) ≠ 数据生命周期 (跨会话持久)</text>
+
+  <!-- Line connecting Sandbox Egress to Secret Broker (Egress Proxy) -->
+  <path d="M1030 470 H 1018 V 548 H 964" class="line-teal"/>
+  <!-- Clean Outbound SaaS Line: Routes cleanly via corridor between Broker & Sandbox, then across to External Tools -->
+  <path d="M964 496 H 992 V 226 H 1394 V 204" class="line-ink"/>
+  <rect x="1100" y="214" width="240" height="24" rx="4" fill="#FFFFFF" stroke="#17191C" stroke-width="1.3"/>
+  <text x="1220" y="230" text-anchor="middle" fill="#17191C" font-size="11" font-weight="700">边缘动态置换真实 Token · 访问外部 SaaS</text>
+
+  <!-- 5. 团队协同与工作区资产层 (Bottom Layer) -->
+  <rect x="44" y="726" width="1512" height="204" rx="16" class="layer-panel"/>
+  <text x="72" y="760" class="layer-title">团队协同与工作区资产实体 (Workspace Persistence &amp; Assets)</text>
+  <text x="72" y="782" class="layer-sub">组织级数字员工沉淀 · 资产脱离个人账号持久留存 · 团队成员进出零影响</text>
+
+  <rect x="68" y="802" width="340" height="106" rx="10" class="box"/>
+  <text x="88" y="832" class="box-title">持久化文件系统 (Persistent Volumes)</text>
+  <text x="88" y="856" class="box-desc">PVC / 宿主机独立挂载卷</text>
+  <text x="88" y="878" class="box-desc">跨会话保留代码、生成报表、构建产物与依赖缓存</text>
+
+  <rect x="428" y="802" width="340" height="106" rx="10" class="box"/>
+  <text x="448" y="832" class="box-title">Workspace 资产实体 (Team Assets)</text>
+  <text x="448" y="856" class="box-desc">固定 Persona 设定与系统 Prompt</text>
+  <text x="448" y="878" class="box-desc">团队共享记忆库、业务规范与审核规则</text>
+
+  <rect x="788" y="802" width="350" height="106" rx="10" class="box"/>
+  <text x="808" y="832" class="box-title">组织核准工具库 (Skills &amp; MCP)</text>
+  <text x="808" y="856" class="box-desc">团队级预装与授权连接器</text>
+  <text x="808" y="878" class="box-desc">成员可按工作区开启，无需重复配置个人 Token</text>
+
+  <rect x="1158" y="802" width="374" height="106" rx="10" class="box"/>
+  <text x="1178" y="832" class="box-title">审计日志与可观测性 (Audit &amp; Telemetry)</text>
+  <text x="1178" y="856" class="box-desc">执行命令完整记录、stdout/stderr 断点日志</text>
+  <text x="1178" y="878" class="box-desc">OpenTelemetry 分布式链路追踪与 Token 消耗审计</text>
+
+  <!-- Vertical lines from Sandbox to PVC -->
+  <path d="M1140 676 v 126" class="line-teal"/>
+  <!-- Vertical lines from Control Plane to Workspace Assets (x=600 cleanly avoids crossing the title text) -->
+  <path d="M600 700 v 102" class="line-blue"/>
+
+</svg>

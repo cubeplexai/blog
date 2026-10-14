@@ -1,0 +1,127 @@
+---
+slug: decoupled-agent-platform-architecture
+title: "Decoupled Brain and Hand: Architecture Design and Boundary Governance for Enterprise Agent Platforms"
+description: "Moving single-node agents into enterprise multi-tenant environments requires crossing four chasms: host corruption, credential leakage, gateway timeouts, and asset ownership. The enterprise agent platform architecture decouples brain and hand: a high-availability control plane (Harness) owns the reasoning loop and state machine, while an elastic sandbox pool leases isolated compute on demand. This article explains the four system boundaries of enterprise agent platforms: control-plane and execution decoupling, secret exclusion with egress proxies, append-only incremental state, and team workspaces as persistent assets."
+authors: [xfgong]
+tags: [Agent Architecture, Managed Agents, Sandboxes, Agent Workspace, CubeLoop, CubePlex]
+image: /img/blog/decoupled-agent-platform-architecture-cover-en.webp
+---
+
+In local terminal environments, developers are accustomed to running autonomous coding and systems automation with agents like Claude Code, Cursor, or CLI-based tools. The model's reasoning loop and the operating system shell, filesystem, and environment variables all reside on the same local host, driven directly through local process trees and memory. This single-node topology is highly productive for an individual developer because the local operating system hides the complexities of network failure domains, process isolation, and multi-tenant auditing.
+
+When enterprises attempt to bring this model to hundreds of engineers and production infrastructure, every single-host assumption breaks down: concurrent users running heavy workloads contend for machine resources; unconstrained shell commands risk damaging the host; passing cloud keys and database credentials as plain environment variables exposes them to prompt injection and exfiltration via `curl` or `printenv`; reverse proxies terminate connections at 60s to 120s read timeouts; and crucially, agents tied to individual developer accounts lose their context, shared memory, and workspace artifacts whenever an employee leaves.
+
+An enterprise agent platform cannot simply package single-node CLI agents into Docker containers, nor can it retreat into stateless workflow canvas engines that lack real execution environments. The core of an enterprise agent platform is a **"Decoupled Brain and Hand" (手脑分离) architecture**: a long-running, protected control plane (Harness) owns the session state machine and reasoning ("the brain"), an elastic pool of isolated sandboxes leases compute to run commands on demand ("the hand"), and four rigorous system boundaries govern the boundary between them.
+
+<!-- truncate -->
+
+## Single-Node Terminals vs. Enterprise Multi-Tenant Topologies
+
+The fundamental distinction between single-node agents and distributed enterprise agent platforms is whether the reasoning loop and execution environments cross security trust boundaries and network failure domains:
+
+| Architecture Dimension | Single-Node Terminal Agents (e.g. Claude Code / CLI) | Enterprise Agent Platforms (Decoupled Architecture) |
+|---|---|---|
+| **Physical Topology** | Brain and hand share the CPU, memory, and filesystem of a single local host | Brain resides in a protected control plane (API / Worker); hand runs in remote elastic sandboxes (Kubernetes / MicroVMs) |
+| **Isolation & Boundaries** | No hard isolation; commands execute with local user privileges and can access any host file | Strongly isolated sandboxes with dedicated Linux namespaces, cgroups, and read-only root filesystems |
+| **Credential Delivery** | Plaintext API keys and passwords injected directly into shell processes | **Secret Exclusion**: sandboxes only receive opaque placeholders; external brokers inject real tokens at egress boundaries |
+| **Connection & Timeouts** | Local TTY / PTY interactive sessions with no reverse proxy timeouts | Web / IM interfaces subject to 60s–120s gateway read timeout caps; long tasks require smooth background demotion |
+| **State Persistence** | In-memory dictionaries or local SQLite; terminates when the process exits | **Append-Only Incremental Events**; durable checkpointer database enabling log replay, recovery, and session migration |
+| **Ownership & Collaboration** | Bound to private individual accounts; dies when the user logs off | **Workspace Team Assets**; Personas, shared memory, approved skills, and persistent volumes belong to the organization |
+
+In enterprise environments, directly packaging single-node agents into long-running Docker containers introduces two critical failure modes: dedicating a permanent container to each user creates prohibitive compute waste and queue latency; and injecting real credentials into execution containers exposes internal enterprise infrastructure the moment a sandbox is probed or compromised.
+
+To achieve production reliability, an enterprise platform must establish four foundational system boundaries.
+
+---
+
+## Boundary 1: Decoupling Control Plane and Execution (Harness & Sandbox Lifecycles)
+
+In a decoupled architecture, the first boundary separates the responsibilities of the control plane from the data plane:
+
+* **Control Plane (Harness)**: A long-running, highly available service cluster (API Gateway and Agent Workers). It runs the native asynchronous while-loop (`async while-loop`), manages reasoning context, applies policy filters, handles context compaction, and suspends turns during Human-in-the-Loop approval. Control plane nodes sit behind security perimeters and never run untrusted user commands or arbitrary tool scripts.
+* **Data Plane (Sandbox Pool)**: On-demand, temporary compute units based on Kubernetes Pods (such as CubeSandbox) or MicroVMs (such as Firecracker). The sandbox exposes a standardized execution API to receive command leases, run build, test, and diagnostic scripts, and stream back standard output and exit codes.
+
+![Decoupling Control Plane & Execution: Ephemeral Compute vs. Persistent Storage](/img/blog/decoupled-agent-platform-architecture/control-plane-sandbox-and-storage-decoupling-en.svg)
+
+Crucially, this model **decouples the compute lifetime from the data lifetime**:
+
+1. **Compute Lifetime (Ephemeral & Elastic)**: Sandboxes are short-lived execution leases. When a task completes and remains idle, sandbox containers are reclaimed or suspended to conserve CPU and memory. When a new turn triggers, a fresh container is provisioned in milliseconds.
+2. **Data Lifetime (Durable & Shared)**: The developer's working environment (Git repositories, downloaded packages, build caches, and generated artifacts) never resides in the container's ephemeral root overlay. CubePlex mounts durable persistent volumes (PVC or host mounts) to `/workspace`. When a sandbox container is destroyed, recreated, or rescheduled onto another node, the persistent volume reattaches immediately, keeping the team's project state intact.
+
+---
+
+## Boundary 2: Credential Delivery & Egress Security (Secret Exclusion vs. Redaction)
+
+Standard automation pipelines frequently deliver third-party credentials (such as GitHub PATs, AWS keys, or internal API tokens) by injecting them as plaintext environment variables (`env`) and masking them in logs (redaction).
+
+**Log redaction is merely a visual presentation filter, not a security boundary**. Inside the sandbox, any bash command or Python script executed by the agent can inspect `os.environ`. If an agent is influenced by prompt injection or executes an untrusted package, plaintext credentials can be exfiltrated with a single `curl` call.
+
+CubePlex implements strict **Secret Exclusion**:
+
+![Secret Exclusion Architecture: Placeholder Injection & Perimeter Proxying](/img/blog/decoupled-agent-platform-architecture/secret-exclusion-and-broker-proxy-en.svg)
+
+1. **Opaque Placeholders**: The control plane injects non-sensitive placeholder tokens (e.g., `CUBEPLEX_SECRET_REF_8f9a2`) into sandbox environment variables. Inspecting the environment yields only unresolvable reference hashes.
+2. **Egress Network Policies**: Sandbox instances run under strict Kubernetes NetworkPolicies or iptables rules that drop all direct outbound internet traffic, allowing egress only to the control plane's **Secret Broker**.
+3. **Dynamic Edge Substitution**: When a tool inside the sandbox initiates an HTTPS call to an external service, traffic routes through the Secret Broker. The broker looks up the real secret in Vault / KMS, validates the target host and request headers against an approved whitelist, and substitutes the real secret at the egress boundary before dispatching the request.
+
+Real production credentials never enter sandbox process memory.
+
+---
+
+## Boundary 3: State Machines & Long Tasks (Append-Only & Generation Fences)
+
+Many agent frameworks (such as graph-based state engines) write full-state snapshots to databases on every node transition or tool response. As sessions grow to 50–100 turns, serializing and saving full message histories creates **$O(N^2)$ cumulative I/O amplification**, causing database bloat and dirty-read concurrency bugs during recovery.
+
+CubeLoop uses a native `async while-loop` with an **Append-Only persistence architecture**:
+
+* **$O(1)$ Turn Writes**: At every turn boundary, the control plane only appends newly emitted messages, tool calls, and delta events to the durable checkpointer. This maximizes database write throughput and produces an immutable audit log.
+* **Deterministic Replay**: When a worker node restarts after a crash, the control plane replays the incremental event stream in memory to reconstruct the exact session state.
+
+For long-running commands, the platform enforces three production contracts:
+
+1. **60-Second Demotion Cutover**: Commands stream output in the foreground for the first 60 seconds. If execution exceeds 60 seconds, the control plane demotes the command to a tracked background task, freeing client HTTP/SSE connections while the sandbox continues running for up to 1 hour.
+2. **Host-Validated Todo Contracts**: When long tasks move to the background, language models frequently hallucinate that work is complete and prematurely mark checklist items as finished. CubeLoop's `TodoListMiddleware` locks todo states open until the sandbox runner confirms exit code 0 and flushes its log cursor.
+3. **Generation Fences**: To prevent network retry races where a delayed stop signal kills a freshly restarted command, the control plane issues monotonically increasing Generation IDs. Sandboxes reject signals that do not match the active generation.
+
+---
+
+## Boundary 4: Organizational Collaboration & Workspace Assets
+
+A common misconception is that a "team agent" is simply a group chat with a shared bot handle. In group chats, multi-user intents collide, conversation history is polluted, and concurrent tool runs corrupt working files.
+
+CubePlex establishes the **Workspace as a persistent team asset**:
+
+* **Agents Belong to Workspaces**: The agent is not tied to an individual user's chat session. It possesses a persistent Persona, shared team memory, and organizational-approved Skills and MCP connectors. When team members leave the company, workspace knowledge and execution history remain intact.
+* **Session Topologies & Sandbox Binding**:
+  * **1:1 Direct Conversations**: Isolated exploration and drafting bound to a private sandbox.
+  * **Group Chats**: Low-privilege Q&A without write access to persistent workspaces.
+  * **Topic Containers (Topic Topology)**: For mission-critical tasks (e.g. incident response or quarterly analysis), teams open dedicated Topics with **Dedicated Topic Sandboxes**, isolating scratch files and long runs from cross-talk.
+
+---
+
+## Enterprise Agent Platform Architecture Topology
+
+Bringing these four system boundaries together yields the complete enterprise agent platform architecture:
+
+![Enterprise Agent Platform Overall Architecture](/img/blog/decoupled-agent-platform-architecture/enterprise-agent-platform-architecture-en.svg)
+
+1. **Client & Ingress Layer**: Enterprise IM (Feishu / Slack) and Web Consoles route through an API Gateway managing SSO, RBAC, and streaming SSE connections.
+2. **Control Plane (Harness)**: High-availability workers run `async while-loop` state machines with Append-Only checkpointers, LLM router engines, 20k-character tool truncations, HITL approval interceptors, and generation fences.
+3. **Security & Secret Broker**: Vault/KMS integration, placeholder env mapping, and egress proxying with host whitelists.
+4. **Data Plane (Sandbox Pool)**: Kubernetes Pods or MicroVMs leased on demand, executing code against mounted persistent volumes.
+5. **Persistence & Assets**: Durable PVC mounts retain workspace files, while the workspace stores personas, shared memory, and OpenTelemetry audit traces.
+
+---
+
+## Production Readiness Checklist
+
+When evaluating or designing enterprise agent platforms, use these criteria to audit system robustness:
+
+* [ ] **Physical Decoupling**: Are the control plane harness and code execution sandboxes isolated across network failure domains?
+* [ ] **Compute vs. Data Separation**: Do workspace files and installed dependencies survive container termination and rescheduling?
+* [ ] **Secret Exclusion**: Are plain environment secrets withheld from sandbox inspection, with credentials injected only at egress proxies?
+* [ ] **Linear State Persistence**: Does database write cost stay at $O(1)$ per turn rather than expanding as $O(N)$ snapshots?
+* [ ] **Long-Task Contracts**: Does the system prevent reverse proxy timeouts at 60s, guard against hallucinated task completion, and use generation fences against cancellation races?
+* [ ] **Workspace Ownership**: Are agent memories, skills, and execution histories owned by the team workspace rather than personal chat accounts?
+
+Bringing autonomous AI agents into enterprise infrastructure requires moving past the illusion of single-node CLI convenience. By establishing clear boundaries for execution isolation, secret exclusion, incremental state, and workspace assets, organizations transform experimental prompts into reliable, scalable digital coworkers.

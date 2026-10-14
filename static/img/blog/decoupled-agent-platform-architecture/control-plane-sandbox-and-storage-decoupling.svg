@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 690" role="img" aria-labelledby="d1-zh-title d1-zh-desc">
+  <title id="d1-zh-title">控制面与执行面解耦：算力临时租用与数据跨会话持久</title>
+  <desc id="d1-zh-desc">控制面持有推理状态与租约调度；沙箱池提供按需隔离的短期算力；持久存储脱离容器生命周期独立挂载。</desc>
+  <defs>
+    <pattern id="grid1" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M30 0H0V30" fill="none" stroke="#E6EBF2" stroke-width="1"/>
+    </pattern>
+    <marker id="arrow-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0L9 3.5 0 7Z" fill="#1463E9"/>
+    </marker>
+    <marker id="arrow-teal" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0L9 3.5 0 7Z" fill="#0D9488"/>
+    </marker>
+    <style>
+      text { font-family: Inter, -apple-system, 'PingFang SC', 'Noto Sans SC', sans-serif; }
+      .main-title { fill:#17191C; font-size:24px; font-weight:750; letter-spacing:-.4px; }
+      .main-sub { fill:#536171; font-size:13.5px; }
+      .layer-title { fill:#17191C; font-size:16px; font-weight:750; }
+      .layer-sub { fill:#64748B; font-size:12px; }
+      .box { fill:#FFFFFF; stroke:#17191C; stroke-width:1.5; }
+      .box-title { fill:#17191C; font-size:13.5px; font-weight:700; }
+      .box-desc { fill:#536171; font-size:11.5px; line-height:1.45; }
+      .badge-text { font-size:11px; font-weight:700; fill:#FFFFFF; text-anchor:middle; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="690" fill="#FCFCFA"/>
+  <rect width="1200" height="690" fill="url(#grid1)"/>
+
+  <!-- Header -->
+  <text x="40" y="42" class="main-title">控制面与执行面解耦：算力临时租用与数据跨会话持久</text>
+  <text x="40" y="68" class="main-sub">控制面持有推理状态与租约调度；沙箱池提供按需隔离的短期算力；持久存储脱离容器生命周期独立挂载。</text>
+
+  <!-- Layer 1: Control Plane (Brain) -->
+  <rect x="40" y="96" width="1120" height="136" rx="14" fill="#F4F8FF" stroke="#1463E9" stroke-width="2"/>
+  <rect x="64" y="114" width="150" height="22" rx="4" fill="#1463E9"/>
+  <text x="139" y="129" class="badge-text">受控控制面 · 长期高可用</text>
+  <text x="228" y="132" class="layer-title" style="fill:#1463E9">Control Plane (Harness API &amp; Workers) - "脑"</text>
+  <text x="64" y="152" class="layer-sub">长期驻留服务集群 · 持有状态机、推理调度与权限策略 · 绝不执行任意不可信代码</text>
+
+  <rect x="64" y="162" width="330" height="56" rx="8" class="box"/>
+  <text x="80" y="184" class="box-title">会话状态机 (async while-loop)</text>
+  <text x="80" y="204" class="box-desc" style="fill:#1463E9; font-weight:600">Append-Only 增量持久化 · 单步 O(1) 写库</text>
+
+  <rect x="410" y="162" width="360" height="56" rx="8" class="box"/>
+  <text x="426" y="184" class="box-title">推理调度 &amp; 上下文防御</text>
+  <text x="426" y="204" class="box-desc">20k 字符前置拦截截断 · 动态历史压实</text>
+
+  <rect x="786" y="162" width="350" height="56" rx="8" class="box"/>
+  <text x="802" y="184" class="box-title">沙箱租借管理器 (Lease Manager)</text>
+  <text x="802" y="204" class="box-desc" style="fill:#0D9488; font-weight:600">按 Topic 签发租约 · 任务闲置自动休眠回收</text>
+
+  <!-- Connectors: Control Plane -> Sandbox Pool -->
+  <path d="M240 232 v 42" fill="none" stroke="#1463E9" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <path d="M960 232 v 42" fill="none" stroke="#1463E9" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <rect x="360" y="242" width="480" height="24" rx="4" fill="#FFFFFF" stroke="#1463E9" stroke-width="1.2"/>
+  <text x="600" y="258" text-anchor="middle" fill="#1463E9" font-size="11.5" font-weight="650">gRPC / RPC 派发执行租约 (Lease) · 下发 Task ID 与占位符</text>
+
+  <!-- Layer 2: Data Plane (Sandbox Pool) -->
+  <rect x="40" y="280" width="1120" height="170" rx="14" fill="#F0FDF4" stroke="#0D9488" stroke-width="2"/>
+  <rect x="64" y="298" width="160" height="22" rx="4" fill="#0D9488"/>
+  <text x="144" y="313" class="badge-text">弹性执行面 · 临时算力租借</text>
+  <text x="238" y="316" class="layer-title" style="fill:#0D9488">Data Plane (Sandbox Pool) - "手"</text>
+  <text x="64" y="336" class="layer-sub">按需租用 · 独立 Linux 命名空间 / cgroups · 任务结束自动销毁或休眠释放 CPU/内存</text>
+
+  <!-- Sandbox A -->
+  <rect x="64" y="346" width="520" height="90" rx="8" class="box"/>
+  <text x="82" y="370" class="box-title">Sandbox A (Topic 1: 支付排障专用沙箱)</text>
+  <text x="82" y="392" class="box-desc">轻量隔离容器 Pod · 绑定只读系统镜像 + 工作区挂载 /workspace</text>
+  <text x="82" y="414" class="box-desc" style="fill:#0D9488; font-weight:600">60s 前台超时平滑降级后台 · 闲置后容器可随时被回收</text>
+
+  <!-- Sandbox B -->
+  <rect x="604" y="346" width="532" height="90" rx="8" class="box"/>
+  <text x="622" y="370" class="box-title">Sandbox B (Topic 2: 报表导出与构建沙箱)</text>
+  <text x="622" y="392" class="box-desc">独立 Firecracker MicroVM / K8s Pod · 资源与 Sandbox A 完全物理隔离</text>
+  <text x="622" y="414" class="box-desc" style="fill:#0D9488; font-weight:600">排他计算环境 · 彻底杜绝多任务并发相互抢占与干扰</text>
+
+  <!-- Connectors: Sandbox Pool -> Persistent Volumes -->
+  <path d="M240 450 v 40" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)"/>
+  <path d="M960 450 v 40" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)"/>
+  <rect x="410" y="458" width="380" height="24" rx="4" fill="#FFFFFF" stroke="#0D9488" stroke-width="1.2"/>
+  <text x="600" y="474" text-anchor="middle" fill="#0D9488" font-size="11.5" font-weight="650">动态挂载持久卷 (Persistent Volume Claims / Host Mounts)</text>
+
+  <!-- Layer 3: Persistent Storage (Asset & Memory) -->
+  <rect x="40" y="496" width="1120" height="154" rx="14" fill="#FFFFFF" stroke="#17191C" stroke-width="2"/>
+  <rect x="64" y="514" width="170" height="22" rx="4" fill="#17191C"/>
+  <text x="149" y="529" class="badge-text">持久化数据层 · 跨会话保留</text>
+  <text x="248" y="532" class="layer-title">Persistent Storage Layer - "记忆与资产"</text>
+  <text x="64" y="552" class="layer-sub">存储生命周期独立于算力容器 · 容器销毁重建后自动重新附加，数据零丢失</text>
+
+  <!-- PVC A -->
+  <rect x="64" y="562" width="520" height="72" rx="8" class="box" fill="#F8FAFC"/>
+  <text x="82" y="586" class="box-title">PVC A (/data/workspaces/topic-1)</text>
+  <text x="82" y="608" class="box-desc">持久保留排障 Git 仓库、生成的 Dump 现场、调试补丁</text>
+  <text x="82" y="626" class="box-desc" style="fill:#17191C; font-weight:600">团队其他成员接手时，所有文件现场原样可继续推进</text>
+
+  <!-- PVC B -->
+  <rect x="604" y="562" width="532" height="72" rx="8" class="box" fill="#F8FAFC"/>
+  <text x="622" y="586" class="box-title">PVC B (/data/workspaces/topic-2)</text>
+  <text x="622" y="608" class="box-desc">持久保留 Python 依赖缓存、导出的 Excel/PDF 报表产物</text>
+  <text x="622" y="626" class="box-desc" style="fill:#17191C; font-weight:600">下周登录工作区，文件与依赖依然完好，无需从头构建</text>
+
+  <!-- Bottom Core Principle Banner -->
+  <rect x="40" y="658" width="1120" height="26" rx="5" fill="#FFFBEB" stroke="#D97706" stroke-width="1.2"/>
+  <text x="600" y="675" text-anchor="middle" fill="#D97706" font-size="12" font-weight="700">核心架构原则：算力生命周期（临时弹性、用完即弃）与数据生命周期（跨会话持久、团队共享）彻底解耦</text>
+</svg>

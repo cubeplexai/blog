@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="512" viewBox="0 0 1280 512" role="img">
+  <defs>
+    <pattern id="cover-grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M36 0H0V36" fill="none" stroke="#e6ebf2" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="512" fill="#fcfcfa"/>
+  <rect width="1280" height="512" fill="url(#cover-grid)" opacity="0.6"/>
+
+  <!-- Right side whiteboard illustration -->
+  <g opacity="0.95" transform="translate(680, 70)">
+    <!-- Control Plane (Brain) -->
+    <rect x="0" y="40" width="225" height="270" rx="16" fill="#f4f8ff" stroke="#1463e9" stroke-width="2.5"/>
+    <rect x="18" y="58" width="130" height="22" rx="4" fill="#1463e9"/>
+    <text x="83" y="73" fill="#ffffff" font-family="Inter, sans-serif" font-size="10.5" font-weight="700" text-anchor="middle">Brain · Control Plane</text>
+    <text x="18" y="106" fill="#17191c" font-family="Inter, sans-serif" font-size="15" font-weight="750">Control Plane</text>
+    
+    <rect x="18" y="122" width="189" height="42" rx="6" fill="#ffffff" stroke="#1463e9" stroke-width="1.2"/>
+    <text x="28" y="148" fill="#17191c" font-family="Inter, sans-serif" font-size="11.5" font-weight="600">Harness State Machine</text>
+    
+    <rect x="18" y="172" width="189" height="42" rx="6" fill="#ffffff" stroke="#1463e9" stroke-width="1.2"/>
+    <text x="28" y="198" fill="#17191c" font-family="Inter, sans-serif" font-size="11.5" font-weight="600">Append-Only Store</text>
+
+    <rect x="18" y="222" width="189" height="42" rx="6" fill="#ffffff" stroke="#1463e9" stroke-width="1.2"/>
+    <text x="28" y="248" fill="#17191c" font-family="Inter, sans-serif" font-size="11.5" font-weight="600">HITL Policy Engine</text>
+
+    <!-- Network Decoupling Bridge / Secret Broker -->
+    <path d="M225 145 H 325" stroke="#1463e9" stroke-width="2" stroke-dasharray="5 4"/>
+    <path d="M225 245 H 325" stroke="#0d9488" stroke-width="2" stroke-dasharray="5 4"/>
+
+    <!-- Secret Broker in the middle -->
+    <rect x="245" y="165" width="60" height="60" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+    <circle cx="275" cy="195" r="14" fill="#d97706" opacity="0.15"/>
+    <path d="M271 195v-4a4 4 0 0 1 8 0v4m-10 0h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2Z" fill="none" stroke="#d97706" stroke-width="1.6"/>
+
+    <!-- Execution Sandbox (Hand) -->
+    <rect x="325" y="40" width="225" height="270" rx="16" fill="#f0fdf4" stroke="#0d9488" stroke-width="2.5"/>
+    <rect x="343" y="58" width="130" height="22" rx="4" fill="#0d9488"/>
+    <text x="408" y="73" fill="#ffffff" font-family="Inter, sans-serif" font-size="10.5" font-weight="700" text-anchor="middle">Hand · Sandbox Pool</text>
+    <text x="343" y="106" fill="#17191c" font-family="Inter, sans-serif" font-size="15" font-weight="750">Sandbox Pool</text>
+
+    <rect x="343" y="122" width="189" height="42" rx="6" fill="#ffffff" stroke="#0d9488" stroke-width="1.2"/>
+    <text x="353" y="148" fill="#17191c" font-family="Inter, sans-serif" font-size="11.5" font-weight="600">Isolated MicroVM / Pod</text>
+
+    <rect x="343" y="172" width="189" height="42" rx="6" fill="#ffffff" stroke="#0d9488" stroke-width="1.2"/>
+    <text x="353" y="198" fill="#17191c" font-family="Inter, sans-serif" font-size="11.5" font-weight="600">60s Background Runner</text>
+
+    <rect x="343" y="222" width="189" height="42" rx="6" fill="#ffffff" stroke="#0d9488" stroke-width="1.2"/>
+    <text x="353" y="248" fill="#17191c" font-family="Inter, sans-serif" font-size="11.5" font-weight="600">PVC Volume Mounts</text>
+
+    <!-- Boundary tag -->
+    <rect x="170" y="325" width="210" height="26" rx="6" fill="#ffffff" stroke="#17191c" stroke-width="1.4"/>
+    <text x="275" y="342" fill="#17191c" font-family="Inter, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Decoupled · Four Boundaries</text>
+  </g>
+
+  <!-- Left: CubePlex Logo Lockup -->
+  <image href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyODAgNjQiIHJvbGU9ImltZyIgYXJpYS1sYWJlbGxlZGJ5PSJ0aXRsZSI+CiAgPHRpdGxlIGlkPSJ0aXRsZSI+Q3ViZVBsZXggbG9nbyBmb3IgbGlnaHQgYmFja2dyb3VuZHM8L3RpdGxlPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik0zMiA3IDU1IDIwIDMyIDMzIDkgMjAgMzIgN1oiIHN0cm9rZT0iIzEyNjhFOCIvPgogICAgPHBhdGggZD0ibTEwIDMyIDIyIDEyLjVMNTQgMzJNMTAgNDMuNSAzMiA1NmwyMi0xMi41IiBzdHJva2U9IiMxNDIxM0QiLz4KICA8L2c+CiAgPGcgZmlsbD0iIzE0MjEzRCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNzQgNDcuMykgc2NhbGUoLjA0NSAtLjA0NSkiPgogICAgPHBhdGggZD0iTTM3MiAtMTZRMjc1IC0xNiAyMDEgMjguNVExMjcgNzMgODUgMTU1LjVRNDMgMjM4IDQzIDM1NFE0MyA0NjggODQgNTUxLjVRMTI1IDYzNSAxOTkgNjgwLjVRMjczIDcyNiAzNzMgNzI2UTUwOSA3MjYgNTg0IDY1OC41UTY1OSA1OTEgNjgyIDQ3MEw1NDYgNDYzUTUzMyA1MzMgNDkwIDU3M1E0NDcgNjEzIDM3MyA2MTNRMjgzIDYxMyAyMzAgNTQzUTE3NyA0NzMgMTc3IDM1NFExNzcgMjM0IDIzMC41IDE2NS41UTI4NCA5NyAzNzIgOTdRNDUxIDk3IDQ5NC41IDE0MC41UTUzOCAxODQgNTUwIDI2MEw2ODYgMjUzUTY2NSAxMjggNTg1LjUgNTZRNTA2IC0xNiAzNzIgLTE2WiIvPgogICAgPHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNjc5KSIgZD0iTTI0NiAtMTJRMTY0IC0xMiAxMTcgNDFRNzAgOTQgNzAgMTkwVjUzNEgxOThWMjIyUTE5OCAxNTQgMjIwLjUgMTIzUTI0MyA5MiAyODkgOTJRMzQwIDkyIDM2OSAxMjYuNVEzOTggMTYxIDM5OCAyMjdWNTM0SDUyNlYwSDQwOUw0MDcgODdRMzY1IC0xMiAyNDYgLTEyWiIvPgogICAgPHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTIzMSkiIGQ9Ik0zNTcgLTEyUTMwMSAtMTIgMjU5IDEyUTIxNyAzNiAxOTUgNzlMMTkyIDBINzBWNzEwSDE5OFY0NThRMjE5IDQ5NCAyNjAuNSA1MjBRMzAyIDU0NiAzNTcgNTQ2UTQyNiA1NDYgNDc2LjUgNTExLjVRNTI3IDQ3NyA1NTQuNSA0MTQuNVE1ODIgMzUyIDU4MiAyNjdRNTgyIDE4MiA1NTQuNSAxMTkuNVE1MjcgNTcgNDc2LjUgMjIuNVE0MjYgLTEyIDM1NyAtMTJaTTMyOCA5MlEzODMgOTIgNDE2IDEzOC41UTQ0OSAxODUgNDQ5IDI2N1E0NDkgMzUwIDQxNi41IDM5NlEzODQgNDQyIDMyOSA0NDJRMjY3IDQ0MiAyMzIuNSAzOTZRMTk4IDM1MCAxOTggMjY3UTE5OCAxODUgMjMyLjUgMTM4LjVRMjY3IDkyIDMyOCA5MloiLz4KICAgIDxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE4MDcpIiBkPSJNMzAxIC0xMlEyMjEgLTEyIDE2MiAyMi41UTEwMyA1NyA3MSAxMjBRMzkgMTgzIDM5IDI2N1EzOSAzNTEgNzEgNDE0UTEwMyA0NzcgMTYxLjUgNTExLjVRMjIwIDU0NiAyOTggNTQ2UTM3NCA1NDYgNDMxIDUxMlE0ODggNDc4IDUxOS41IDQxNFE1NTEgMzUwIDU1MSAyNjBWMjMxSDE3MlExNzUgMTYxIDIxMCAxMjUuNVEyNDUgOTAgMzAyIDkwUTM4OSA5MCA0MTMgMTY0TDU0NCAxNTZRNTIyIDc4IDQ1Ny41IDMzUTM5MyAtMTIgMzAxIC0xMlpNMTcyIDMxN0g0MTlRNDE0IDM4MiAzODEuNSA0MTMuNVEzNDkgNDQ1IDI5OCA0NDVRMjQ2IDQ0NSAyMTMgNDEyUTE4MCAzNzkgMTcyIDMxN1oiLz4KICAgIDxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIzNTMpIiBkPSJNODAgMFY3MTBIMzU1UTQ3OSA3MTAgNTQ5LjUgNjUwUTYyMCA1OTAgNjIwIDQ4NFE2MjAgMzc3IDU0OS41IDMxNi41UTQ3OSAyNTYgMzU1IDI1NkgyMTBWMFpNMjEwIDM2OUgzNDlRNDE1IDM2OSA0NTAuNSAzOThRNDg2IDQyNyA0ODYgNDg0UTQ4NiA1NDAgNDUwLjUgNTY4LjVRNDE1IDU5NyAzNDkgNTk3SDIxMFoiLz4KICAgIDxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI5NzIpIiBkPSJNMTk4IDBRMTM5IDAgMTA0LjUgMzBRNzAgNjAgNzAgMTI2VjcxMEgxOThWMTM5UTE5OCA5OSAyMzggOTlIMjc3VjBaIi8+CiAgICA8cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMjI0KSIgZD0iTTMwMSAtMTJRMjIxIC0xMiAxNjIgMjIuNVExMDMgNTcgNzEgMTIwUTM5IDE4MyAzOSAyNjdRMzkgMzUxIDcxIDQxNFExMDMgNDc3IDE2MS41IDUxMS41UTIyMCA1NDYgMjk4IDU0NlEzNzQgNTQ2IDQzMSA1MTJRNDg4IDQ3OCA1MTkuNSA0MTRRNTUxIDM1MCA1NTEgMjYwVjIzMUgxNzJRMTc1IDE2MSAyMTAgMTI1LjVRMjQ1IDkwIDMwMiA5MFEzODkgOTAgNDEzIDE2NEw1NDQgMTU2UTUyMiA3OCA0NTcuNSAzM1EzOTMgLTEyIDMwMSAtMTJaTTE3MiAzMTdINDE5UTQxNCAzODIgMzgxLjUgNDEzLjVRMzQ5IDQ0NSAyOTggNDQ1UTI0NiA0NDUgMjEzIDQxMlExODAgMzc5IDE3MiAzMTdaIi8+CiAgICA8cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzNzcwKSIgZD0iTTQ2IDAgMjM4IDI3MiA1MyA1MzRIMTkyTDMxNCAzNTJMNDM0IDUzNEg1NzVMMzkxIDI3MUw1ODIgMEg0NDNMMzE2IDE5MkwxODggMFoiLz4KICA8L2c+Cjwvc3ZnPgo=" x="64" y="68" width="176" height="40"/>
+
+  <rect x="64" y="136" width="52" height="6" rx="3" fill="#1463e9"/>
+
+  <!-- Yellow marker behind Line 2 -->
+  <path d="M54 274 H580 V320 H58 Z" fill="#FFE24A" opacity="0.82" transform="rotate(-0.6 64 278)"/>
+
+  <!-- Left: Main Title Text -->
+  <text x="64" y="224" fill="#17191c" font-family="Inter, -apple-system, sans-serif" font-size="38" font-weight="750" letter-spacing="-1">
+    <tspan x="64" dy="0">Decoupled Brain &amp; Hand:</tspan>
+    <tspan x="64" dy="64" font-size="40">Enterprise Agent Platforms</tspan>
+    <tspan x="64" dy="64" font-size="36" fill="#394554">Architecture &amp; Governance</tspan>
+  </text>
+
+  <path d="M64 438H114" stroke="#1463e9" stroke-width="3" stroke-linecap="round"/>
+</svg>
