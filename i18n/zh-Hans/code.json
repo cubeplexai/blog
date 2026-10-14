@@ -1,4 +1,31 @@
 {
+  "blog.home.rssFeed": {
+    "message": "RSS 订阅"
+  },
+  "blog.home.recentArticles": {
+    "message": "最新文章"
+  },
+  "blog.home.pageArticles": {
+    "message": "第 {page} 页文章"
+  },
+  "blog.topicBar.allPosts": {
+    "message": "全部文章"
+  },
+  "blog.topicBar.allTags": {
+    "message": "查看全部标签"
+  },
+  "blog.featured.badge": {
+    "message": "最新发布"
+  },
+  "blog.featured.readArticle": {
+    "message": "阅读全文"
+  },
+  "blog.tagPage.backToAll": {
+    "message": "全部文章"
+  },
+  "blog.tagPage.articleCount": {
+    "message": "共 {count} 篇相关文章。"
+  },
   "blog.allPosts.ariaLabel": {
     "message": "全部文章"
   },
