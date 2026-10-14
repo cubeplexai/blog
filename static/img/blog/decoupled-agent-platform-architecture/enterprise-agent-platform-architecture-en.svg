@@ -181,27 +181,30 @@
   <text x="72" y="782" class="layer-sub">Organizational digital teammate assets · Independent of individual employee accounts · Zero offboarding fallout</text>
 
   <rect x="68" y="802" width="340" height="106" rx="10" class="box"/>
-  <text x="88" y="832" class="box-title">Persistent File Systems (Volumes)</text>
-  <text x="88" y="856" class="box-desc">PVC / Host volume mounts</text>
-  <text x="88" y="878" class="box-desc">Retains code, reports, build caches, and dependencies across sessions</text>
+  <text x="88" y="832" class="box-title">Workspace Entity (Team Assets)</text>
+  <text x="88" y="856" class="box-desc">Stable Persona identities &amp; system prompts</text>
+  <text x="88" y="878" class="box-desc">Team-shared memory, business specs, and audit rules</text>
 
   <rect x="428" y="802" width="340" height="106" rx="10" class="box"/>
-  <text x="448" y="832" class="box-title">Workspace Entity (Team Assets)</text>
-  <text x="448" y="856" class="box-desc">Stable Persona identities &amp; system prompts</text>
-  <text x="448" y="878" class="box-desc">Team-shared memory, business specs, and audit rules</text>
+  <text x="448" y="832" class="box-title">Approved Tool Catalog (Skills &amp; MCP)</text>
+  <text x="448" y="856" class="box-desc">Team-level pre-installed &amp; authorized connectors</text>
+  <text x="448" y="878" class="box-desc">Enabled per workspace without sharing personal tokens</text>
 
   <rect x="788" y="802" width="350" height="106" rx="10" class="box"/>
-  <text x="808" y="832" class="box-title">Approved Tool Catalog (Skills &amp; MCP)</text>
-  <text x="808" y="856" class="box-desc">Team-level pre-installed &amp; authorized connectors</text>
-  <text x="808" y="878" class="box-desc">Enabled per workspace without sharing personal tokens</text>
+  <text x="808" y="832" class="box-title">Audit Logs &amp; Telemetry</text>
+  <text x="808" y="856" class="box-desc">Complete command execution histories, stdout/stderr streams</text>
+  <text x="808" y="878" class="box-desc">OpenTelemetry distributed tracing &amp; token consumption audit</text>
 
   <rect x="1158" y="802" width="374" height="106" rx="10" class="box"/>
-  <text x="1178" y="832" class="box-title">Audit Logs &amp; Telemetry</text>
-  <text x="1178" y="856" class="box-desc">Complete command execution histories, stdout/stderr streams</text>
-  <text x="1178" y="878" class="box-desc">OpenTelemetry distributed tracing &amp; token consumption audit</text>
+  <text x="1178" y="832" class="box-title">Persistent File Systems (Volumes)</text>
+  <text x="1178" y="856" class="box-desc">PVC / Host volume mounts</text>
+  <text x="1178" y="878" class="box-desc">Retains code, reports, build caches, and dependencies across sessions</text>
 
-  <!-- Vertical lines from Sandbox to PVC -->
-  <path d="M1140 676 v 126" class="line-teal"/>
+  <!-- Vertical lines from Sandbox to PVC (Solidly anchored at x=1345 under Data Lifecycle) -->
+  <path d="M1345 676 v 126" class="line-teal"/>
+  <rect x="1195" y="738" width="300" height="22" rx="4" fill="#FFFFFF" stroke="#0D9488" stroke-width="1.2"/>
+  <text x="1345" y="753" text-anchor="middle" fill="#0D9488" font-size="10.5" font-weight="700">Mounts Workspace PVC · Durable Across Sessions</text>
+
   <!-- Vertical lines from Control Plane to Workspace Assets (x=600 cleanly avoids crossing the title text) -->
   <path d="M600 700 v 102" class="line-blue"/>
 
