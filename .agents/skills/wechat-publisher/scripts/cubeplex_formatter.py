@@ -37,7 +37,7 @@ LINK_STYLE = (
 
 RECOMMENDED_READING = (
     ("CubePlex -- 企业级 Agent 平台正式开源", "./cubeplex-open-source-release"),
-    ("从 Agent computer 到团队交付：QM 与 CubePlex 的两条路径", "./qm-cubeplex-team-agent-collaboration"),
+    ("Every Agent：企业 Agent 从个人副本转向共享同事", "./every-agent-shared-workflows"),
     ("CubePlex 与 DeerFlow：个人 Agent 环境与团队 Agent Workspace", "./cubeplex-vs-deerflow-workspace-and-harness"),
     ("Managed Agents Harness 架构与选择", "./managed-agents-cloud-harness-vs-sandbox-harness"),
 )
